@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "Dual",
+    "slug": "dual",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "dual",
+    "userInterfaceStyle": "dark",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.perso.dual",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Dual utilise vos caméras avant et arrière pour capturer des photos et vidéos simultanément.",
+        "NSMicrophoneUsageDescription": "Dual utilise votre micro pour enregistrer l'audio de vos vidéos.",
+        "NSPhotoLibraryAddUsageDescription": "Dual enregistre vos photos et vidéos capturées dans votre galerie."
+      }
+    },
+    "android": {
+      "package": "com.perso.dual",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "plugins": [
+      [
+        "react-native-vision-camera",
+        {
+          "cameraPermissionText": "Dual a besoin d'accéder à vos caméras pour la capture simultanée avant / arrière.",
+          "enableMicrophonePermission": true,
+          "microphonePermissionText": "Dual a besoin de votre micro pour enregistrer l'audio des vidéos."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Dual accède à votre galerie pour y enregistrer vos captures.",
+          "savePhotosPermission": "Dual enregistre vos photos et vidéos dans votre galerie.",
+          "isAccessMediaLocationEnabled": true
+        }
+      ],
+      "expo-status-bar",
+      "expo-asset"
+    ]
+  }
+}

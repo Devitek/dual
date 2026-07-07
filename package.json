@@ -1,0 +1,29 @@
+{
+  "name": "dual",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start --dev-client",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "prebuild": "expo prebuild --clean",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "expo": "^57.0.0",
+    "expo-asset": "~57.0.3",
+    "expo-file-system": "~57.0.0",
+    "expo-media-library": "~57.0.1",
+    "expo-status-bar": "~57.0.0",
+    "react": "19.2.3",
+    "react-native": "0.86.0",
+    "react-native-vision-camera": "^4.7.3"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@types/react": "~19.2.4",
+    "babel-preset-expo": "~57.0.2",
+    "typescript": "~6.0.3"
+  }
+}

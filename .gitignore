@@ -1,0 +1,43 @@
+# Learn more https://docs.expo.dev/guides/using-git
+
+# Dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native — dossiers générés par `expo prebuild` (workflow CNG).
+# On ne les versionne pas : ils sont régénérés à partir de app.json + config plugins.
+/android
+/ios
+.kotlin/
+
+# Native build artifacts / secrets
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# Debug logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# Local env files
+.env*.local
+.env.local
+
+# TypeScript
+*.tsbuildinfo
