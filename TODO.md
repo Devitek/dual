@@ -58,3 +58,43 @@ doctor, mais n'a pas encore tourné sur un appareil. Points à vérifier/ajuster
 - [ ] Sélecteur de format v5 via `constraints` (`{ fps }`, HDR) — retiré pendant la
       migration (l'API v4 `useCameraFormat` n'existe plus).
 - [ ] `react-native-safe-area-context` pour les offsets (edge-to-edge SDK 57).
+
+## 🚚 Livraison / Store — BLOQUÉ (compte développeur non vérifié)
+
+Tout ce qui suit est en attente d'un **compte Google Play Console vérifié**
+(vérification d'identité, frais unique). Le pipeline CI/build actuel produit un
+APK **debug-signé de TEST** ; rien n'est encore prêt pour une publication Store.
+
+### Préalable — compte & accès
+- [ ] Créer/vérifier le **compte Google Play Console** (identité vérifiée).
+- [ ] (Si build délégué) Compte **Expo/EAS** + `EXPO_TOKEN` en secret GitHub.
+- [ ] Créer l'app dans la Play Console (package `com.perso.dual` — à renommer en
+      `com.devitek.*` ou équivalent avant publication).
+
+### Signature (App Signing)
+- [ ] Générer l'**upload key** (keystore) + activer **Play App Signing**.
+- [ ] Stocker keystore + mots de passe en **secrets GitHub** (base64) — jamais
+      committer (`*.keystore` / `*.jks` déjà gitignorés).
+- [ ] Configurer le `signingConfig release` (via config plugin `expo-build-properties`
+      ou EAS credentials) — actuellement release = signature debug.
+
+### Build de release
+- [ ] Passer `android-build.yml` de `assembleDebug` → **`bundleRelease` (AAB signé)**.
+- [ ] **`versionCode`** auto-incrémenté (run number CI ou EAS auto-increment) —
+      actuellement fixe (défaut 1).
+- [ ] (Alternative recommandée) **EAS Build** profil `production` (`eas.json`),
+      credentials gérés par Expo.
+
+### Publication (soumission)
+- [ ] **`eas submit`** OU workflow **fastlane / Google Play Publisher API**
+      (service account JSON en secret) déclenché sur `release: published`.
+- [ ] Rodage via piste **Internal testing** → **Closed/Open testing** → Production.
+
+### Conformité fiche Play
+- [ ] Fiche : titre, description, **captures d'écran**, icône haute-def, feature graphic.
+- [ ] **Politique de confidentialité** (URL) + formulaire **Data safety**
+      (caméra / micro / stockage / notifications).
+- [ ] Justification des permissions sensibles (caméra, micro, `POST_NOTIFICATIONS`,
+      `FOREGROUND_SERVICE_DATA_SYNC`).
+- [ ] Content rating (questionnaire IARC) + `targetSdkVersion` conforme aux
+      exigences Play en vigueur.
