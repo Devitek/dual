@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 
 import { colors } from '../theme/colors';
-import type { MultiCameraPermissionsState } from '../hooks/useMultiCameraPermissions';
+import type { MultiCamPermissionsState } from '../hooks/useMultiCamPermissions';
 
 interface PermissionRowProps {
   label: string;
@@ -28,7 +28,7 @@ function PermissionRow({ label, granted }: PermissionRowProps): React.ReactEleme
 }
 
 interface PermissionGateProps {
-  permissions: MultiCameraPermissionsState;
+  permissions: MultiCamPermissionsState;
   children: React.ReactNode;
 }
 
@@ -70,7 +70,7 @@ export function PermissionGate({
         }}
       >
         {isRequesting ? (
-          <ActivityIndicator color={colors.text} />
+          <ActivityIndicator color={colors.onPrimary} />
         ) : (
           <Text style={styles.buttonText}>
             {canAskAgain ? 'Autoriser' : 'Ouvrir les Réglages'}
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonPressed: { opacity: 0.85 },
-  buttonText: { color: colors.text, fontSize: 17, fontWeight: '600' },
+  buttonText: { color: colors.onPrimary, fontSize: 17, fontWeight: '600' },
   hint: {
     color: colors.textMuted,
     fontSize: 13,

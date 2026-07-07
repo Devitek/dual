@@ -1,84 +1,251 @@
-import React, { useCallback, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import type { CameraDevice } from 'react-native-vision-camera';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Gesture } from 'react-native-gesture-handler';
 
 import { colors } from '../theme/colors';
 import { useIsForeground } from '../hooks/useIsForeground';
-import { useMultiCameraPermissions } from '../hooks/useMultiCameraPermissions';
-import { useMultiCameraDevices } from '../hooks/useMultiCameraDevices';
-import { useMultiCameraCapture } from '../hooks/useMultiCameraCapture';
+import { useMultiCamPermissions } from '../hooks/useMultiCamPermissions';
+import { useMultiCam } from '../hooks/useMultiCam';
 import { PermissionGate } from '../components/PermissionGate';
-import { MultiCameraView } from '../components/MultiCameraView';
+import { MultiCamPreview } from '../components/MultiCamPreview';
 import { CaptureControls } from '../components/CaptureControls';
+import { CameraTopBar, type PhotoFlashMode } from '../components/CameraTopBar';
+import { SettingsSheet } from '../components/SettingsSheet';
+import { ZoomIndicator } from '../components/ZoomIndicator';
+import { ProcessingIndicator } from '../components/ProcessingIndicator';
 import { UnsupportedBanner } from '../components/UnsupportedBanner';
-
-type Position = 'back' | 'front';
+import { SessionGallery } from '../components/SessionGallery';
+import { PipCompositor, type PipCompositorHandle } from '../components/PipCompositor';
+import { Snackbar } from '../components/Snackbar';
+import {
+  composePipPhoto,
+  composePipVideo,
+  isVideoPipComposerAvailable,
+  requestVideoPipNotificationsPermission,
+  subscribeVideoPipProgress,
+} from '../native/videoPip';
+import { haptics } from '../utils/haptics';
+import type { FocusPoint } from '../components/FocusIndicator';
+import { pipCanvasForQuality } from '../vision/MultiCamController';
+import type { CameraSlot, CaptureQuality, SaveMode } from '../vision/MultiCamController';
+import type { PipCorner } from '../services/pipComposer';
 
 /**
- * Écran principal Multi-Caméra.
- *
- * Compose : permissions -> détection matériel -> rendu PiP -> contrôles.
- * Gère l'état "quelle caméra est principale" (inversion) et le cycle de vie
- * (caméra désactivée quand l'app n'est pas au premier plan).
+ * Écran principal — VisionCamera v5 multi-caméra, UI Material 3, Android.
  */
 export function MultiCameraScreen(): React.ReactElement {
-  const permissions = useMultiCameraPermissions();
-  const devices = useMultiCameraDevices();
-  const capture = useMultiCameraCapture();
+  const { width, height } = useWindowDimensions();
+  const permissions = useMultiCamPermissions();
   const isForeground = useIsForeground();
 
-  // Quelle caméra occupe le plein écran ? (l'autre va dans la vignette)
-  const [primaryPosition, setPrimaryPosition] = useState<Position>('back');
+  const cam = useMultiCam(isForeground, permissions.allGranted);
+
+  const [primarySlot, setPrimarySlot] = useState<CameraSlot>('back');
+  const [torchOn, setTorchOn] = useState(false);
+  const [photoFlash, setPhotoFlash] = useState<PhotoFlashMode>('off');
+  const [focusPoint, setFocusPoint] = useState<FocusPoint | null>(null);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [zoomDisplay, setZoomDisplay] = useState<number | null>(null);
+  const [zoomNonce, setZoomNonce] = useState(0);
+  const [videoProgress, setVideoProgress] = useState<number | null>(null);
+  const focusNonce = useRef(0);
+  const lastZoomUpdate = useRef(0);
+  const pipRef = useRef<PipCompositorHandle>(null);
+  const flashOpacity = useRef(new Animated.Value(0)).current;
+
+  // Injecte le compositeur PiP (view-shot) dans le contrôleur natif.
+  useEffect(() => {
+    cam.controller.setPipComposer((primary, secondary) => {
+      const handle = pipRef.current;
+      return handle != null
+        ? handle.compose(primary, secondary)
+        : Promise.reject(new Error('Compositeur PiP indisponible'));
+    });
+    return () => cam.controller.setPipComposer(null);
+  }, [cam.controller]);
+
+  // Branche le composeur vidéo natif (Foreground Service) s'il est dans le build.
+  useEffect(() => {
+    if (!isVideoPipComposerAvailable) return;
+    requestVideoPipNotificationsPermission();
+    cam.controller.setVideoComposer((primary, secondary, corner, bitRate, saveOriginals) =>
+      composePipVideo(primary, secondary, corner, bitRate, saveOriginals),
+    );
+    cam.controller.setPhotoComposer((primary, secondary, corner, canvasWidth, saveOriginals) =>
+      composePipPhoto(primary, secondary, corner, canvasWidth, saveOriginals),
+    );
+    const sub = subscribeVideoPipProgress((p) => setVideoProgress(p));
+    return () => {
+      cam.controller.setVideoComposer(null);
+      cam.controller.setPhotoComposer(null);
+      sub.remove();
+    };
+  }, [cam.controller]);
+
+  // Réinitialise la progression quand plus aucun traitement n'est en cours.
+  useEffect(() => {
+    if (cam.processingCount === 0) setVideoProgress(null);
+  }, [cam.processingCount]);
 
   const swap = useCallback(() => {
-    setPrimaryPosition((p) => (p === 'back' ? 'front' : 'back'));
-  }, []);
+    haptics.selection();
+    setPrimarySlot((prev) => {
+      const next: CameraSlot = prev === 'back' ? 'front' : 'back';
+      cam.controller.setPrimarySlot(next);
+      return next;
+    });
+  }, [cam.controller]);
 
-  // La caméra n'est active QUE si l'app est au premier plan ET les permissions OK.
-  const isActive = isForeground && permissions.allGranted;
+  const toggleTorch = useCallback(() => {
+    haptics.selection();
+    setTorchOn((prev) => {
+      const next = !prev;
+      void cam.controller.setTorch('back', next ? 'on' : 'off');
+      return next;
+    });
+  }, [cam.controller]);
 
-  const primaryDevice: CameraDevice | undefined =
-    primaryPosition === 'back' ? devices.backDevice : devices.frontDevice;
-  const secondaryDevice: CameraDevice | undefined =
-    primaryPosition === 'back' ? devices.frontDevice : devices.backDevice;
+  const onSetPhotoFlash = useCallback((mode: PhotoFlashMode) => setPhotoFlash(mode), []);
+
+  const onPhoto = useCallback(() => {
+    haptics.medium();
+    // Feedback visuel INSTANTANÉ (flash d'obturateur), avant tout traitement async.
+    flashOpacity.setValue(0.85);
+    Animated.timing(flashOpacity, { toValue: 0, duration: 240, useNativeDriver: true }).start();
+    void cam.controller.capturePhoto(photoFlash);
+  }, [cam.controller, photoFlash, flashOpacity]);
+
+  const onToggleRecording = useCallback(() => {
+    if (cam.isRecording) {
+      haptics.medium();
+      void cam.controller.stopRecording();
+    } else {
+      haptics.heavy();
+      void cam.controller.startRecording();
+    }
+  }, [cam.controller, cam.isRecording]);
+
+  const setPhotoSaveMode = useCallback((m: SaveMode) => cam.controller.setPhotoSaveMode(m), [cam.controller]);
+  const setVideoSaveMode = useCallback((m: SaveMode) => cam.controller.setVideoSaveMode(m), [cam.controller]);
+  const setPipCorner = useCallback((c: PipCorner) => cam.controller.setPipCorner(c), [cam.controller]);
+  const setQuality = useCallback((q: CaptureQuality) => void cam.controller.setQuality(q), [cam.controller]);
+
+  // Tap-to-focus + pinch-to-zoom sur la caméra principale.
+  const gesture = useMemo(() => {
+    const tap = Gesture.Tap()
+      .maxDuration(250)
+      .onEnd((event) => {
+        focusNonce.current += 1;
+        setFocusPoint({ x: event.x, y: event.y, nonce: focusNonce.current });
+        void cam.controller.focusAt(primarySlot, event.x / width, event.y / height);
+      });
+
+    let zoomBase = 1;
+    const pinch = Gesture.Pinch()
+      .onBegin(() => {
+        zoomBase = cam.controller.getZoomBounds(primarySlot).current;
+      })
+      .onUpdate((event) => {
+        const { min, max } = cam.controller.getZoomBounds(primarySlot);
+        const zoom = Math.min(max, Math.max(min, zoomBase * event.scale));
+        void cam.controller.setZoom(primarySlot, zoom);
+        const now = Date.now();
+        if (now - lastZoomUpdate.current > 80) {
+          lastZoomUpdate.current = now;
+          setZoomDisplay(zoom);
+          setZoomNonce((n) => n + 1);
+        }
+      })
+      .onEnd(() => {
+        setZoomDisplay(cam.controller.getZoomBounds(primarySlot).current);
+        setZoomNonce((n) => n + 1);
+      });
+
+    return Gesture.Simultaneous(tap, pinch);
+  }, [cam.controller, primarySlot, width, height]);
+
+  const modeLabel = cam.mode === 'multi' ? 'Dual' : cam.mode === 'single' ? 'Simple' : '—';
 
   return (
     <PermissionGate permissions={permissions}>
       <View style={styles.root}>
-        {primaryDevice == null ? (
+        {cam.status === 'error' ? (
           <View style={styles.center}>
-            <Text style={styles.noCamText}>Aucune caméra disponible sur cet appareil.</Text>
+            <Text style={styles.msg}>{cam.errorMessage ?? 'Erreur caméra.'}</Text>
           </View>
         ) : (
           <>
-            <MultiCameraView
-              primaryDevice={primaryDevice}
-              secondaryDevice={secondaryDevice}
-              primaryRef={capture.primaryCameraRef}
-              // On ne branche la ref secondaire QUE si le multi-cam est actif :
-              // en mono-caméra, capture.secondaryCameraRef.current reste null.
-              secondaryRef={capture.secondaryCameraRef}
-              isActive={isActive}
-              isMultiCam={devices.isMultiCamSupported}
-              onSecondaryError={devices.reportConcurrentFailure}
+            <MultiCamPreview
+              backPreview={cam.backPreview}
+              frontPreview={cam.frontPreview}
+              primarySlot={primarySlot}
+              isMultiCam={cam.mode === 'multi'}
+              isStarting={cam.status === 'starting' || cam.status === 'idle'}
+              gesture={gesture}
+              focusPoint={focusPoint}
+              pipCorner={cam.pipCorner}
               onTapSecondary={swap}
             />
 
-            {!devices.isMultiCamSupported && (
-              <UnsupportedBanner missingSensor={!devices.hasBothCameras} />
-            )}
+            <ZoomIndicator zoom={zoomDisplay} nonce={zoomNonce} />
+
+            <CameraTopBar
+              modeLabel={modeLabel}
+              torchOn={torchOn}
+              onOpenSettings={() => setSettingsOpen(true)}
+            />
+
+            <ProcessingIndicator count={cam.processingCount} progress={videoProgress} />
+
+            {cam.mode === 'single' && cam.status === 'running' && <UnsupportedBanner />}
 
             <CaptureControls
-              isRecording={capture.isRecording}
-              isBusy={capture.isBusy}
-              canSwap={devices.hasBothCameras}
-              onSwap={swap}
-              onPhoto={capture.takePhoto}
-              onToggleRecording={capture.toggleRecording}
-              lastCapture={capture.lastCapture}
+              isRecording={cam.isRecording}
+              isBusy={cam.isBusy}
+              onPhoto={onPhoto}
+              onToggleRecording={onToggleRecording}
+              lastCapture={cam.lastCapture}
+              processing={cam.processingCount > 0}
+              onOpenReview={() => setGalleryOpen(true)}
             />
+
+            {/* Flash d'obturateur (feedback instantané) */}
+            <Animated.View pointerEvents="none" style={[styles.flash, { opacity: flashOpacity }]} />
+
+            <SettingsSheet
+              visible={settingsOpen}
+              onClose={() => setSettingsOpen(false)}
+              canSwap={cam.mode === 'multi'}
+              onSwap={swap}
+              torch={torchOn}
+              torchSupported={cam.hasTorch}
+              onToggleTorch={toggleTorch}
+              photoFlash={photoFlash}
+              flashSupported={cam.hasTorch}
+              onSetPhotoFlash={onSetPhotoFlash}
+              photoSaveMode={cam.photoSaveMode}
+              onSetPhotoSaveMode={setPhotoSaveMode}
+              videoSaveMode={cam.videoSaveMode}
+              onSetVideoSaveMode={setVideoSaveMode}
+              pipCorner={cam.pipCorner}
+              onSetPipCorner={setPipCorner}
+              quality={cam.captureQuality}
+              onSetQuality={setQuality}
+            />
+
+            <SessionGallery
+              visible={galleryOpen}
+              captures={cam.sessionCaptures}
+              onClose={() => setGalleryOpen(false)}
+            />
+
+            <Snackbar notice={cam.notice} />
           </>
         )}
+
+        {/* Surface de composition PiP (hors-écran) */}
+        <PipCompositor ref={pipRef} corner={cam.pipCorner} canvasWidth={pipCanvasForQuality(cam.captureQuality)} />
       </View>
     </PermissionGate>
   );
@@ -87,5 +254,6 @@ export function MultiCameraScreen(): React.ReactElement {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  noCamText: { color: colors.text, fontSize: 16, textAlign: 'center' },
+  msg: { color: colors.onSurface, fontSize: 16, textAlign: 'center' },
+  flash: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#000' },
 });

@@ -1,0 +1,15 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'expo.modules.videopipcomposer'
+version = '0.1.0'
+
+android {
+  namespace "expo.modules.videopipcomposer"
+  defaultConfig {
+    versionCode 1
+    versionName '0.1.0'
+  }
+}
