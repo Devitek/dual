@@ -1,0 +1,34 @@
+name: Dependabot auto-merge
+
+# Active l'auto-merge (après passage de la CI) pour les mises à jour à faible
+# risque : patch npm + toutes les actions GitHub. Les minor/major restent en
+# revue manuelle.
+#
+# Prérequis repo : Settings → General → "Allow auto-merge" activé, et une
+# protection de branche exigeant la CI (sinon le merge n'attend pas les checks).
+
+on: pull_request_target
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dependabot metadata
+        id: meta
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Enable auto-merge (patch npm + github-actions)
+        if: >-
+          steps.meta.outputs.update-type == 'version-update:semver-patch' ||
+          steps.meta.outputs.package-ecosystem == 'github_actions'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --squash "$PR_URL"

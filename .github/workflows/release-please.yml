@@ -1,0 +1,23 @@
+name: Release Please
+
+# Versioning automatique + changelog + GitHub Release à partir des
+# Conventional Commits (feat: / fix: / feat!: ...). release-please ouvre une
+# "release PR" ; à sa fusion sur main, il crée le tag + la release + le CHANGELOG,
+# et synchronise la version dans package.json et app.json.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json

@@ -1,0 +1,56 @@
+name: Android Build
+
+# Build APK Android (CNG : prebuild + Gradle). Auto-suffisant, sans service
+# externe. Déclenché à la publication d'une release (par release-please) et
+# manuellement. L'APK est publié en artefact et attaché à la release.
+#
+# NB : build de TEST (signature debug). Pour un AAB signé Play Store, ajouter un
+# keystore en secrets + `bundleRelease`, ou basculer sur EAS Build.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Android APK (debug-signed)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Expo prebuild (Android)
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Assemble APK
+        run: ./gradlew assembleDebug --no-daemon
+        working-directory: android
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dual-android-apk
+          path: android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
+      - name: Attach APK to release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ github.event.release.tag_name }}" android/app/build/outputs/apk/debug/*.apk --clobber
