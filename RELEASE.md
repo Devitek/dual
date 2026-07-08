@@ -70,6 +70,22 @@ gh workflow run store-metadata.yml --repo Devitek/dual
 Le workflow **Store Metadata** pousse `fastlane/metadata/android/` (fr-FR + en-US)
 via `fastlane supply`. Aucune manip locale requise.
 
+## 6. (Option) Vraies captures TÉLÉPHONE depuis ton appareil — en local
+Les captures livrées sont des mockups. Pour des captures réelles de l'app :
+```bash
+# pré-requis : adb (platform-tools) + ImageMagick, téléphone en débogage USB.
+# règle d'abord la langue du téléphone sur la locale visée.
+bundle exec fastlane android capture_phone locale:fr-FR count:4
+```
+La lane te fait naviguer écran par écran (Entrée entre chaque), capture via `adb`,
+normalise au ratio ≤ 2:1 exigé par Play, et écrit dans
+`fastlane/metadata/android/<locale>/images/phoneScreenshots/`. Publie ensuite via
+le workflow **Store Metadata**.
+
+> 🔜 Tablettes 7"/10" : la lane est prête à évoluer via une option `device:`
+> (phone|seveninch|teninch) pointant vers le bon dossier — il suffira de brancher
+> une tablette. Les mockups 7"/10" actuels restent en attendant.
+
 ## Rappels
 - Chaque upload doit **augmenter le `versionCode`** → géré via le numéro de run CI.
 - `release_status: draft` = rien n'est diffusé tant que tu n'as pas cliqué *Rollout*.

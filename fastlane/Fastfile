@@ -30,4 +30,57 @@ platform :android do
       skip_upload_apk: true,
     )
   end
+
+  # ---------------------------------------------------------------------------
+  # Captures d'écran RÉELLES depuis un appareil branché (adb), pour remplacer les
+  # mockups par de vraies captures de l'app. TÉLÉPHONE uniquement pour l'instant.
+  #
+  # Pourquoi pas `screengrab` : il exige un test d'instrumentation Espresso + la
+  # lib Screengrab dans le projet natif (régénéré à chaque `expo prebuild`) et une
+  # UI pilotable — lourd pour une app Expo/RN. Ici on capture manuellement l'écran
+  # réel via adb : simple, fiable, et ça marche sur ton vrai téléphone (vraies
+  # doubles caméras, impossible sur émulateur).
+  #
+  # 🔜 ÉVOLUTION 7"/10" : ajouter une option `device:` (phone|seveninch|teninch)
+  #    ciblant le dossier correspondant (phoneScreenshots / sevenInchScreenshots /
+  #    tenInchScreenshots) et brancher une tablette. La capture + la normalisation
+  #    de ratio ci-dessous sont déjà réutilisables telles quelles.
+  #
+  # Pré-requis local : Android platform-tools (adb) + ImageMagick (magick),
+  # téléphone en débogage USB autorisé.
+  # Usage : bundle exec fastlane android capture_phone locale:fr-FR count:4
+  # ---------------------------------------------------------------------------
+  desc "Capture les captures TÉLÉPHONE depuis un appareil adb. Options: locale (déf. en-US), count (déf. 4)."
+  lane :capture_phone do |options|
+    locale = options[:locale] || "en-US"
+    count  = (options[:count] || 4).to_i
+    dir    = "fastlane/metadata/android/#{locale}/images/phoneScreenshots"
+    sh("mkdir", "-p", dir)
+
+    online = sh("adb", "devices", log: false).lines.select { |l| l.match?(/\tdevice$/) }
+    UI.user_error!("Aucun appareil adb en ligne. Branche le téléphone + autorise le débogage USB.") if online.empty?
+    UI.message("Appareil : #{online.first.split.first}")
+    UI.important("Règle la langue du téléphone sur « #{locale} » pour une fiche cohérente.")
+
+    (1..count).each do |i|
+      UI.input("📸 Écran #{i}/#{count} — affiche l'écran voulu dans l'app, puis Entrée…")
+      tmp = "/tmp/twinlens_shot_#{i}.png"
+      sh("bash", "-c", "adb exec-out screencap -p > '#{tmp}'")
+
+      # Google Play limite le ratio à 2:1 max : on ajoute des bandes discrètes si
+      # l'écran du téléphone dépasse (ex. 1080x2400 = 2.22:1 -> padding en 1200x2400).
+      w, h = sh("magick", "identify", "-format", "%w %h", tmp, log: false).split.map(&:to_i)
+      dst = "#{dir}/#{i}.png"
+      if h > 2 * w
+        sh("magick", tmp, "-background", "black", "-gravity", "center", "-extent", "#{(h / 2.0).ceil}x#{h}", dst)
+      elsif w > 2 * h
+        sh("magick", tmp, "-background", "black", "-gravity", "center", "-extent", "#{w}x#{(w / 2.0).ceil}", dst)
+      else
+        sh("cp", tmp, dst)
+      end
+      UI.success("✓ #{dst} (capturé en #{w}x#{h})")
+    end
+
+    UI.success("#{count} captures téléphone pour #{locale}. Publie-les via le workflow Store Metadata (fastlane android metadata).")
+  end
 end
