@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/Devitek/dual/compare/v1.1.0...v1.2.0) (2026-07-08)
+
+
+### Features
+
+* **camera:** option to hide the second camera preview (surprise mode) ([e817b7a](https://github.com/Devitek/dual/commit/e817b7ace7453f51b838b2014d48c1b74e5ed1f4))
+
 ## [1.1.0](https://github.com/Devitek/dual/compare/v1.0.0...v1.1.0) (2026-07-08)
 
 
