@@ -1,0 +1,33 @@
+# Fastlane — publication TwinLens sur Google Play (Fastlane `supply`).
+# 100% gratuit : le binaire est construit dans GitHub Actions (voir
+# .github/workflows/release-android.yml), ce lane ne fait que l'envoyer.
+#
+# Pré-requis (une fois) : l'app doit exister dans la Play Console et un PREMIER
+# AAB doit y avoir été déposé manuellement (exigence Google). Voir RELEASE.md.
+
+default_platform(:android)
+
+platform :android do
+  desc "Envoie l'AAB (+ notes de version) sur une piste Play. ENV: AAB_PATH, SUPPLY_TRACK, SUPPLY_RELEASE_STATUS"
+  lane :internal do
+    upload_to_play_store(
+      track: ENV["SUPPLY_TRACK"] || "internal",
+      release_status: ENV["SUPPLY_RELEASE_STATUS"] || "draft",
+      aab: ENV.fetch("AAB_PATH"),
+      skip_upload_apk: true,
+      # Le binaire + les release notes uniquement ; la fiche (textes/images) se
+      # pousse via le lane `metadata` pour ne pas écraser la console par erreur.
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+    )
+  end
+
+  desc "Pousse la FICHE Play (titres, descriptions, images, captures) sans binaire."
+  lane :metadata do
+    upload_to_play_store(
+      skip_upload_aab: true,
+      skip_upload_apk: true,
+    )
+  end
+end

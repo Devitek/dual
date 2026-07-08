@@ -1,0 +1,102 @@
+name: Release (Play Store)
+
+# Build d'un AAB SIGNÉ (upload key) puis envoi sur Google Play via Fastlane
+# `supply`. 100% gratuit (build sur GitHub Actions, pas d'EAS cloud) et
+# MANUEL : tu déclenches quand tu veux publier.
+#
+# Secrets requis (voir RELEASE.md) :
+#   ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD,
+#   ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD, PLAY_SERVICE_ACCOUNT_JSON
+#
+# Pré-requis Play : l'app doit exister et un 1er AAB doit avoir été déposé
+# manuellement dans la Play Console (exigence Google pour un nouveau package).
+
+on:
+  workflow_dispatch:
+    inputs:
+      track:
+        description: "Piste Play"
+        type: choice
+        options: [internal, alpha, beta, production]
+        default: internal
+      release_status:
+        description: "Statut de la release"
+        type: choice
+        options: [draft, completed]
+        default: draft
+
+concurrency:
+  group: release-android
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build signed AAB + Play upload
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      - name: Resolve version (name from latest release, code from run number)
+        id: ver
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          NAME="$(gh release view --json tagName -q .tagName 2>/dev/null | sed 's/^v//')"
+          echo "name=${NAME:-1.0.0}" >> "$GITHUB_OUTPUT"
+          echo "code=${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+
+      - name: Expo prebuild (Android)
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Decode upload keystore
+        run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/upload.keystore"
+
+      - name: Build signed AAB
+        working-directory: android
+        run: |
+          ./gradlew bundleRelease --no-daemon \
+            -Pandroid.injected.version.code=${{ steps.ver.outputs.code }} \
+            -Pandroid.injected.version.name=${{ steps.ver.outputs.name }} \
+            -Pandroid.injected.signing.store.file="$RUNNER_TEMP/upload.keystore" \
+            -Pandroid.injected.signing.store.password="${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
+            -Pandroid.injected.signing.key.alias="${{ secrets.ANDROID_KEY_ALIAS }}" \
+            -Pandroid.injected.signing.key.password="${{ secrets.ANDROID_KEY_PASSWORD }}"
+
+      - name: Write Play service account key
+        run: printf '%s' '${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}' > "$RUNNER_TEMP/play.json"
+
+      - name: Upload to Google Play (Fastlane supply)
+        env:
+          AAB_PATH: android/app/build/outputs/bundle/release/app-release.aab
+          PLAY_SERVICE_ACCOUNT_JSON_PATH: ${{ runner.temp }}/play.json
+          SUPPLY_TRACK: ${{ inputs.track }}
+          SUPPLY_RELEASE_STATUS: ${{ inputs.release_status }}
+        run: bundle exec fastlane android internal
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: twinlens-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
