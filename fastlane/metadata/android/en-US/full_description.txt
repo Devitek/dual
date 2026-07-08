@@ -1,17 +1,20 @@
-TwinLens turns your phone into a true dual-camera studio.
+Why choose between the front and the back camera? Shoot BOTH at once. 🤳🎥
 
-Capture the front and back cameras at the SAME time — photo or video — and get a single Picture-in-Picture file (back full-screen + front inset), composed entirely on your device.
+TwinLens films your face and the scene at the same time and stitches them into one Picture-in-Picture clip (PiP) — the rear camera full-screen, your reaction tucked in the corner. All on your phone, in a tap.
 
-FEATURES
-• Simultaneous front + back capture (photo & video)
-• On-device Picture-in-Picture merge — one ready-to-share file
-• Surprise mode: hide the second camera's live preview for spontaneous reactions
-• Save the merged file, both original files, or both
-• Quick zoom presets, tap-to-focus, pinch-to-zoom, flash & torch
-• Session gallery with in-app video playback, share and delete
-• Material You dynamic colors (Android 12+)
-• 100% on-device: no account, no server, no ads, no tracking
+WHAT YOU GET
+• 🎬 Dual camera capture — front + back cameras at the same time (photo & video)
+• 🖼️ Picture-in-Picture merge, composed on-device — one file ready to post
+• 🙈 Surprise mode: hide the selfie preview and discover your reaction later
+• 💾 Keep the merged clip, both raw files, or all of them
+• 🔍 Quick zoom, tap-to-focus, pinch-to-zoom, flash & torch
+• 🗂️ Session gallery with in-app playback, share & delete
+• 🎨 Material You colors (Android 12+) · 🌍 6 languages
+• 🔒 100% on-device — no account, no sign-up, no servers, no ads, no tracking
 
-Perfect for reactions, travel, events, tutorials and vlogs — capture the moment and your reaction to it, together.
+PERFECT FOR
+Reaction videos, vlogs, travel, concerts, tutorials, prank reveals, "get ready with me", first-time tastings — anything where your face is half the story.
 
-Note: simultaneous dual capture depends on your device hardware. When it isn't supported, TwinLens automatically falls back to a single camera.
+Dual camera. Front and back. Picture-in-Picture. One tap. Zero cloud.
+
+Heads-up: simultaneous dual capture depends on your phone's hardware; if it isn't supported, TwinLens smoothly falls back to a single camera.
