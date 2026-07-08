@@ -61,4 +61,4 @@ jobs:
       - name: Upload listing (Fastlane supply — metadata only)
         env:
           PLAY_SERVICE_ACCOUNT_JSON_PATH: ${{ runner.temp }}/play.json
-        run: bundle exec fastlane android metadata
+        run: bundle exec fastlane android metadata --verbose
