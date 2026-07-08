@@ -1,26 +1,31 @@
 name: Release (Play Store)
 
-# Build d'un AAB SIGNÉ (upload key) puis envoi sur Google Play via Fastlane
-# `supply`. 100% gratuit (build sur GitHub Actions, pas d'EAS cloud) et
-# MANUEL : tu déclenches quand tu veux publier.
+# Build d'un AAB SIGNÉ (upload key) et attachement à la release GitHub, puis
+# (optionnel) envoi sur Google Play via Fastlane `supply`. 100% gratuit (build
+# GitHub Actions, pas d'EAS) et MANUEL.
 #
-# Secrets requis (voir RELEASE.md) :
-#   ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD,
-#   ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD, PLAY_SERVICE_ACCOUNT_JSON
+# 1er dépôt Play : Google exige que le TOUT PREMIER AAB soit déposé À LA MAIN
+# dans la Play Console. Lance donc ce workflow avec `upload_to_play=false`
+# (défaut) pour récupérer l'AAB attaché à la release, puis dépose-le manuellement.
+# Ensuite, passe `upload_to_play=true` pour publier automatiquement via supply.
 #
-# Pré-requis Play : l'app doit exister et un 1er AAB doit avoir été déposé
-# manuellement dans la Play Console (exigence Google pour un nouveau package).
+# Secrets requis : ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD,
+# ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD (+ PLAY_SERVICE_ACCOUNT_JSON si upload).
 
 on:
   workflow_dispatch:
     inputs:
+      upload_to_play:
+        description: "Envoyer aussi sur Google Play (laisser false pour le 1er dépôt manuel)"
+        type: boolean
+        default: false
       track:
-        description: "Piste Play"
+        description: "Piste Play (si upload)"
         type: choice
         options: [internal, alpha, beta, production]
         default: internal
       release_status:
-        description: "Statut de la release"
+        description: "Statut de la release Play (si upload)"
         type: choice
         options: [draft, completed]
         default: draft
@@ -31,7 +36,7 @@ concurrency:
 
 jobs:
   release:
-    name: Build signed AAB + Play upload
+    name: Build signed AAB (+ optional Play upload)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -57,12 +62,14 @@ jobs:
       - name: Install JS dependencies
         run: npm ci
 
-      - name: Resolve version (name from latest release, code from run number)
+      - name: Resolve version (from latest release; code = run number)
         id: ver
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          NAME="$(gh release view --json tagName -q .tagName 2>/dev/null | sed 's/^v//')"
+          TAG="$(gh release view --json tagName -q .tagName 2>/dev/null || true)"
+          NAME="$(echo "$TAG" | sed 's/^v//')"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           echo "name=${NAME:-1.0.0}" >> "$GITHUB_OUTPUT"
           echo "code=${{ github.run_number }}" >> "$GITHUB_OUTPUT"
 
@@ -83,20 +90,38 @@ jobs:
             -Pandroid.injected.signing.key.alias="${{ secrets.ANDROID_KEY_ALIAS }}" \
             -Pandroid.injected.signing.key.password="${{ secrets.ANDROID_KEY_PASSWORD }}"
 
-      - name: Write Play service account key
-        run: printf '%s' '${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}' > "$RUNNER_TEMP/play.json"
+      - name: Name the AAB
+        id: aab
+        run: |
+          SRC=android/app/build/outputs/bundle/release/app-release.aab
+          VER="${{ steps.ver.outputs.tag }}"
+          [ -z "$VER" ] && VER="r${{ steps.ver.outputs.code }}"
+          OUT="TwinLens-${VER}.aab"
+          cp "$SRC" "$OUT"
+          echo "path=$OUT" >> "$GITHUB_OUTPUT"
 
-      - name: Upload to Google Play (Fastlane supply)
+      - name: Attach AAB to the GitHub release
+        if: steps.ver.outputs.tag != ''
         env:
-          AAB_PATH: android/app/build/outputs/bundle/release/app-release.aab
-          PLAY_SERVICE_ACCOUNT_JSON_PATH: ${{ runner.temp }}/play.json
-          SUPPLY_TRACK: ${{ inputs.track }}
-          SUPPLY_RELEASE_STATUS: ${{ inputs.release_status }}
-        run: bundle exec fastlane android internal
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ steps.ver.outputs.tag }}" "${{ steps.aab.outputs.path }}" --clobber
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v7
         with:
           name: twinlens-aab
-          path: android/app/build/outputs/bundle/release/app-release.aab
+          path: ${{ steps.aab.outputs.path }}
           if-no-files-found: error
+
+      - name: Write Play service account key
+        if: ${{ inputs.upload_to_play }}
+        run: printf '%s' '${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}' > "$RUNNER_TEMP/play.json"
+
+      - name: Upload to Google Play (Fastlane supply)
+        if: ${{ inputs.upload_to_play }}
+        env:
+          AAB_PATH: ${{ steps.aab.outputs.path }}
+          PLAY_SERVICE_ACCOUNT_JSON_PATH: ${{ runner.temp }}/play.json
+          SUPPLY_TRACK: ${{ inputs.track }}
+          SUPPLY_RELEASE_STATUS: ${{ inputs.release_status }}
+        run: bundle exec fastlane android internal

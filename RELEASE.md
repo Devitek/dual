@@ -47,20 +47,24 @@ Garde une **sauvegarde** de `upload.keystore` hors du dépôt.
 - **Politique de confidentialité** : `https://devitek.github.io/dual/privacy.html`.
 - **Data safety** : « aucune donnée collectée / partagée » (tout est local).
 - **Content rating** (IARC), audience cible, déclaration pub = non.
-- **1er dépôt manuel** : Google exige que le **premier AAB** soit déposé à la main
-  (Play Console → piste *Internal testing* → Create release → upload de l'AAB
-  produit par le workflow, récupéré en artefact `twinlens-aab`). Ensuite, tout
-  passe par Fastlane.
+- **1er dépôt manuel** : Google exige que le **premier AAB** soit déposé à la main.
+  Lance `gh workflow run release-android.yml -f upload_to_play=false` → l'**AAB
+  signé est attaché à la release GitHub** (`TwinLens-vX.Y.Z.aab`, aussi en artefact
+  `twinlens-aab`). Télécharge-le, puis Play Console → *Internal testing* → Create
+  release → upload. Ensuite, tout passe par Fastlane.
 
-## 4. Publier une build (à chaque fois)
+## 4. Publier une build
 1. Couper une release applicative : merge sur `main` → PR release-please → merge
    → tag `vX.Y.Z` (le `versionName` en découle ; le `versionCode` = numéro de run CI).
 2. Lancer le workflow **Release (Play Store)** :
    ```bash
+   # 1re fois (AAB attaché à la release, PAS d'envoi Play → dépôt manuel) :
+   gh workflow run release-android.yml --repo Devitek/dual -f upload_to_play=false
+
+   # ensuite (build + envoi auto sur la piste choisie) :
    gh workflow run release-android.yml --repo Devitek/dual \
-     -f track=internal -f release_status=draft
+     -f upload_to_play=true -f track=internal -f release_status=draft
    ```
-   → build AAB signé + upload sur la piste choisie (draft par défaut).
 3. Play Console → vérifier la release (draft) → *Rollout*.
 
 ## 5. Mettre à jour la fiche (textes/captures) sans binaire — depuis la CI
