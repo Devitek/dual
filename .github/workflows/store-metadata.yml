@@ -39,6 +39,25 @@ jobs:
           print("private_key  :", "present" if d.get("private_key") else "MISSING")
           PY
 
+      - name: Diagnostic — appel brut edits.insert (raison exacte du 403)
+        continue-on-error: true
+        run: |
+          pip install --quiet google-auth requests
+          python3 - "$RUNNER_TEMP/play.json" <<'PY'
+          import sys, requests
+          from google.oauth2 import service_account
+          import google.auth.transport.requests as gr
+          creds = service_account.Credentials.from_service_account_file(
+              sys.argv[1], scopes=["https://www.googleapis.com/auth/androidpublisher"])
+          creds.refresh(gr.Request())
+          print("token OK, expiry:", creds.expiry)
+          pkg = "fr.devitek.twinlens"
+          url = f"https://androidpublisher.googleapis.com/androidpublisher/v3/applications/{pkg}/edits"
+          r = requests.post(url, headers={"Authorization": f"Bearer {creds.token}"})
+          print("HTTP", r.status_code)
+          print(r.text)
+          PY
+
       - name: Upload listing (Fastlane supply — metadata only)
         env:
           PLAY_SERVICE_ACCOUNT_JSON_PATH: ${{ runner.temp }}/play.json
