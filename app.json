@@ -1,11 +1,12 @@
 {
   "expo": {
-    "name": "Dual",
+    "name": "TwinLens",
     "slug": "dual",
     "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "dual",
     "userInterfaceStyle": "dark",
+    "icon": "./assets/icon.png",
     "platforms": [
       "android"
     ],
@@ -13,7 +14,11 @@
       "**/*"
     ],
     "android": {
-      "package": "com.perso.dual",
+      "package": "fr.devitek.twinlens",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon-foreground.png",
+        "backgroundImage": "./assets/adaptive-icon-background.png"
+      },
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
@@ -23,14 +28,16 @@
       [
         "expo-media-library",
         {
-          "photosPermission": "Dual accède à votre galerie pour y enregistrer vos captures.",
-          "savePhotosPermission": "Dual enregistre vos photos et vidéos dans votre galerie.",
+          "photosPermission": "TwinLens accède à votre galerie pour y enregistrer vos captures.",
+          "savePhotosPermission": "TwinLens enregistre vos photos et vidéos dans votre galerie.",
           "isAccessMediaLocationEnabled": true
         }
       ],
       "expo-status-bar",
       "expo-asset",
-      "expo-font"
+      "expo-font",
+      "expo-sharing",
+      "expo-video"
     ]
   }
 }
