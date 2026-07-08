@@ -57,7 +57,33 @@ doctor, mais n'a pas encore tourné sur un appareil. Points à vérifier/ajuster
 
 - [ ] Sélecteur de format v5 via `constraints` (`{ fps }`, HDR) — retiré pendant la
       migration (l'API v4 `useCameraFormat` n'existe plus).
-- [ ] `react-native-safe-area-context` pour les offsets (edge-to-edge SDK 57).
+- [~] `react-native-safe-area-context` : `SafeAreaProvider` en place + insets
+      appliqués (avec plancher anti-régression sous statusbar masquée) à la barre
+      haute, au bandeau mono-cam et à l'en-tête galerie. Reste à propager aux
+      offsets couplés PiP/PipHint (top 96 / bottom 150) si besoin.
+- [x] **Material You** (couleur dynamique système, Android 12+) via
+      `@pchmn/expo-material3-theme` : `ThemeProvider` + `useColors()` /
+      `useThemedStyles(makeStyles)` (`src/theme/theme.tsx`). Tous les composants
+      migrés en styles thémés ; repli sur la couleur de marque hors Android 12+.
+      Reste optionnel : **icône thématisée** (adaptiveIcon `monochromeImage`).
+
+## Redesign TwinLens (UI only — couche caméra native intacte)
+
+- [x] §0 Branding : app `TwinLens` (slug/package inchangés), icône + adaptive icon,
+      textes de permission. Pill viseur `Dual`/`Simple` conservé (= mode de capture).
+- [x] §1 Viseur : obturateur unique adaptatif + `ModeSwitch` Photo|Vidéo + `ZoomBar`
+      (paliers), bouton d'inversion, flash blanc + bounce miniature, hint PiP 1er
+      lancement (AsyncStorage `tl_seen_pip_hint`).
+- [x] §2 Flash photo cyclable (off/auto/on) dans la barre supérieure.
+- [x] §3 Paramètres : segmented M3 (coche), descriptions des modes, légendes de
+      résolution, sélecteur de coin en mini-téléphones, bouton « Fermer » retiré.
+- [x] §4 Galerie : poster vidéo (`expo-video-thumbnails`), lecture in-app
+      (`expo-video`), sélection (appui long) + Partager/Ouvrir/Supprimer, puce
+      « déjà enregistrés ». Durée vidéo trackée dans le contrôleur.
+- [x] §5 Écran d'erreur actionnable (`CameraErrorView` + `controller.retry()`),
+      lien « Pourquoi ? » sur le bandeau mono-cam.
+- [x] §6 Finitions : safe-area (voir ci-dessus), hitSlop PiP, **Material You**
+      (couleur système, voir Reste/dette). App renommée `fr.devitek.twinlens`.
 
 ## 🚚 Livraison / Store — BLOQUÉ (compte développeur non vérifié)
 
@@ -68,8 +94,8 @@ APK **debug-signé de TEST** ; rien n'est encore prêt pour une publication Stor
 ### Préalable — compte & accès
 - [ ] Créer/vérifier le **compte Google Play Console** (identité vérifiée).
 - [ ] (Si build délégué) Compte **Expo/EAS** + `EXPO_TOKEN` en secret GitHub.
-- [ ] Créer l'app dans la Play Console (package `com.perso.dual` — à renommer en
-      `com.devitek.*` ou équivalent avant publication).
+- [ ] Créer l'app dans la Play Console avec le package **`fr.devitek.twinlens`**
+      (déjà fixé dans `app.json`).
 
 ### Signature (App Signing)
 - [ ] Générer l'**upload key** (keystore) + activer **Play App Signing**.
