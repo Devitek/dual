@@ -1,0 +1,4 @@
+• Nouveau : mode surprise — masquez l'aperçu de la 2ᵉ caméra pour plus de spontanéité.
+• Refonte de l'interface, obturateur unique adaptatif, paliers de zoom rapides.
+• Couleurs dynamiques Material You et 6 langues.
+Merci d'essayer TwinLens !

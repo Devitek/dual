@@ -53,3 +53,7 @@ yarn-error.*
 
 # Design handoff (reference material, not shipped)
 /design_handoff_twinlens
+
+# Screenshot renders (régénérés depuis store/screenshots/src via Chrome headless).
+# Les copies canoniques vivent dans docs/assets et fastlane/metadata.
+/store/screenshots/*.png

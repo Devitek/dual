@@ -1,0 +1,33 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+  * { margin: 0; box-sizing: border-box; }
+  html, body { width: 1024px; height: 500px; overflow: hidden; }
+  body {
+    font-family: 'Roboto', 'Noto Sans', system-ui, sans-serif;
+    background:
+      radial-gradient(70% 120% at 12% 20%, #4F378B 0%, transparent 55%),
+      radial-gradient(80% 140% at 95% 90%, #6d9eeb33 0%, transparent 50%),
+      linear-gradient(120deg, #1b1430 0%, #141218 60%, #0f0d13 100%);
+    display: flex; align-items: center; gap: 56px; padding: 0 90px; color: #E6E0E9;
+  }
+  .badge { position: relative; width: 240px; height: 240px; flex: none; }
+  .badge .back {
+    position: absolute; inset: 0; border-radius: 56px;
+    background: linear-gradient(160deg, #2a3550, #0f1116); border: 3px solid #36343B;
+    box-shadow: 0 24px 60px rgba(0,0,0,.55);
+  }
+  .badge .front {
+    position: absolute; right: -6px; bottom: -6px; width: 120px; height: 168px; border-radius: 34px;
+    background: radial-gradient(60% 45% at 50% 40%, rgba(255,224,196,.6), transparent 72%), linear-gradient(160deg,#3a2f4a,#241d2e);
+    border: 4px solid #D0BCFF; box-shadow: 0 12px 30px rgba(0,0,0,.5);
+  }
+  .txt h1 { font-size: 104px; font-weight: 800; letter-spacing: -1px;
+    background: linear-gradient(90deg,#EADDFF,#D0BCFF); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .txt p { font-size: 42px; font-weight: 600; color: #CAC4D0; margin-top: 8px; }
+</style></head>
+<body>
+  <div class="badge"><div class="back"></div><div class="front"></div></div>
+  <div class="txt">
+    <h1>TwinLens</h1>
+    <p>Avant + arrière, en une seule prise.</p>
+  </div>
+</body></html>

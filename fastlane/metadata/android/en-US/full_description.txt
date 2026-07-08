@@ -1,0 +1,17 @@
+TwinLens turns your phone into a true dual-camera studio.
+
+Capture the front and back cameras at the SAME time — photo or video — and get a single Picture-in-Picture file (back full-screen + front inset), composed entirely on your device.
+
+FEATURES
+• Simultaneous front + back capture (photo & video)
+• On-device Picture-in-Picture merge — one ready-to-share file
+• Surprise mode: hide the second camera's live preview for spontaneous reactions
+• Save the merged file, both original files, or both
+• Quick zoom presets, tap-to-focus, pinch-to-zoom, flash & torch
+• Session gallery with in-app video playback, share and delete
+• Material You dynamic colors (Android 12+)
+• 100% on-device: no account, no server, no ads, no tracking
+
+Perfect for reactions, travel, events, tutorials and vlogs — capture the moment and your reaction to it, together.
+
+Note: simultaneous dual capture depends on your device hardware. When it isn't supported, TwinLens automatically falls back to a single camera.
