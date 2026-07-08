@@ -1,7 +1,9 @@
 /* Mockups d'écran TwinLens rendus en 1080x2400 (Chrome headless -> PNG).
    Palette = tokens Material 3 sombre de l'app (src/theme/colors.ts). */
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html, body { width: 1080px; height: 2400px; overflow: hidden; }
+/* Ancré au viewport : rendu à différentes tailles (téléphone 2:1, tablette 7"/10")
+   via --window-size. La barre haute / basse et le PiP restent ancrés aux bords. */
+html, body { width: 100%; height: 100vh; overflow: hidden; }
 body {
   font-family: 'Roboto', 'Noto Sans', system-ui, sans-serif;
   color: #E6E0E9;
