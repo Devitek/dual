@@ -69,6 +69,10 @@ jobs:
               print("listings.update FR :", r5.status_code, r5.text[:300])
               r6 = requests.delete(f"{base}/edits/{eid}", headers=H)  # abandonne l'edit (aucune modif publiée)
               print("edits.delete       :", r6.status_code)
+          # Test hypothèse quota-project : mêmes creds + en-tête X-Goog-User-Project
+          proj = json.load(open(sys.argv[1]))["project_id"]
+          rq = requests.post(f"{base}/edits", headers={**H, "X-Goog-User-Project": proj})
+          print("insert +X-Goog-User-Project:", rq.status_code, rq.text[:300])
           PY
 
       - name: Upload listing (Fastlane supply — metadata only)
