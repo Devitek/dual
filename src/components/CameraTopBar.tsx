@@ -2,6 +2,7 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { useColors, useThemedStyles, type Palette } from '../theme/theme';
 
@@ -39,6 +40,7 @@ export function CameraTopBar({
 }: CameraTopBarProps): React.ReactElement {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   // Plancher : jamais au-dessus de la valeur d'origine (statusbar masquée => insets.top peut valoir 0).
   const top = Math.max(insets.top + 8, 48);
@@ -62,7 +64,15 @@ export function CameraTopBar({
           android_ripple={{ color: colors.onSurfaceVariant, borderless: true, radius: 22 }}
           style={({ pressed }) => [styles.iconBtn, pressed && styles.pressed]}
           accessibilityRole="button"
-          accessibilityLabel={`Flash photo : ${photoFlash === 'off' ? 'désactivé' : photoFlash === 'auto' ? 'automatique' : 'activé'}`}
+          accessibilityLabel={t('topBar.flashA11y', {
+            state: t(
+              photoFlash === 'off'
+                ? 'topBar.flashStateOff'
+                : photoFlash === 'auto'
+                  ? 'topBar.flashStateAuto'
+                  : 'topBar.flashStateOn',
+            ),
+          })}
         >
           <MaterialIcons name={FLASH_ICON[photoFlash]} size={21} color={flashColor} />
         </Pressable>
@@ -72,7 +82,7 @@ export function CameraTopBar({
           android_ripple={{ color: colors.onSurfaceVariant, borderless: true, radius: 26 }}
           style={({ pressed }) => [styles.settingsBtn, pressed && styles.pressed]}
           accessibilityRole="button"
-          accessibilityLabel="Ouvrir les paramètres"
+          accessibilityLabel={t('topBar.settingsA11y')}
         >
           <MaterialIcons name="tune" size={24} color={colors.onSurface} />
         </Pressable>

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Animated, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTranslation } from 'react-i18next';
 
 import { useThemedStyles, type Palette } from '../theme/theme';
 import { useIsForeground } from '../hooks/useIsForeground';
@@ -55,6 +56,7 @@ export function MultiCameraScreen(): React.ReactElement {
   const isForeground = useIsForeground();
 
   const cam = useMultiCam(isForeground, permissions.allGranted);
+  const { t } = useTranslation();
 
   const [primarySlot, setPrimarySlot] = useState<CameraSlot>('back');
   const [mode, setMode] = useState<CaptureMode>('photo');
@@ -253,7 +255,7 @@ export function MultiCameraScreen(): React.ReactElement {
     return Gesture.Simultaneous(tap, pinch);
   }, [cam.controller, primarySlot, width, height]);
 
-  const modeLabel = cam.mode === 'multi' ? 'Dual' : cam.mode === 'single' ? 'Simple' : '—';
+  const modeLabel = cam.mode === 'multi' ? t('mode.dual') : cam.mode === 'single' ? t('mode.single') : '—';
 
   return (
     <PermissionGate permissions={permissions}>

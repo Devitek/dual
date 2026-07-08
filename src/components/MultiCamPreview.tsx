@@ -6,6 +6,7 @@ import {
   type GestureType,
 } from 'react-native-gesture-handler';
 import { NativePreviewView, type CameraPreviewOutput } from 'react-native-vision-camera';
+import { useTranslation } from 'react-i18next';
 
 import { useColors, useThemedStyles, type Palette } from '../theme/theme';
 import { FocusIndicator, type FocusPoint } from './FocusIndicator';
@@ -56,6 +57,7 @@ export function MultiCamPreview({
 }: MultiCamPreviewProps): React.ReactElement {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
   const mainPreview = primarySlot === 'back' ? backPreview : frontPreview;
   const pipPreview = primarySlot === 'back' ? frontPreview : backPreview;
   const showPip = isMultiCam && pipPreview != null;
@@ -75,7 +77,7 @@ export function MultiCamPreview({
       ) : (
         <View style={[StyleSheet.absoluteFill, styles.placeholder]}>
           {isStarting && <ActivityIndicator color={colors.primary} size="large" />}
-          {isStarting && <Text style={styles.placeholderText}>Démarrage des caméras…</Text>}
+          {isStarting && <Text style={styles.placeholderText}>{t('preview.starting')}</Text>}
         </View>
       )}
 
@@ -87,7 +89,7 @@ export function MultiCamPreview({
           onPress={onTapSecondary}
           hitSlop={8}
           accessibilityRole="button"
-          accessibilityLabel="Inverser les caméras"
+          accessibilityLabel={t('capture.swapA11y')}
         >
           <NativePreviewView
             style={StyleSheet.absoluteFill}

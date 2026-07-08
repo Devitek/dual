@@ -1,0 +1,125 @@
+{
+  "permissions": {
+    "title": "Autorisations requises",
+    "subtitle": "TwinLens a besoin d’accéder à vos caméras, à votre micro et à votre galerie pour capturer et enregistrer vos médias avant / arrière.",
+    "camera": "Caméra",
+    "microphone": "Microphone",
+    "gallery": "Galerie (écriture)",
+    "grant": "Autoriser l’accès",
+    "requesting": "Demande en cours…",
+    "openSettings": "Ouvrir les réglages de l’application",
+    "hintCanAsk": "Touchez « Autoriser l’accès » puis acceptez chaque demande (caméra, micro, galerie).",
+    "hintDenied": "Une autorisation a été refusée. Activez-la manuellement via les réglages de l’application."
+  },
+  "topBar": {
+    "flashA11y": "Flash photo : {{state}}",
+    "flashStateOff": "désactivé",
+    "flashStateAuto": "automatique",
+    "flashStateOn": "activé",
+    "settingsA11y": "Ouvrir les paramètres"
+  },
+  "capture": {
+    "thumbnailA11y": "Voir les médias de la session",
+    "shutterPhotoA11y": "Prendre une photo",
+    "recStartA11y": "Démarrer l’enregistrement",
+    "recStopA11y": "Arrêter l’enregistrement",
+    "swapA11y": "Inverser les caméras"
+  },
+  "mode": {
+    "photo": "PHOTO",
+    "video": "VIDÉO",
+    "photoA11y": "Mode photo",
+    "videoA11y": "Mode vidéo",
+    "dual": "Dual",
+    "single": "Simple"
+  },
+  "zoom": {
+    "levelA11y": "Zoom {{level}}"
+  },
+  "preview": {
+    "starting": "Démarrage des caméras…"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "sectionCamera": "Caméra",
+    "swap": "Inverser les caméras",
+    "torch": "Torche",
+    "flashPhoto": "Flash photo",
+    "sectionPipCorner": "Position de la vignette",
+    "sectionRecPhoto": "Enregistrement — Photo",
+    "sectionRecVideo": "Enregistrement — Vidéo",
+    "sectionQuality": "Qualité",
+    "flashOff": "Off",
+    "flashAuto": "Auto",
+    "flashOn": "On",
+    "savePip": "PiP",
+    "savePipPlus": "PiP + 2",
+    "saveFiles": "2 fichiers",
+    "qualityStandard": "Standard",
+    "qualityHigh": "Élevée",
+    "qualityMax": "Max",
+    "descPipPhoto": "Une image fusionnée : arrière + vignette avant.",
+    "descPipVideo": "Une vidéo fusionnée (ré-encodage à la fin de la prise).",
+    "descPipPlus": "La fusion + les 2 fichiers bruts.",
+    "descOriginals": "Les 2 fichiers séparés, sans fusion.",
+    "qualityHint": "« Max » : photo en 4K, vidéo en 1080p. Changer la qualité redémarre brièvement les caméras.",
+    "cornerA11y": "Vignette en {{corner}}",
+    "cornerTopLeft": "haut gauche",
+    "cornerTopRight": "haut droite",
+    "cornerBottomRight": "bas droite",
+    "cornerBottomLeft": "bas gauche"
+  },
+  "gallery": {
+    "title": "Médias de la session",
+    "selected_one": "{{count}} sélectionné",
+    "selected_other": "{{count}} sélectionnés",
+    "savedChip": "Déjà enregistrés dans votre galerie",
+    "empty": "Aucune capture pour l’instant.",
+    "share": "Partager",
+    "open": "Ouvrir",
+    "delete": "Supprimer",
+    "closePhotoHint": "Toucher pour fermer",
+    "closeA11y": "Fermer",
+    "cancelSelectionA11y": "Annuler la sélection",
+    "closeVideoA11y": "Fermer la lecture"
+  },
+  "error": {
+    "title": "Caméras indisponibles",
+    "message": "Impossible d’accéder aux caméras. Une autre application les utilise peut-être.",
+    "retry": "Réessayer",
+    "openSettings": "Ouvrir les paramètres de l’app"
+  },
+  "unsupported": {
+    "title": "Mode caméra unique",
+    "textUnsupported": "Cet appareil ne prend pas en charge la capture simultanée avant + arrière. Bascule automatique sur une seule caméra.",
+    "textMissing": "Cet appareil ne dispose pas des deux caméras.",
+    "why": "Pourquoi ?",
+    "hide": "Masquer",
+    "explain": "La capture avant + arrière simultanée dépend de l’ISP de l’appareil : beaucoup de modèles ne l’autorisent que sur certaines combinaisons de caméras, ou pas du tout. TwinLens bascule alors sur une seule caméra pour rester fonctionnel."
+  },
+  "pipHint": {
+    "text": "Touchez la vignette pour inverser les caméras",
+    "gotItA11y": "Compris"
+  },
+  "processing": {
+    "pip": "PiP {{pct}} %",
+    "generic": "Traitement…"
+  },
+  "notices": {
+    "pipSaved": "PiP enregistré",
+    "pipPlusPhotos": "PiP + 2 photos enregistrés",
+    "twoPhotos": "2 photos enregistrées",
+    "photoSaved": "Photo enregistrée",
+    "captureFailed": "Capture échouée : {{error}}",
+    "videoPipSaved": "Vidéo PiP enregistrée",
+    "videoPipPlus": "Vidéo PiP + 2 originaux enregistrés",
+    "twoVideosNoPip": "2 vidéos enregistrées (fusion PiP indisponible)",
+    "twoVideos": "2 vidéos enregistrées",
+    "videoSaved": "Vidéo enregistrée",
+    "noVideo": "Aucune vidéo enregistrée.",
+    "recError": "Enregistrement ({{slot}}) : {{error}}",
+    "processingFailed": "Traitement échoué : {{error}}",
+    "qualityUnsupported": "Qualité non supportée — retour au réglage précédent.",
+    "noCamera": "Aucune caméra disponible."
+  }
+}

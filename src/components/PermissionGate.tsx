@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import { useColors, useThemedStyles, type Palette } from '../theme/theme';
 import type { MultiCamPermissionsState } from '../hooks/useMultiCamPermissions';
@@ -45,6 +46,7 @@ export function PermissionGate({
 }: PermissionGateProps): React.ReactElement {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
   if (permissions.allGranted) {
     return <>{children}</>;
   }
@@ -53,16 +55,13 @@ export function PermissionGate({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Autorisations requises</Text>
-      <Text style={styles.subtitle}>
-        TwinLens a besoin d’accéder à vos caméras, à votre micro et à votre galerie
-        pour capturer et enregistrer vos médias avant / arrière.
-      </Text>
+      <Text style={styles.title}>{t('permissions.title')}</Text>
+      <Text style={styles.subtitle}>{t('permissions.subtitle')}</Text>
 
       <View style={styles.rows}>
-        <PermissionRow label="Caméra" granted={permissions.hasCameraPermission} />
-        <PermissionRow label="Microphone" granted={permissions.hasMicrophonePermission} />
-        <PermissionRow label="Galerie (écriture)" granted={permissions.hasMediaLibraryPermission} />
+        <PermissionRow label={t('permissions.camera')} granted={permissions.hasCameraPermission} />
+        <PermissionRow label={t('permissions.microphone')} granted={permissions.hasMicrophonePermission} />
+        <PermissionRow label={t('permissions.gallery')} granted={permissions.hasMediaLibraryPermission} />
       </View>
 
       <Pressable
@@ -73,10 +72,10 @@ export function PermissionGate({
         {isRequesting ? (
           <>
             <ActivityIndicator color={colors.onPrimary} />
-            <Text style={styles.buttonText}>Demande en cours…</Text>
+            <Text style={styles.buttonText}>{t('permissions.requesting')}</Text>
           </>
         ) : (
-          <Text style={styles.buttonText}>Autoriser l’accès</Text>
+          <Text style={styles.buttonText}>{t('permissions.grant')}</Text>
         )}
       </Pressable>
 
@@ -86,17 +85,13 @@ export function PermissionGate({
         style={({ pressed }) => [styles.settingsBtn, pressed && styles.buttonPressed]}
         onPress={() => void Linking.openSettings()}
         accessibilityRole="button"
-        accessibilityLabel="Ouvrir les réglages de l'application"
+        accessibilityLabel={t('permissions.openSettings')}
       >
         <MaterialIcons name="settings" size={18} color={colors.primary} />
-        <Text style={styles.settingsText}>Ouvrir les réglages de l’application</Text>
+        <Text style={styles.settingsText}>{t('permissions.openSettings')}</Text>
       </Pressable>
 
-      <Text style={styles.hint}>
-        {canAskAgain
-          ? 'Touchez « Autoriser l’accès » puis acceptez chaque demande (caméra, micro, galerie).'
-          : 'Une autorisation a été refusée. Activez-la manuellement via les réglages de l’application.'}
-      </Text>
+      <Text style={styles.hint}>{canAskAgain ? t('permissions.hintCanAsk') : t('permissions.hintDenied')}</Text>
     </View>
   );
 }

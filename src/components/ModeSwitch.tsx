@@ -1,5 +1,6 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { useThemedStyles, type Palette } from '../theme/theme';
 import { haptics } from '../utils/haptics';
@@ -13,9 +14,9 @@ interface ModeSwitchProps {
   disabled?: boolean;
 }
 
-const MODES: { value: CaptureMode; label: string }[] = [
-  { value: 'photo', label: 'PHOTO' },
-  { value: 'video', label: 'VIDÉO' },
+const MODES: { value: CaptureMode; labelKey: string; a11yKey: string }[] = [
+  { value: 'photo', labelKey: 'mode.photo', a11yKey: 'mode.photoA11y' },
+  { value: 'video', labelKey: 'mode.video', a11yKey: 'mode.videoA11y' },
 ];
 
 /**
@@ -24,6 +25,7 @@ const MODES: { value: CaptureMode; label: string }[] = [
  */
 export function ModeSwitch({ mode, onChange, disabled = false }: ModeSwitchProps): React.ReactElement {
   const styles = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
   return (
     <View style={[styles.container, disabled && styles.disabled]}>
       {MODES.map((m) => {
@@ -43,7 +45,7 @@ export function ModeSwitch({ mode, onChange, disabled = false }: ModeSwitchProps
             ]}
             accessibilityRole="button"
             accessibilityState={{ selected: active, disabled }}
-            accessibilityLabel={isVideo ? 'Mode vidéo' : 'Mode photo'}
+            accessibilityLabel={t(m.a11yKey)}
           >
             <Text
               style={[
@@ -51,7 +53,7 @@ export function ModeSwitch({ mode, onChange, disabled = false }: ModeSwitchProps
                 active ? (isVideo ? styles.labelActiveVideo : styles.labelActive) : styles.labelInactive,
               ]}
             >
-              {m.label}
+              {t(m.labelKey)}
             </Text>
           </Pressable>
         );

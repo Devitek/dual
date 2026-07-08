@@ -1,5 +1,6 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { haptics } from '../utils/haptics';
 
@@ -21,6 +22,7 @@ function formatLevel(level: number): string {
  * Masquée s'il n'y a pas au moins deux paliers (mono-focale).
  */
 export function ZoomBar({ levels, current, onSelect }: ZoomBarProps): React.ReactElement | null {
+  const { t } = useTranslation();
   if (levels.length < 2) return null;
 
   // Palier actif = le plus proche du zoom courant.
@@ -48,7 +50,7 @@ export function ZoomBar({ levels, current, onSelect }: ZoomBarProps): React.Reac
             style={[styles.pill, active && styles.pillActive]}
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
-            accessibilityLabel={`Zoom ${formatLevel(level)}`}
+            accessibilityLabel={t('zoom.levelA11y', { level: formatLevel(level) })}
           >
             <Text style={[styles.text, active ? styles.textActive : styles.textInactive]}>
               {formatLevel(level)}

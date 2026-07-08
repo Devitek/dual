@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import * as VideoThumbnails from 'expo-video-thumbnails';
 import * as Sharing from 'expo-sharing';
 import * as IntentLauncher from 'expo-intent-launcher';
@@ -52,6 +53,7 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
   const insets = useSafeAreaInsets();
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
   const [preview, setPreview] = useState<CapturedMedia | null>(null);
   const [playing, setPlaying] = useState<CapturedMedia | null>(null);
   const [selectMode, setSelectMode] = useState(false);
@@ -181,20 +183,20 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
         <View style={[styles.header, { paddingTop: Math.max(insets.top + 16, 54) }]}>
           {selectMode ? (
             <>
-              <Pressable onPress={exitSelect} style={styles.closeIcon} accessibilityLabel="Annuler la sélection">
+              <Pressable onPress={exitSelect} style={styles.closeIcon} accessibilityLabel={t('gallery.cancelSelectionA11y')}>
                 <MaterialIcons name="close" size={24} color={colors.onSurface} />
               </Pressable>
-              <Text style={styles.title}>{selected.size} sélectionné{selected.size > 1 ? 's' : ''}</Text>
+              <Text style={styles.title}>{t('gallery.selected', { count: selected.size })}</Text>
               <View style={styles.spacer} />
             </>
           ) : (
             <>
-              <Text style={styles.title}>Médias de la session</Text>
+              <Text style={styles.title}>{t('gallery.title')}</Text>
               <View style={styles.count}>
                 <Text style={styles.countText}>{captures.length}</Text>
               </View>
               <View style={styles.spacer} />
-              <Pressable onPress={onClose} style={styles.closeIcon} accessibilityLabel="Fermer">
+              <Pressable onPress={onClose} style={styles.closeIcon} accessibilityLabel={t('gallery.closeA11y')}>
                 <MaterialIcons name="close" size={24} color={colors.onSurface} />
               </Pressable>
             </>
@@ -204,14 +206,14 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
         {!selectMode && data.length > 0 && (
           <View style={styles.savedChip}>
             <MaterialIcons name="cloud-done" size={15} color={colors.success} />
-            <Text style={styles.savedChipText}>Déjà enregistrés dans votre galerie</Text>
+            <Text style={styles.savedChipText}>{t('gallery.savedChip')}</Text>
           </View>
         )}
 
         {data.length === 0 ? (
           <View style={styles.empty}>
             <MaterialIcons name="photo-library" size={40} color={colors.onSurfaceVariant} />
-            <Text style={styles.emptyText}>Aucune capture pour l’instant.</Text>
+            <Text style={styles.emptyText}>{t('gallery.empty')}</Text>
           </View>
         ) : (
           <FlatList
@@ -280,7 +282,7 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
               onPress={shareSelected}
             >
               <MaterialIcons name="share" size={22} color={colors.onSurface} />
-              <Text style={styles.actionLabel}>Partager</Text>
+              <Text style={styles.actionLabel}>{t('gallery.share')}</Text>
             </Pressable>
             <Pressable
               style={[styles.action, selectedItems.length !== 1 && styles.actionDim]}
@@ -288,11 +290,11 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
               onPress={openSelected}
             >
               <MaterialIcons name="open-in-new" size={22} color={colors.onSurface} />
-              <Text style={styles.actionLabel}>Ouvrir</Text>
+              <Text style={styles.actionLabel}>{t('gallery.open')}</Text>
             </Pressable>
             <Pressable style={styles.action} onPress={deleteSelected}>
               <MaterialIcons name="delete-outline" size={22} color={colors.danger} />
-              <Text style={[styles.actionLabel, styles.actionDanger]}>Supprimer</Text>
+              <Text style={[styles.actionLabel, styles.actionDanger]}>{t('gallery.delete')}</Text>
             </Pressable>
           </View>
         )}
@@ -302,7 +304,7 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
       {preview != null && (
         <Pressable style={styles.fullscreen} onPress={() => setPreview(null)}>
           <Image source={{ uri: preview.primaryUri }} style={styles.fullImg} resizeMode="contain" />
-          <Text style={styles.tapHint}>Toucher pour fermer</Text>
+          <Text style={styles.tapHint}>{t('gallery.closePhotoHint')}</Text>
         </Pressable>
       )}
 
@@ -316,7 +318,7 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
               player.pause();
               setPlaying(null);
             }}
-            accessibilityLabel="Fermer la lecture"
+            accessibilityLabel={t('gallery.closeVideoA11y')}
           >
             <MaterialIcons name="close" size={26} color="#fff" />
           </Pressable>

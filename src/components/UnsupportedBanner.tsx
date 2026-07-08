@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { useThemedStyles, type Palette } from '../theme/theme';
 import { haptics } from '../utils/haptics';
@@ -20,15 +21,12 @@ export function UnsupportedBanner({ missingSensor = false }: UnsupportedBannerPr
   const [expanded, setExpanded] = useState(false);
   const insets = useSafeAreaInsets();
   const styles = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
 
   return (
     <View style={[styles.container, { top: Math.max(insets.top + 52, 92) }]} pointerEvents="box-none">
-      <Text style={styles.title}>Mode caméra unique</Text>
-      <Text style={styles.text}>
-        {missingSensor
-          ? 'Cet appareil ne dispose pas des deux caméras.'
-          : 'Cet appareil ne prend pas en charge la capture simultanée avant + arrière. Bascule automatique sur une seule caméra.'}
-      </Text>
+      <Text style={styles.title}>{t('unsupported.title')}</Text>
+      <Text style={styles.text}>{t(missingSensor ? 'unsupported.textMissing' : 'unsupported.textUnsupported')}</Text>
 
       {!missingSensor && (
         <>
@@ -41,16 +39,10 @@ export function UnsupportedBanner({ missingSensor = false }: UnsupportedBannerPr
             hitSlop={8}
             accessibilityRole="button"
           >
-            <Text style={styles.linkText}>{expanded ? 'Masquer' : 'Pourquoi ?'}</Text>
+            <Text style={styles.linkText}>{expanded ? t('unsupported.hide') : t('unsupported.why')}</Text>
           </Pressable>
 
-          {expanded && (
-            <Text style={styles.explain}>
-              La capture avant + arrière simultanée dépend de l’ISP de l’appareil : beaucoup de
-              modèles ne l’autorisent que sur certaines combinaisons de caméras, ou pas du tout.
-              TwinLens bascule alors sur une seule caméra pour rester fonctionnel.
-            </Text>
-          )}
+          {expanded && <Text style={styles.explain}>{t('unsupported.explain')}</Text>}
         </>
       )}
     </View>

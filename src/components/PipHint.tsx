@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, Text, type ViewStyle } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import { useColors, useThemedStyles, type Palette } from '../theme/theme';
 import type { PipCorner } from '../services/pipComposer';
@@ -31,6 +32,7 @@ export function PipHint({ visible, corner, onDismiss }: PipHintProps): React.Rea
   const opacity = useRef(new Animated.Value(0)).current;
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
 
   useEffect(() => {
     Animated.timing(opacity, {
@@ -49,10 +51,10 @@ export function PipHint({ visible, corner, onDismiss }: PipHintProps): React.Rea
         onPress={onDismiss}
         hitSlop={8}
         accessibilityRole="button"
-        accessibilityLabel="Compris"
+        accessibilityLabel={t('pipHint.gotItA11y')}
       >
         <MaterialIcons name="touch-app" size={16} color={colors.onPrimaryContainer} />
-        <Text style={styles.text}>Touchez la vignette pour inverser les caméras</Text>
+        <Text style={styles.text}>{t('pipHint.text')}</Text>
       </Pressable>
     </Animated.View>
   );

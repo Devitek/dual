@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import { useColors, useThemedStyles, type Palette } from '../theme/theme';
 import { ModeSwitch, type CaptureMode } from './ModeSwitch';
@@ -60,6 +61,7 @@ export function CaptureControls({
   const thumbScale = useRef(new Animated.Value(1)).current;
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!isRecording) {
@@ -108,7 +110,7 @@ export function CaptureControls({
                 <Pressable
                   style={({ pressed }) => [styles.thumbWrap, pressed && styles.pressed]}
                   onPress={onOpenReview}
-                  accessibilityLabel="Voir les médias de la session"
+                  accessibilityLabel={t('capture.thumbnailA11y')}
                 >
                   {lastCapture.kind === 'photo' ? (
                     <Image source={{ uri: lastCapture.primaryUri }} style={styles.thumb} />
@@ -144,11 +146,7 @@ export function CaptureControls({
               style={styles.shutterOuter}
               accessibilityRole="button"
               accessibilityLabel={
-                isVideo
-                  ? isRecording
-                    ? "Arrêter l'enregistrement"
-                    : "Démarrer l'enregistrement"
-                  : 'Prendre une photo'
+                isVideo ? (isRecording ? t('capture.recStopA11y') : t('capture.recStartA11y')) : t('capture.shutterPhotoA11y')
               }
             >
               <View
@@ -167,7 +165,7 @@ export function CaptureControls({
               disabled={swapDisabled}
               style={({ pressed }) => [styles.swapButton, pressed && styles.pressed, swapDisabled && styles.swapDisabled]}
               accessibilityRole="button"
-              accessibilityLabel="Inverser les caméras"
+              accessibilityLabel={t('capture.swapA11y')}
             >
               <MaterialIcons name="cameraswitch" size={24} color={colors.onSurface} />
             </Pressable>

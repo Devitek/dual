@@ -1,0 +1,125 @@
+{
+  "permissions": {
+    "title": "Permissions required",
+    "subtitle": "TwinLens needs access to your cameras, microphone and gallery to capture and save your front / back media.",
+    "camera": "Camera",
+    "microphone": "Microphone",
+    "gallery": "Gallery (write)",
+    "grant": "Grant access",
+    "requesting": "Requesting…",
+    "openSettings": "Open app settings",
+    "hintCanAsk": "Tap “Grant access”, then accept each request (camera, microphone, gallery).",
+    "hintDenied": "A permission was denied. Enable it manually in the app settings."
+  },
+  "topBar": {
+    "flashA11y": "Photo flash: {{state}}",
+    "flashStateOff": "off",
+    "flashStateAuto": "automatic",
+    "flashStateOn": "on",
+    "settingsA11y": "Open settings"
+  },
+  "capture": {
+    "thumbnailA11y": "View session media",
+    "shutterPhotoA11y": "Take a photo",
+    "recStartA11y": "Start recording",
+    "recStopA11y": "Stop recording",
+    "swapA11y": "Switch cameras"
+  },
+  "mode": {
+    "photo": "PHOTO",
+    "video": "VIDEO",
+    "photoA11y": "Photo mode",
+    "videoA11y": "Video mode",
+    "dual": "Dual",
+    "single": "Single"
+  },
+  "zoom": {
+    "levelA11y": "Zoom {{level}}"
+  },
+  "preview": {
+    "starting": "Starting cameras…"
+  },
+  "settings": {
+    "title": "Settings",
+    "sectionCamera": "Camera",
+    "swap": "Switch cameras",
+    "torch": "Torch",
+    "flashPhoto": "Photo flash",
+    "sectionPipCorner": "Thumbnail position",
+    "sectionRecPhoto": "Recording — Photo",
+    "sectionRecVideo": "Recording — Video",
+    "sectionQuality": "Quality",
+    "flashOff": "Off",
+    "flashAuto": "Auto",
+    "flashOn": "On",
+    "savePip": "PiP",
+    "savePipPlus": "PiP + 2",
+    "saveFiles": "2 files",
+    "qualityStandard": "Standard",
+    "qualityHigh": "High",
+    "qualityMax": "Max",
+    "descPipPhoto": "One merged image: back + front inset.",
+    "descPipVideo": "One merged video (re-encoded at the end of the take).",
+    "descPipPlus": "The merge + the 2 raw files.",
+    "descOriginals": "The 2 separate files, no merge.",
+    "qualityHint": "“Max”: 4K photo, 1080p video. Changing quality briefly restarts the cameras.",
+    "cornerA11y": "Thumbnail at {{corner}}",
+    "cornerTopLeft": "top left",
+    "cornerTopRight": "top right",
+    "cornerBottomRight": "bottom right",
+    "cornerBottomLeft": "bottom left"
+  },
+  "gallery": {
+    "title": "Session media",
+    "selected_one": "{{count}} selected",
+    "selected_other": "{{count}} selected",
+    "savedChip": "Already saved to your gallery",
+    "empty": "No captures yet.",
+    "share": "Share",
+    "open": "Open",
+    "delete": "Delete",
+    "closePhotoHint": "Tap to close",
+    "closeA11y": "Close",
+    "cancelSelectionA11y": "Cancel selection",
+    "closeVideoA11y": "Close playback"
+  },
+  "error": {
+    "title": "Cameras unavailable",
+    "message": "Can’t access the cameras. Another app might be using them.",
+    "retry": "Retry",
+    "openSettings": "Open app settings"
+  },
+  "unsupported": {
+    "title": "Single camera mode",
+    "textUnsupported": "This device doesn’t support simultaneous front + back capture. Automatically switching to a single camera.",
+    "textMissing": "This device doesn’t have both cameras.",
+    "why": "Why?",
+    "hide": "Hide",
+    "explain": "Simultaneous front + back capture depends on the device ISP: many models only allow it on certain camera combinations, or not at all. TwinLens then falls back to a single camera to stay functional."
+  },
+  "pipHint": {
+    "text": "Tap the thumbnail to switch cameras",
+    "gotItA11y": "Got it"
+  },
+  "processing": {
+    "pip": "PiP {{pct}}%",
+    "generic": "Processing…"
+  },
+  "notices": {
+    "pipSaved": "PiP saved",
+    "pipPlusPhotos": "PiP + 2 photos saved",
+    "twoPhotos": "2 photos saved",
+    "photoSaved": "Photo saved",
+    "captureFailed": "Capture failed: {{error}}",
+    "videoPipSaved": "PiP video saved",
+    "videoPipPlus": "PiP video + 2 originals saved",
+    "twoVideosNoPip": "2 videos saved (PiP merge unavailable)",
+    "twoVideos": "2 videos saved",
+    "videoSaved": "Video saved",
+    "noVideo": "No video recorded.",
+    "recError": "Recording ({{slot}}): {{error}}",
+    "processingFailed": "Processing failed: {{error}}",
+    "qualityUnsupported": "Quality not supported — reverting to previous setting.",
+    "noCamera": "No camera available."
+  }
+}

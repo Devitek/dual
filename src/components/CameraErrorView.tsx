@@ -1,6 +1,7 @@
 import React from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import { useColors, useThemedStyles, type Palette } from '../theme/theme';
 import { haptics } from '../utils/haptics';
@@ -18,16 +19,15 @@ interface CameraErrorViewProps {
 export function CameraErrorView({ message, onRetry }: CameraErrorViewProps): React.ReactElement {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
   return (
     <View style={styles.container}>
       <View style={styles.iconCircle}>
         <MaterialIcons name="no-photography" size={42} color={colors.danger} />
       </View>
 
-      <Text style={styles.title}>Caméras indisponibles</Text>
-      <Text style={styles.message}>
-        Impossible d’accéder aux caméras. Une autre application les utilise peut-être.
-      </Text>
+      <Text style={styles.title}>{t('error.title')}</Text>
+      <Text style={styles.message}>{t('error.message')}</Text>
 
       {message != null && message.length > 0 && <Text style={styles.detail}>{message}</Text>}
 
@@ -38,19 +38,19 @@ export function CameraErrorView({ message, onRetry }: CameraErrorViewProps): Rea
           onRetry();
         }}
         accessibilityRole="button"
-        accessibilityLabel="Réessayer"
+        accessibilityLabel={t('error.retry')}
       >
         <MaterialIcons name="refresh" size={20} color={colors.onPrimary} />
-        <Text style={styles.retryText}>Réessayer</Text>
+        <Text style={styles.retryText}>{t('error.retry')}</Text>
       </Pressable>
 
       <Pressable
         style={styles.settingsLink}
         onPress={() => void Linking.openSettings()}
         accessibilityRole="button"
-        accessibilityLabel="Ouvrir les paramètres de l'application"
+        accessibilityLabel={t('error.openSettings')}
       >
-        <Text style={styles.settingsLinkText}>Ouvrir les paramètres de l’app</Text>
+        <Text style={styles.settingsLinkText}>{t('error.openSettings')}</Text>
       </Pressable>
     </View>
   );

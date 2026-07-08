@@ -21,6 +21,7 @@ import * as MediaLibrary from 'expo-media-library';
 
 import { getFileSize, toFileUri } from '../utils/fileSystem';
 import type { PipCorner } from '../services/pipComposer';
+import i18n from '../i18n';
 
 export type CameraSlot = 'back' | 'front';
 export type MultiCamMode = 'multi' | 'single' | 'none';
@@ -202,7 +203,7 @@ export class MultiCamController {
     this.queue = this.queue
       .then(job)
       .catch((error) => {
-        this.notify('error', `Traitement échoué : ${(error as Error)?.message ?? error}`);
+        this.notify('error', i18n.t('notices.processingFailed', { error: (error as Error)?.message ?? String(error) }));
       })
       .finally(() => {
         this.update({ processingCount: Math.max(0, this.snapshot.processingCount - 1) });
@@ -247,7 +248,7 @@ export class MultiCamController {
       }
 
       if (backDevice == null) {
-        this.update({ status: 'error', mode: 'none', errorMessage: 'Aucune caméra disponible.' });
+        this.update({ status: 'error', mode: 'none', errorMessage: i18n.t('notices.noCamera') });
         return;
       }
 
@@ -366,7 +367,7 @@ export class MultiCamController {
     // configurer -> on revient au réglage précédent qui fonctionnait.
     if (this.snapshot.status === 'error' && !this.disposed) {
       this.update({ captureQuality: previous });
-      this.notify('error', 'Qualité non supportée — retour au réglage précédent.');
+      this.notify('error', i18n.t('notices.qualityUnsupported'));
       await this.teardownSession();
       await this.buildSession();
     }
@@ -465,7 +466,7 @@ export class MultiCamController {
       primaryPath = primaryFile.filePath;
       secondaryPath = secondaryFile?.filePath ?? null;
     } catch (error) {
-      this.notify('error', `Capture échouée : ${(error as Error)?.message ?? error}`);
+      this.notify('error', i18n.t('notices.captureFailed', { error: (error as Error)?.message ?? String(error) }));
       this.update({ isBusy: false });
       return;
     }
@@ -495,7 +496,7 @@ export class MultiCamController {
           secondaryUri: saveOriginals ? toFileUri(secondaryPath) : null,
           createdAt: Date.now(),
         });
-        this.notify('success', saveOriginals ? 'PiP + 2 photos enregistrés' : 'PiP enregistré');
+        this.notify('success', i18n.t(saveOriginals ? 'notices.pipPlusPhotos' : 'notices.pipSaved'));
         return;
       }
 
@@ -516,10 +517,10 @@ export class MultiCamController {
       const displayUri = pipUri ?? originalPrimaryUri ?? toFileUri(primaryPath);
       const secondaryUri = secondaryPath != null ? toFileUri(secondaryPath) : null;
       this.pushCapture({ kind: 'photo', primaryUri: displayUri, secondaryUri, createdAt: Date.now() });
-      if (pipUri != null && wantOriginals) this.notify('success', 'PiP + 2 photos enregistrés');
-      else if (pipUri != null) this.notify('success', 'PiP enregistré');
-      else if (secondaryPath != null) this.notify('success', '2 photos enregistrées');
-      else this.notify('success', 'Photo enregistrée');
+      if (pipUri != null && wantOriginals) this.notify('success', i18n.t('notices.pipPlusPhotos'));
+      else if (pipUri != null) this.notify('success', i18n.t('notices.pipSaved'));
+      else if (secondaryPath != null) this.notify('success', i18n.t('notices.twoPhotos'));
+      else this.notify('success', i18n.t('notices.photoSaved'));
     });
   }
 
@@ -533,7 +534,7 @@ export class MultiCamController {
     const primaryPath = this.primarySlot === 'back' ? this.recAgg.backPath : this.recAgg.frontPath;
     const secondaryPath = this.primarySlot === 'back' ? this.recAgg.frontPath : this.recAgg.backPath;
     if (primaryPath == null) {
-      this.notify('error', 'Aucune vidéo enregistrée.');
+      this.notify('error', i18n.t('notices.noVideo'));
       return;
     }
 
@@ -563,7 +564,7 @@ export class MultiCamController {
           createdAt: Date.now(),
           durationMs,
         });
-        this.notify('success', saveOriginals ? 'Vidéo PiP + 2 originaux enregistrés' : 'Vidéo PiP enregistrée');
+        this.notify('success', i18n.t(saveOriginals ? 'notices.videoPipPlus' : 'notices.videoPipSaved'));
       } else {
         // Mode originaux, ou pas de composeur natif -> sauvegarde JS des originaux.
         const primaryUri = await this.persist(primaryPath);
@@ -573,9 +574,9 @@ export class MultiCamController {
           'success',
           secondaryPath != null
             ? wantPip
-              ? '2 vidéos enregistrées (fusion PiP indisponible)'
-              : '2 vidéos enregistrées'
-            : 'Vidéo enregistrée',
+              ? i18n.t('notices.twoVideosNoPip')
+              : i18n.t('notices.twoVideos')
+            : i18n.t('notices.videoSaved'),
         );
       }
     });
@@ -590,7 +591,7 @@ export class MultiCamController {
     };
     const onError = (error: Error): void => {
       this.recAgg.settled += 1;
-      this.notify('error', `Enregistrement (${slot}) : ${error.message}`);
+      this.notify('error', i18n.t('notices.recError', { slot, error: error.message }));
       this.commitRecordingIfDone();
     };
     return { onFinished, onError };

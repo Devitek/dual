@@ -3,6 +3,8 @@ import 'react-native-gesture-handler';
 
 import { registerRootComponent } from 'expo';
 
+// Initialise i18n (détection de la langue de l'appareil) avant tout rendu.
+import './src/i18n';
 import App from './App';
 
 // registerRootComponent appelle AppRegistry.registerComponent('main', () => App)

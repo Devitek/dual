@@ -1,5 +1,6 @@
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { useColors, useThemedStyles, type Palette } from '../theme/theme';
 
@@ -16,6 +17,7 @@ interface ProcessingIndicatorProps {
 export function ProcessingIndicator({ count, progress }: ProcessingIndicatorProps): React.ReactElement | null {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
   if (count <= 0) return null;
   const pct = progress != null && progress >= 0 ? Math.round(progress * 100) : null;
 
@@ -23,7 +25,7 @@ export function ProcessingIndicator({ count, progress }: ProcessingIndicatorProp
     <View style={styles.wrap} pointerEvents="none">
       <View style={styles.pill}>
         <ActivityIndicator size="small" color={colors.onPrimaryContainer} />
-        <Text style={styles.text}>{pct != null ? `PiP ${pct}%` : 'Traitement…'}</Text>
+        <Text style={styles.text}>{pct != null ? t('processing.pip', { pct }) : t('processing.generic')}</Text>
       </View>
     </View>
   );

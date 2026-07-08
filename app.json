@@ -37,7 +37,8 @@
       "expo-asset",
       "expo-font",
       "expo-sharing",
-      "expo-video"
+      "expo-video",
+      "expo-localization"
     ]
   }
 }
