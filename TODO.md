@@ -111,6 +111,17 @@ APK **debug-signé de TEST** ; rien n'est encore prêt pour une publication Stor
 - [ ] (Alternative recommandée) **EAS Build** profil `production` (`eas.json`),
       credentials gérés par Expo.
 
+### Optimisation (post-lancement)
+- [ ] **R8 / minification + upload du `mapping.txt`** — répond à l'avertissement
+      Play « aucun fichier de désobscurcissement associé à cet App Bundle ».
+      Activer via `expo-build-properties` (`enableProguardInReleaseBuilds` +
+      `enableShrinkResourcesInReleaseBuilds`), ajouter les *keep rules* pour
+      VisionCamera/Nitro + le module PiP natif, puis passer le mapping à `supply`
+      (`upload_to_play_store(mapping: …)` dans `release-android.yml`).
+      ⚠️ **Tester sur device** avant release (R8 peut casser une app RN mal
+      configurée). Non bloquant : l'avertissement est bénin tant qu'on n'obscurcit
+      pas, et l'app est déjà légère (~23 Mo).
+
 ### Publication (soumission)
 - [ ] **`eas submit`** OU workflow **fastlane / Google Play Publisher API**
       (service account JSON en secret) déclenché sur `release: published`.
