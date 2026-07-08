@@ -158,6 +158,9 @@ interface SettingsSheetProps {
   torch: boolean;
   torchSupported: boolean;
   onToggleTorch: () => void;
+  secondaryPreview: boolean;
+  secondaryPreviewSupported: boolean;
+  onToggleSecondaryPreview: () => void;
   photoFlash: PhotoFlashMode;
   flashSupported: boolean;
   onSetPhotoFlash: (mode: PhotoFlashMode) => void;
@@ -180,6 +183,9 @@ export function SettingsSheet({
   torch,
   torchSupported,
   onToggleTorch,
+  secondaryPreview,
+  secondaryPreviewSupported,
+  onToggleSecondaryPreview,
   photoFlash,
   flashSupported,
   onSetPhotoFlash,
@@ -229,6 +235,18 @@ export function SettingsSheet({
               value={torch}
               disabled={!torchSupported}
               onValueChange={onToggleTorch}
+              trackColor={{ true: colors.primary, false: colors.outlineVariant }}
+              thumbColor={colors.onPrimary}
+            />
+          </View>
+
+          <View style={[styles.row, !secondaryPreviewSupported && styles.dim]}>
+            <MaterialIcons name="picture-in-picture-alt" size={22} color={colors.onSurface} />
+            <Text style={styles.rowLabel}>{t('settings.secondaryPreview')}</Text>
+            <Switch
+              value={secondaryPreview}
+              disabled={!secondaryPreviewSupported}
+              onValueChange={onToggleSecondaryPreview}
               trackColor={{ true: colors.primary, false: colors.outlineVariant }}
               thumbColor={colors.onPrimary}
             />

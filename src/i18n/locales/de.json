@@ -37,13 +37,16 @@
     "levelA11y": "Zoom {{level}}"
   },
   "preview": {
-    "starting": "Kameras werden gestartet…"
+    "starting": "Kameras werden gestartet…",
+    "hiddenSecondary": "Verborgen",
+    "hiddenSecondaryA11y": "Vorschau der 2. Kamera ausgeblendet — wird weiterhin aufgenommen"
   },
   "settings": {
     "title": "Einstellungen",
     "sectionCamera": "Kamera",
     "swap": "Kameras wechseln",
     "torch": "Taschenlampe",
+    "secondaryPreview": "Vorschau 2. Kamera",
     "flashPhoto": "Fotoblitz",
     "sectionPipCorner": "Position der Miniatur",
     "sectionRecPhoto": "Aufnahme — Foto",

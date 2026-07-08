@@ -7,6 +7,7 @@ import {
 } from 'react-native-gesture-handler';
 import { NativePreviewView, type CameraPreviewOutput } from 'react-native-vision-camera';
 import { useTranslation } from 'react-i18next';
+import { MaterialIcons } from '@expo/vector-icons';
 
 import { useColors, useThemedStyles, type Palette } from '../theme/theme';
 import { FocusIndicator, type FocusPoint } from './FocusIndicator';
@@ -37,6 +38,8 @@ interface MultiCamPreviewProps {
   pipCorner: PipCorner;
   /** Tap sur la vignette => inverser les caméras. */
   onTapSecondary: () => void;
+  /** Afficher l'aperçu live de la 2e caméra (false = « mode surprise »). */
+  showSecondaryPreview: boolean;
 }
 
 /**
@@ -54,6 +57,7 @@ export function MultiCamPreview({
   focusPoint,
   pipCorner,
   onTapSecondary,
+  showSecondaryPreview,
 }: MultiCamPreviewProps): React.ReactElement {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
@@ -83,7 +87,7 @@ export function MultiCamPreview({
 
       <FocusIndicator point={focusPoint} />
 
-      {showPip && (
+      {showPip && showSecondaryPreview && (
         <Pressable
           style={[styles.pip, pipPositionStyle(pipCorner)]}
           onPress={onTapSecondary}
@@ -103,6 +107,19 @@ export function MultiCamPreview({
             <Text style={styles.pipHintText}>⇆</Text>
           </View>
         </Pressable>
+      )}
+
+      {/* Mode surprise : la 2e caméra tourne mais son aperçu est masqué. */}
+      {showPip && !showSecondaryPreview && (
+        <View
+          style={[styles.hiddenChip, pipPositionStyle(pipCorner)]}
+          pointerEvents="none"
+          accessible
+          accessibilityLabel={t('preview.hiddenSecondaryA11y')}
+        >
+          <MaterialIcons name="visibility-off" size={16} color={colors.onSurfaceVariant} />
+          <Text style={styles.hiddenChipText}>{t('preview.hiddenSecondary')}</Text>
+        </View>
       )}
     </View>
   );
@@ -146,4 +163,17 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
     justifyContent: 'center',
   },
   pipHintText: { color: colors.onSurface, fontSize: 14, fontWeight: '700' },
+  hiddenChip: {
+    position: 'absolute',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    backgroundColor: colors.overlayStrong,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+  },
+  hiddenChipText: { color: colors.onSurfaceVariant, fontSize: 12, fontWeight: '600' },
 });

@@ -218,6 +218,11 @@ export function MultiCameraScreen(): React.ReactElement {
   const setPipCorner = useCallback((c: PipCorner) => cam.controller.setPipCorner(c), [cam.controller]);
   const setQuality = useCallback((q: CaptureQuality) => void cam.controller.setQuality(q), [cam.controller]);
 
+  const toggleSecondaryPreview = useCallback(() => {
+    haptics.selection();
+    cam.controller.setShowSecondaryPreview(!cam.showSecondaryPreview);
+  }, [cam.controller, cam.showSecondaryPreview]);
+
   // Tap-to-focus + pinch-to-zoom sur la caméra principale.
   const gesture = useMemo(() => {
     const tap = Gesture.Tap()
@@ -274,6 +279,7 @@ export function MultiCameraScreen(): React.ReactElement {
               focusPoint={focusPoint}
               pipCorner={cam.pipCorner}
               onTapSecondary={swap}
+              showSecondaryPreview={cam.showSecondaryPreview}
             />
 
             <ZoomIndicator zoom={zoomDisplay} nonce={zoomNonce} />
@@ -308,7 +314,7 @@ export function MultiCameraScreen(): React.ReactElement {
               onSelectZoom={onSelectZoom}
             />
 
-            {cam.mode === 'multi' && (
+            {cam.mode === 'multi' && cam.showSecondaryPreview && (
               <PipHint visible={pipHintVisible} corner={cam.pipCorner} onDismiss={dismissPipHint} />
             )}
 
@@ -323,6 +329,9 @@ export function MultiCameraScreen(): React.ReactElement {
               torch={torchOn}
               torchSupported={cam.hasTorch}
               onToggleTorch={toggleTorch}
+              secondaryPreview={cam.showSecondaryPreview}
+              secondaryPreviewSupported={cam.mode === 'multi'}
+              onToggleSecondaryPreview={toggleSecondaryPreview}
               photoFlash={photoFlash}
               flashSupported={cam.hasTorch}
               onSetPhotoFlash={onSetPhotoFlash}

@@ -37,13 +37,16 @@
     "levelA11y": "Zoom {{level}}"
   },
   "preview": {
-    "starting": "Démarrage des caméras…"
+    "starting": "Démarrage des caméras…",
+    "hiddenSecondary": "Masquée",
+    "hiddenSecondaryA11y": "Aperçu de la 2ᵉ caméra masqué — toujours enregistrée"
   },
   "settings": {
     "title": "Paramètres",
     "sectionCamera": "Caméra",
     "swap": "Inverser les caméras",
     "torch": "Torche",
+    "secondaryPreview": "Aperçu 2ᵉ caméra",
     "flashPhoto": "Flash photo",
     "sectionPipCorner": "Position de la vignette",
     "sectionRecPhoto": "Enregistrement — Photo",

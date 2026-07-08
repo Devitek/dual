@@ -71,6 +71,9 @@ export interface MultiCamSnapshot {
   /** Nombre de traitements (composition/sauvegarde) en cours en arrière-plan. */
   processingCount: number;
   captureQuality: CaptureQuality;
+  /** Aperçu LIVE de la 2e caméra (vignette). `false` = « mode surprise ».
+   *  N'affecte NI la capture NI la fusion PiP — seulement l'affichage live. */
+  showSecondaryPreview: boolean;
 }
 
 interface QualityConfig {
@@ -122,6 +125,8 @@ const INITIAL: MultiCamSnapshot = {
   sessionCaptures: [],
   processingCount: 0,
   captureQuality: 'high',
+  // Aperçu de la 2e caméra activé par défaut ; désactivable pour la surprise.
+  showSecondaryPreview: true,
 };
 
 /**
@@ -407,6 +412,11 @@ export class MultiCamController {
 
   setPipCorner(corner: PipCorner): void {
     this.update({ pipCorner: corner });
+  }
+
+  /** Active/désactive l'aperçu live de la 2e caméra (« mode surprise »). */
+  setShowSecondaryPreview(value: boolean): void {
+    this.update({ showSecondaryPreview: value });
   }
 
   /**

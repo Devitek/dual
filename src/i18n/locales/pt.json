@@ -37,13 +37,16 @@
     "levelA11y": "Zoom {{level}}"
   },
   "preview": {
-    "starting": "Iniciando as câmeras…"
+    "starting": "Iniciando as câmeras…",
+    "hiddenSecondary": "Oculta",
+    "hiddenSecondaryA11y": "Prévia da 2ª câmera oculta — continua sendo gravada"
   },
   "settings": {
     "title": "Configurações",
     "sectionCamera": "Câmera",
     "swap": "Trocar de câmera",
     "torch": "Lanterna",
+    "secondaryPreview": "Prévia da 2ª câmera",
     "flashPhoto": "Flash da foto",
     "sectionPipCorner": "Posição da miniatura",
     "sectionRecPhoto": "Gravação — Foto",

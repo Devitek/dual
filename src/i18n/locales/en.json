@@ -37,13 +37,16 @@
     "levelA11y": "Zoom {{level}}"
   },
   "preview": {
-    "starting": "Starting cameras…"
+    "starting": "Starting cameras…",
+    "hiddenSecondary": "Hidden",
+    "hiddenSecondaryA11y": "Second camera preview hidden — still being recorded"
   },
   "settings": {
     "title": "Settings",
     "sectionCamera": "Camera",
     "swap": "Switch cameras",
     "torch": "Torch",
+    "secondaryPreview": "Second camera preview",
     "flashPhoto": "Photo flash",
     "sectionPipCorner": "Thumbnail position",
     "sectionRecPhoto": "Recording — Photo",
