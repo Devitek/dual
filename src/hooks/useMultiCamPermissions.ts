@@ -37,10 +37,30 @@ export function useMultiCamPermissions(): MultiCamPermissionsState {
 
   const requestAll = useCallback(async (): Promise<void> => {
     setIsRequesting(true);
+    // Demandes SÉQUENTIELLES et isolées : Android n'affiche qu'un dialogue à la
+    // fois, et un refus/échec sur l'une ne doit pas empêcher les suivantes.
     try {
-      if (!hasCameraPermission) await requestCamera();
-      if (!hasMicrophonePermission) await requestMic();
-      if (!hasMediaLibraryPermission) await requestMedia();
+      if (!hasCameraPermission) {
+        try {
+          await requestCamera();
+        } catch {
+          /* refusé */
+        }
+      }
+      if (!hasMicrophonePermission) {
+        try {
+          await requestMic();
+        } catch {
+          /* refusé */
+        }
+      }
+      if (!hasMediaLibraryPermission) {
+        try {
+          await requestMedia();
+        } catch {
+          /* refusé */
+        }
+      }
     } finally {
       setIsRequesting(false);
     }
