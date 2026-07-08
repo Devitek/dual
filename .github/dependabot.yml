@@ -9,20 +9,26 @@ updates:
       day: monday
     open-pull-requests-limit: 10
     labels: ["dependencies"]
-    # Regroupe les mises à jour liées pour réduire le bruit
+    # Regroupe les mises à jour de dev pour réduire le bruit.
     groups:
-      expo:
-        patterns: ["expo", "expo-*", "@expo/*", "babel-preset-expo"]
-      react-native:
-        patterns: ["react-native", "@react-native/*", "react-native-*"]
       dev-dependencies:
         dependency-type: development
-    # Ces versions sont pilotées par le SDK Expo (via `expo install`) :
-    # on évite les bumps aveugles qui cassent la compat (voir historique).
+    # L'écosystème Expo / React Native est piloté par le SDK (`expo install`) :
+    # les bumps Dependabot cassent la compat (expo-doctor). On les ignore ici et
+    # on met à jour ces paquets délibérément lors des montées de SDK.
     ignore:
+      - dependency-name: "expo"
+      - dependency-name: "expo-*"
+      - dependency-name: "@expo/*"
       - dependency-name: "react"
       - dependency-name: "react-dom"
       - dependency-name: "react-native"
+      - dependency-name: "@react-native/*"
+      - dependency-name: "react-native-*"
+      - dependency-name: "babel-preset-expo"
+      # Toolchain Babel : on suit l'écosystème Expo, pas de majeur aveugle.
+      - dependency-name: "@babel/core"
+        update-types: ["version-update:semver-major"]
 
   # Actions GitHub des workflows
   - package-ecosystem: github-actions
