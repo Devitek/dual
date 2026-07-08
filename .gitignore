@@ -47,3 +47,9 @@ yarn-error.*
 
 # TypeScript
 *.tsbuildinfo
+
+# Expo export output
+/dist
+
+# Design handoff (reference material, not shipped)
+/design_handoff_twinlens
