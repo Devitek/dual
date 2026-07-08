@@ -63,12 +63,12 @@ Garde une **sauvegarde** de `upload.keystore` hors du dépôt.
    → build AAB signé + upload sur la piste choisie (draft par défaut).
 3. Play Console → vérifier la release (draft) → *Rollout*.
 
-## 5. Mettre à jour la fiche (textes/captures) sans binaire
+## 5. Mettre à jour la fiche (textes/captures) sans binaire — depuis la CI
 ```bash
-# en local, avec les mêmes ENV (PLAY_SERVICE_ACCOUNT_JSON_PATH) :
-bundle exec fastlane android metadata
+gh workflow run store-metadata.yml --repo Devitek/dual
 ```
-(ou ajouter un `workflow_dispatch` dédié si tu préfères le faire en CI.)
+Le workflow **Store Metadata** pousse `fastlane/metadata/android/` (fr-FR + en-US)
+via `fastlane supply`. Aucune manip locale requise.
 
 ## Rappels
 - Chaque upload doit **augmenter le `versionCode`** → géré via le numéro de run CI.

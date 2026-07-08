@@ -1,0 +1,34 @@
+name: Store Metadata (Play listing)
+
+# Pousse la FICHE Play (titres, descriptions, notes de version, icône, feature
+# graphic, captures) via Fastlane `supply`, SANS binaire. Manuel.
+#
+# Secret requis : PLAY_SERVICE_ACCOUNT_JSON (cf. RELEASE.md).
+# Pré-requis : l'app doit exister dans la Play Console (1er AAB déjà déposé).
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: store-metadata
+  cancel-in-progress: false
+
+jobs:
+  metadata:
+    name: Upload Play listing
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+
+      - name: Write Play service account key
+        run: printf '%s' '${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}' > "$RUNNER_TEMP/play.json"
+
+      - name: Upload listing (Fastlane supply — metadata only)
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON_PATH: ${{ runner.temp }}/play.json
+        run: bundle exec fastlane android metadata
