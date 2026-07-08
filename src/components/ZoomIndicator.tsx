@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 
-import { colors } from '../theme/colors';
+import { useThemedStyles, type Palette } from '../theme/theme';
 
 interface ZoomIndicatorProps {
   zoom: number | null;
@@ -14,6 +14,7 @@ interface ZoomIndicatorProps {
  */
 export function ZoomIndicator({ zoom, nonce }: ZoomIndicatorProps): React.ReactElement | null {
   const opacity = useRef(new Animated.Value(0)).current;
+  const styles = useThemedStyles(makeStyles);
 
   useEffect(() => {
     if (zoom == null) return;
@@ -38,7 +39,7 @@ export function ZoomIndicator({ zoom, nonce }: ZoomIndicatorProps): React.ReactE
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   wrap: { position: 'absolute', top: '44%', left: 0, right: 0, alignItems: 'center' },
   pill: {
     minWidth: 56,

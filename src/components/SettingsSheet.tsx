@@ -1,8 +1,8 @@
 import React from 'react';
-import { Modal, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Switch, Text, View, type ViewStyle } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
-import { colors } from '../theme/colors';
+import { useColors, useThemedStyles, type Palette } from '../theme/theme';
 import { haptics } from '../utils/haptics';
 import type { CaptureQuality, SaveMode } from '../vision/MultiCamController';
 import type { PipCorner } from '../services/pipComposer';
@@ -11,6 +11,8 @@ import type { PhotoFlashMode } from './CameraTopBar';
 interface Option<T extends string> {
   value: T;
   label: string;
+  /** Micro-légende sur une 2e ligne (ex. résolutions pour la qualité). */
+  caption?: string;
 }
 
 interface SegmentedProps<T extends string> {
@@ -20,10 +22,16 @@ interface SegmentedProps<T extends string> {
   disabled?: boolean;
 }
 
+/**
+ * Segmented buttons Material 3 : conteneur continu (bordure unique + séparateurs
+ * internes), segment actif teinté `primaryContainer` avec icône coche.
+ */
 function Segmented<T extends string>({ options, value, onChange, disabled = false }: SegmentedProps<T>): React.ReactElement {
+  const colors = useColors();
+  const styles = useThemedStyles(makeStyles);
   return (
-    <View style={[styles.segment, disabled && styles.dim]}>
-      {options.map((opt) => {
+    <View style={[styles.segGroup, disabled && styles.dim]}>
+      {options.map((opt, i) => {
         const active = opt.value === value;
         return (
           <Pressable
@@ -33,11 +41,68 @@ function Segmented<T extends string>({ options, value, onChange, disabled = fals
               haptics.selection();
               onChange(opt.value);
             }}
-            style={[styles.segItem, active && styles.segItemActive]}
+            style={[styles.segCell, i > 0 && styles.segDivider, active && styles.segCellActive]}
+            accessibilityRole="button"
+            accessibilityState={{ selected: active, disabled }}
           >
-            <Text style={[styles.segText, active && styles.segTextActive]} numberOfLines={1}>
-              {opt.label}
-            </Text>
+            <View style={styles.segLabelRow}>
+              {active && <MaterialIcons name="check" size={15} color={colors.onPrimaryContainer} style={styles.segCheck} />}
+              <Text style={[styles.segLabel, active && styles.segLabelActive]} numberOfLines={1}>
+                {opt.label}
+              </Text>
+            </View>
+            {opt.caption != null && (
+              <Text style={[styles.segCaption, active && styles.segCaptionActive]} numberOfLines={1}>
+                {opt.caption}
+              </Text>
+            )}
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+const CORNERS: PipCorner[] = ['top-left', 'top-right', 'bottom-right', 'bottom-left'];
+
+/** Position absolue du point dans le mini-téléphone selon le coin. */
+function cornerDotStyle(corner: PipCorner): ViewStyle {
+  const isTop = corner === 'top-left' || corner === 'top-right';
+  const isLeft = corner === 'top-left' || corner === 'bottom-left';
+  return {
+    position: 'absolute',
+    ...(isTop ? { top: 3 } : { bottom: 3 }),
+    ...(isLeft ? { left: 3 } : { right: 3 }),
+  };
+}
+
+interface CornerPickerProps {
+  value: PipCorner;
+  onChange: (corner: PipCorner) => void;
+}
+
+/** Sélecteur de coin de vignette sous forme de 4 mini-schémas de téléphone. */
+function CornerPicker({ value, onChange }: CornerPickerProps): React.ReactElement {
+  const styles = useThemedStyles(makeStyles);
+  return (
+    <View style={styles.cornerRow}>
+      {CORNERS.map((corner) => {
+        const active = corner === value;
+        return (
+          <Pressable
+            key={corner}
+            onPress={() => {
+              haptics.selection();
+              onChange(corner);
+            }}
+            style={[styles.cornerCell, active && styles.cornerCellActive]}
+            accessibilityRole="button"
+            accessibilityState={{ selected: active }}
+            accessibilityLabel={`Vignette en ${corner}`}
+          >
+            <View style={[styles.phone, active && styles.phoneActive]}>
+              <View style={[styles.dot, active && styles.dotActive, cornerDotStyle(corner)]} />
+            </View>
           </Pressable>
         );
       })}
@@ -48,7 +113,7 @@ function Segmented<T extends string>({ options, value, onChange, disabled = fals
 const SAVE_OPTIONS: Option<SaveMode>[] = [
   { value: 'pip', label: 'PiP' },
   { value: 'pip_plus_originals', label: 'PiP + 2' },
-  { value: 'originals', label: '2 originaux' },
+  { value: 'originals', label: '2 fichiers' },
 ];
 
 const FLASH_OPTIONS: Option<PhotoFlashMode>[] = [
@@ -57,18 +122,25 @@ const FLASH_OPTIONS: Option<PhotoFlashMode>[] = [
   { value: 'on', label: 'On' },
 ];
 
-const CORNER_OPTIONS: Option<PipCorner>[] = [
-  { value: 'top-left', label: '↖' },
-  { value: 'top-right', label: '↗' },
-  { value: 'bottom-right', label: '↘' },
-  { value: 'bottom-left', label: '↙' },
+const QUALITY_OPTIONS: Option<CaptureQuality>[] = [
+  { value: 'standard', label: 'Standard', caption: '1080p·720p' },
+  { value: 'high', label: 'Élevée', caption: '1080p·1080p' },
+  { value: 'max', label: 'Max', caption: '4K·1080p' },
 ];
 
-const QUALITY_OPTIONS: Option<CaptureQuality>[] = [
-  { value: 'standard', label: 'Standard' },
-  { value: 'high', label: 'Élevée' },
-  { value: 'max', label: 'Max' },
-];
+/** Phrase explicative de l'option de sauvegarde active (photo ou vidéo). */
+function saveModeDescription(mode: SaveMode, kind: 'photo' | 'video'): string {
+  switch (mode) {
+    case 'pip':
+      return kind === 'video'
+        ? 'Une vidéo fusionnée (ré-encodage à la fin de la prise).'
+        : 'Une image fusionnée : arrière + vignette avant.';
+    case 'pip_plus_originals':
+      return 'La fusion + les 2 fichiers bruts.';
+    case 'originals':
+      return 'Les 2 fichiers séparés, sans fusion.';
+  }
+}
 
 interface SettingsSheetProps {
   visible: boolean;
@@ -112,6 +184,8 @@ export function SettingsSheet({
   quality,
   onSetQuality,
 }: SettingsSheetProps): React.ReactElement {
+  const colors = useColors();
+  const styles = useThemedStyles(makeStyles);
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} />
@@ -119,64 +193,65 @@ export function SettingsSheet({
         <View style={styles.handle} />
         <Text style={styles.title}>Paramètres</Text>
 
-        {/* Caméra */}
-        <Text style={styles.section}>Caméra</Text>
-        <Pressable
-          onPress={() => {
-            onSwap();
-            onClose();
-          }}
-          disabled={!canSwap}
-          style={[styles.row, !canSwap && styles.dim]}
-        >
-          <MaterialIcons name="flip-camera-android" size={22} color={colors.onSurface} />
-          <Text style={styles.rowLabel}>Inverser les caméras</Text>
-        </Pressable>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {/* Caméra */}
+          <Text style={styles.section}>Caméra</Text>
+          <Pressable
+            onPress={() => {
+              onSwap();
+              onClose();
+            }}
+            disabled={!canSwap}
+            style={[styles.row, !canSwap && styles.dim]}
+          >
+            <MaterialIcons name="flip-camera-android" size={22} color={colors.onSurface} />
+            <Text style={styles.rowLabel}>Inverser les caméras</Text>
+          </Pressable>
 
-        <View style={[styles.row, !torchSupported && styles.dim]}>
-          <MaterialIcons name="flashlight-on" size={22} color={colors.onSurface} />
-          <Text style={styles.rowLabel}>Torche</Text>
-          <Switch
-            value={torch}
-            disabled={!torchSupported}
-            onValueChange={onToggleTorch}
-            trackColor={{ true: colors.primary, false: colors.outlineVariant }}
-            thumbColor={colors.onPrimary}
-          />
-        </View>
-
-        <View style={[styles.rowCol, !flashSupported && styles.dim]}>
-          <View style={styles.rowHeader}>
-            <MaterialIcons name="flash-on" size={22} color={colors.onSurface} />
-            <Text style={styles.rowLabel}>Flash photo</Text>
+          <View style={[styles.row, !torchSupported && styles.dim]}>
+            <MaterialIcons name="flashlight-on" size={22} color={colors.onSurface} />
+            <Text style={styles.rowLabel}>Torche</Text>
+            <Switch
+              value={torch}
+              disabled={!torchSupported}
+              onValueChange={onToggleTorch}
+              trackColor={{ true: colors.primary, false: colors.outlineVariant }}
+              thumbColor={colors.onPrimary}
+            />
           </View>
-          <Segmented options={FLASH_OPTIONS} value={photoFlash} onChange={onSetPhotoFlash} disabled={!flashSupported} />
-        </View>
 
-        <Text style={styles.section}>Position de la vignette</Text>
-        <Segmented options={CORNER_OPTIONS} value={pipCorner} onChange={onSetPipCorner} />
+          <View style={[styles.rowCol, !flashSupported && styles.dim]}>
+            <View style={styles.rowHeader}>
+              <MaterialIcons name="flash-on" size={22} color={colors.onSurface} />
+              <Text style={styles.rowLabel}>Flash photo</Text>
+            </View>
+            <Segmented options={FLASH_OPTIONS} value={photoFlash} onChange={onSetPhotoFlash} disabled={!flashSupported} />
+          </View>
 
-        {/* Enregistrement */}
-        <Text style={styles.section}>Enregistrement — Photo</Text>
-        <Segmented options={SAVE_OPTIONS} value={photoSaveMode} onChange={onSetPhotoSaveMode} />
+          <Text style={styles.section}>Position de la vignette</Text>
+          <CornerPicker value={pipCorner} onChange={onSetPipCorner} />
 
-        <Text style={styles.section}>Enregistrement — Vidéo</Text>
-        <Segmented options={SAVE_OPTIONS} value={videoSaveMode} onChange={onSetVideoSaveMode} />
-        <Text style={styles.section}>Qualité</Text>
-        <Segmented options={QUALITY_OPTIONS} value={quality} onChange={onSetQuality} />
-        <Text style={styles.hint}>
-          Ajuste résolution de capture + bitrate. Changer la qualité redémarre brièvement les caméras.
-        </Text>
+          {/* Enregistrement */}
+          <Text style={styles.section}>Enregistrement — Photo</Text>
+          <Segmented options={SAVE_OPTIONS} value={photoSaveMode} onChange={onSetPhotoSaveMode} />
+          <Text style={styles.optDesc}>{saveModeDescription(photoSaveMode, 'photo')}</Text>
 
-        <Pressable style={styles.closeBtn} onPress={onClose}>
-          <Text style={styles.closeText}>Fermer</Text>
-        </Pressable>
+          <Text style={styles.section}>Enregistrement — Vidéo</Text>
+          <Segmented options={SAVE_OPTIONS} value={videoSaveMode} onChange={onSetVideoSaveMode} />
+          <Text style={styles.optDesc}>{saveModeDescription(videoSaveMode, 'video')}</Text>
+
+          <Text style={styles.section}>Qualité</Text>
+          <Segmented options={QUALITY_OPTIONS} value={quality} onChange={onSetQuality} />
+          <Text style={styles.hint}>
+            « Max » : photo en 4K, vidéo en 1080p. Changer la qualité redémarre brièvement les caméras.
+          </Text>
+        </ScrollView>
       </View>
     </Modal>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: colors.scrim },
   sheet: {
     backgroundColor: colors.surfaceContainer,
@@ -184,7 +259,8 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 28,
     paddingHorizontal: 20,
     paddingTop: 12,
-    paddingBottom: 36,
+    paddingBottom: 28,
+    maxHeight: '86%',
   },
   handle: {
     alignSelf: 'center',
@@ -214,30 +290,52 @@ const styles = StyleSheet.create({
   rowHeader: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   rowLabel: { color: colors.onSurface, fontSize: 16, flex: 1 },
   dim: { opacity: 0.4 },
-  segment: {
+  // Segmented (M3)
+  segGroup: {
     flexDirection: 'row',
-    backgroundColor: colors.surfaceContainerHighest,
-    borderRadius: 12,
-    padding: 4,
-    gap: 4,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+    borderRadius: 18,
+    overflow: 'hidden',
   },
-  segItem: {
+  segCell: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: 9,
+    paddingHorizontal: 4,
+    minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  segItemActive: { backgroundColor: colors.primary },
-  segText: { color: colors.onSurfaceVariant, fontSize: 13, fontWeight: '600' },
-  segTextActive: { color: colors.onPrimary },
+  segDivider: { borderLeftWidth: 1, borderLeftColor: colors.outlineVariant },
+  segCellActive: { backgroundColor: colors.primaryContainer },
+  segLabelRow: { flexDirection: 'row', alignItems: 'center' },
+  segCheck: { marginRight: 4 },
+  segLabel: { color: colors.onSurfaceVariant, fontSize: 13, fontWeight: '600' },
+  segLabelActive: { color: colors.onPrimaryContainer },
+  segCaption: { color: colors.onSurfaceVariant, fontSize: 10.5, marginTop: 2, fontVariant: ['tabular-nums'] },
+  segCaptionActive: { color: colors.onPrimaryContainer },
+  optDesc: { color: colors.onSurfaceVariant, fontSize: 11.5, marginTop: 7 },
   hint: { color: colors.onSurfaceVariant, fontSize: 12, lineHeight: 17, marginTop: 8 },
-  closeBtn: {
-    marginTop: 22,
-    backgroundColor: colors.surfaceContainerHighest,
-    paddingVertical: 15,
-    borderRadius: 14,
+  // Corner picker (mini-téléphones)
+  cornerRow: { flexDirection: 'row', gap: 8 },
+  cornerCell: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'transparent',
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  closeText: { color: colors.onSurface, fontSize: 16, fontWeight: '600' },
+  cornerCellActive: { backgroundColor: colors.primaryContainer, borderColor: colors.primary },
+  phone: {
+    width: 22,
+    height: 32,
+    borderRadius: 5,
+    borderWidth: 1.5,
+    borderColor: colors.outline,
+  },
+  phoneActive: { borderColor: colors.primary },
+  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.outline },
+  dotActive: { backgroundColor: colors.onPrimaryContainer },
 });

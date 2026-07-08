@@ -1,44 +1,87 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colors } from '../theme/colors';
+import { useColors, useThemedStyles, type Palette } from '../theme/theme';
 
 export type PhotoFlashMode = 'off' | 'on' | 'auto';
 export type TorchState = 'on' | 'off';
 
+type IconName = React.ComponentProps<typeof MaterialIcons>['name'];
+
+const FLASH_ICON: Record<PhotoFlashMode, IconName> = {
+  off: 'flash-off',
+  auto: 'flash-auto',
+  on: 'flash-on',
+};
+
 interface CameraTopBarProps {
   modeLabel: string;
   torchOn: boolean;
+  photoFlash: PhotoFlashMode;
+  flashSupported: boolean;
+  onCyclePhotoFlash: () => void;
   onOpenSettings: () => void;
 }
 
 /**
- * Barre supérieure Material 3 épurée : indicateur de mode (Dual / Simple) +
- * petit repère torche, et bouton d'accès au menu Paramètres (à droite).
+ * Barre supérieure Material 3 épurée : indicateur de mode (Dual / Simple) à
+ * gauche ; à droite, cycle de flash photo (off / auto / on) + accès Paramètres.
  */
-export function CameraTopBar({ modeLabel, torchOn, onOpenSettings }: CameraTopBarProps): React.ReactElement {
+export function CameraTopBar({
+  modeLabel,
+  torchOn,
+  photoFlash,
+  flashSupported,
+  onCyclePhotoFlash,
+  onOpenSettings,
+}: CameraTopBarProps): React.ReactElement {
+  const colors = useColors();
+  const styles = useThemedStyles(makeStyles);
+  const insets = useSafeAreaInsets();
+  // Plancher : jamais au-dessus de la valeur d'origine (statusbar masquée => insets.top peut valoir 0).
+  const top = Math.max(insets.top + 8, 48);
+  const flashColor = !flashSupported
+    ? colors.outlineVariant
+    : photoFlash === 'off'
+      ? colors.onSurface
+      : colors.warning;
+
   return (
-    <View style={styles.container} pointerEvents="box-none">
+    <View style={[styles.container, { top }]} pointerEvents="box-none">
       <View style={styles.modePill}>
         {torchOn && <MaterialIcons name="flashlight-on" size={14} color={colors.warning} />}
         <Text style={styles.modeText}>{modeLabel}</Text>
       </View>
 
-      <Pressable
-        onPress={onOpenSettings}
-        android_ripple={{ color: colors.onSurfaceVariant, borderless: true, radius: 26 }}
-        style={({ pressed }) => [styles.settingsBtn, pressed && styles.pressed]}
-        accessibilityRole="button"
-        accessibilityLabel="Ouvrir les paramètres"
-      >
-        <MaterialIcons name="tune" size={24} color={colors.onSurface} />
-      </Pressable>
+      <View style={styles.actions}>
+        <Pressable
+          onPress={onCyclePhotoFlash}
+          disabled={!flashSupported}
+          android_ripple={{ color: colors.onSurfaceVariant, borderless: true, radius: 22 }}
+          style={({ pressed }) => [styles.iconBtn, pressed && styles.pressed]}
+          accessibilityRole="button"
+          accessibilityLabel={`Flash photo : ${photoFlash === 'off' ? 'désactivé' : photoFlash === 'auto' ? 'automatique' : 'activé'}`}
+        >
+          <MaterialIcons name={FLASH_ICON[photoFlash]} size={21} color={flashColor} />
+        </Pressable>
+
+        <Pressable
+          onPress={onOpenSettings}
+          android_ripple={{ color: colors.onSurfaceVariant, borderless: true, radius: 26 }}
+          style={({ pressed }) => [styles.settingsBtn, pressed && styles.pressed]}
+          accessibilityRole="button"
+          accessibilityLabel="Ouvrir les paramètres"
+        >
+          <MaterialIcons name="tune" size={24} color={colors.onSurface} />
+        </Pressable>
+      </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   container: {
     position: 'absolute',
     top: 48,
@@ -58,6 +101,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.overlayStrong,
   },
   modeText: { color: colors.onSurface, fontSize: 13, fontWeight: '700' },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  iconBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.overlayStrong,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   settingsBtn: {
     width: 46,
     height: 46,

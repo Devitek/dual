@@ -2,7 +2,7 @@ import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 import { Image, StyleSheet, View, type ImageStyle } from 'react-native';
 import ViewShot, { type ViewShotRef } from 'react-native-view-shot';
 
-import { colors } from '../theme/colors';
+import { useThemedStyles, type Palette } from '../theme/theme';
 import { DEFAULT_PIP_LAYOUT, type PipCorner } from '../services/pipComposer';
 
 export interface PipCompositorHandle {
@@ -42,6 +42,7 @@ export const PipCompositor = forwardRef<PipCompositorHandle, { corner: PipCorner
     const shotRef = useRef<ViewShotRef>(null);
     const [job, setJob] = useState<{ primary: string; secondary: string; id: number } | null>(null);
     const pending = useRef<Pending | null>(null);
+    const styles = useThemedStyles(makeStyles);
 
     useImperativeHandle(
       ref,
@@ -130,7 +131,7 @@ export const PipCompositor = forwardRef<PipCompositorHandle, { corner: PipCorner
   },
 );
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   // Hors-écran via un décalage, SANS opacity (sinon couleurs délavées à la capture).
   offscreen: { position: 'absolute', left: -5000, top: 0 },
   canvas: { backgroundColor: colors.background },

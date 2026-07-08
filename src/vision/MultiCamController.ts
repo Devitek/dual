@@ -17,6 +17,7 @@ import {
 // SDK 57 : `saveToLibraryAsync` du package racine est déprécié et THROW à
 // l'exécution. On importe l'API legacy (voie officielle recommandée).
 import { saveToLibraryAsync } from 'expo-media-library/legacy';
+import * as MediaLibrary from 'expo-media-library';
 
 import { getFileSize, toFileUri } from '../utils/fileSystem';
 import type { PipCorner } from '../services/pipComposer';
@@ -37,6 +38,8 @@ export interface CapturedMedia {
   /** URI du média de la caméra SECONDAIRE (vignette), ou null en mono. */
   secondaryUri: string | null;
   createdAt: number;
+  /** Durée de la vidéo en millisecondes (approx.), pour l'affichage galerie. */
+  durationMs?: number;
 }
 
 export interface Notice {
@@ -166,6 +169,8 @@ export class MultiCamController {
     backPath: null as string | null,
     frontPath: null as string | null,
   };
+  /** Horodatage de début d'enregistrement (pour estimer la durée). */
+  private recStartedAt = 0;
 
   // ---------------------------------------------------------------- store ----
   subscribe = (listener: () => void): (() => void) => {
@@ -342,6 +347,13 @@ export class MultiCamController {
     await this.teardownSession();
   }
 
+  /** Reconstruit la session après une erreur (bouton « Réessayer »). */
+  async retry(): Promise<void> {
+    if (this.disposed) return;
+    await this.teardownSession();
+    await this.buildSession();
+  }
+
   /** Change la qualité : reconfigure la session (résolutions) si elle tourne. */
   async setQuality(quality: CaptureQuality): Promise<void> {
     const previous = this.snapshot.captureQuality;
@@ -394,6 +406,29 @@ export class MultiCamController {
 
   setPipCorner(corner: PipCorner): void {
     this.update({ pipCorner: corner });
+  }
+
+  /**
+   * Retire une capture de la session ET tente sa suppression de la galerie
+   * (best-effort : l'URI peut être un fichier temporaire non indexé).
+   */
+  async removeCapture(capture: CapturedMedia): Promise<void> {
+    const remaining = this.snapshot.sessionCaptures.filter((c) => c !== capture);
+    const lastCapture =
+      this.snapshot.lastCapture === capture
+        ? remaining.length > 0
+          ? remaining[remaining.length - 1] ?? null
+          : null
+        : this.snapshot.lastCapture;
+    this.update({ sessionCaptures: remaining, lastCapture });
+
+    try {
+      const assets: string[] = [capture.primaryUri];
+      if (capture.secondaryUri != null) assets.push(capture.secondaryUri);
+      await MediaLibrary.deleteAssetsAsync(assets);
+    } catch {
+      /* URI non indexée (fichier temporaire) — retrait de session déjà fait */
+    }
   }
 
   private controllerFor(slot: CameraSlot): CameraController | null {
@@ -508,6 +543,8 @@ export class MultiCamController {
     const bitRate = QUALITY[this.snapshot.captureQuality].videoBitrate;
     const wantPip = mode !== 'originals';
     const canPip = secondaryPath != null && this.videoComposer != null;
+    // Durée estimée : figée MAINTENANT (avant la composition, qui peut être longue).
+    const durationMs = this.recStartedAt > 0 ? Date.now() - this.recStartedAt : undefined;
     this.enqueue(async () => {
       if (wantPip && canPip) {
         const saveOriginals = mode === 'pip_plus_originals';
@@ -524,13 +561,14 @@ export class MultiCamController {
           primaryUri: savedPipUri,
           secondaryUri: saveOriginals ? toFileUri(secondaryPath!) : null,
           createdAt: Date.now(),
+          durationMs,
         });
         this.notify('success', saveOriginals ? 'Vidéo PiP + 2 originaux enregistrés' : 'Vidéo PiP enregistrée');
       } else {
         // Mode originaux, ou pas de composeur natif -> sauvegarde JS des originaux.
         const primaryUri = await this.persist(primaryPath);
         const secondaryUri = secondaryPath != null ? await this.persist(secondaryPath) : null;
-        this.pushCapture({ kind: 'video', primaryUri, secondaryUri, createdAt: Date.now() });
+        this.pushCapture({ kind: 'video', primaryUri, secondaryUri, createdAt: Date.now(), durationMs });
         this.notify(
           'success',
           secondaryPath != null
@@ -561,6 +599,7 @@ export class MultiCamController {
   async startRecording(): Promise<void> {
     if (this.backVideo == null || this.snapshot.isRecording || this.snapshot.isBusy) return;
     this.recAgg = { expected: this.frontVideo != null ? 2 : 1, settled: 0, backPath: null, frontPath: null };
+    this.recStartedAt = Date.now();
     this.update({ isRecording: true });
     try {
       this.recorders.back = await this.backVideo.createRecorder({});

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet } from 'react-native';
 
-import { colors } from '../theme/colors';
+import { useThemedStyles, type Palette } from '../theme/theme';
 
 export interface FocusPoint {
   x: number;
@@ -19,6 +19,7 @@ const SIZE = 74;
 export function FocusIndicator({ point }: { point: FocusPoint | null }): React.ReactElement | null {
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(1.4)).current;
+  const styles = useThemedStyles(makeStyles);
 
   useEffect(() => {
     if (point == null) return;
@@ -53,7 +54,7 @@ export function FocusIndicator({ point }: { point: FocusPoint | null }): React.R
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   box: {
     position: 'absolute',
     width: SIZE,

@@ -1,7 +1,7 @@
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
-import { colors } from '../theme/colors';
+import { useColors, useThemedStyles, type Palette } from '../theme/theme';
 
 interface ProcessingIndicatorProps {
   count: number;
@@ -14,6 +14,8 @@ interface ProcessingIndicatorProps {
  * La progression détaillée est dans la notification système (Foreground Service).
  */
 export function ProcessingIndicator({ count, progress }: ProcessingIndicatorProps): React.ReactElement | null {
+  const colors = useColors();
+  const styles = useThemedStyles(makeStyles);
   if (count <= 0) return null;
   const pct = progress != null && progress >= 0 ? Math.round(progress * 100) : null;
 
@@ -27,7 +29,7 @@ export function ProcessingIndicator({ count, progress }: ProcessingIndicatorProp
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   wrap: { position: 'absolute', bottom: 132, left: 16 },
   pill: {
     flexDirection: 'row',

@@ -1,20 +1,24 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Animated, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture } from 'react-native-gesture-handler';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { colors } from '../theme/colors';
+import { useThemedStyles, type Palette } from '../theme/theme';
 import { useIsForeground } from '../hooks/useIsForeground';
 import { useMultiCamPermissions } from '../hooks/useMultiCamPermissions';
 import { useMultiCam } from '../hooks/useMultiCam';
 import { PermissionGate } from '../components/PermissionGate';
 import { MultiCamPreview } from '../components/MultiCamPreview';
 import { CaptureControls } from '../components/CaptureControls';
+import type { CaptureMode } from '../components/ModeSwitch';
 import { CameraTopBar, type PhotoFlashMode } from '../components/CameraTopBar';
 import { SettingsSheet } from '../components/SettingsSheet';
 import { ZoomIndicator } from '../components/ZoomIndicator';
 import { ProcessingIndicator } from '../components/ProcessingIndicator';
 import { UnsupportedBanner } from '../components/UnsupportedBanner';
+import { CameraErrorView } from '../components/CameraErrorView';
 import { SessionGallery } from '../components/SessionGallery';
+import { PipHint } from '../components/PipHint';
 import { PipCompositor, type PipCompositorHandle } from '../components/PipCompositor';
 import { Snackbar } from '../components/Snackbar';
 import {
@@ -30,6 +34,18 @@ import { pipCanvasForQuality } from '../vision/MultiCamController';
 import type { CameraSlot, CaptureQuality, SaveMode } from '../vision/MultiCamController';
 import type { PipCorner } from '../services/pipComposer';
 
+/** Clé de persistance du hint « touchez la vignette » (1er lancement). */
+const PIP_HINT_KEY = 'tl_seen_pip_hint';
+
+/** Paliers de zoom rapides dérivés des bornes de la caméra principale. */
+function buildZoomLevels(min: number, max: number): number[] {
+  const levels: number[] = [];
+  if (min <= 0.6) levels.push(0.5); // ultra grand-angle si dispo
+  levels.push(1);
+  if (max >= 1.9) levels.push(2);
+  return levels;
+}
+
 /**
  * Écran principal — VisionCamera v5 multi-caméra, UI Material 3, Android.
  */
@@ -41,6 +57,7 @@ export function MultiCameraScreen(): React.ReactElement {
   const cam = useMultiCam(isForeground, permissions.allGranted);
 
   const [primarySlot, setPrimarySlot] = useState<CameraSlot>('back');
+  const [mode, setMode] = useState<CaptureMode>('photo');
   const [torchOn, setTorchOn] = useState(false);
   const [photoFlash, setPhotoFlash] = useState<PhotoFlashMode>('off');
   const [focusPoint, setFocusPoint] = useState<FocusPoint | null>(null);
@@ -48,11 +65,15 @@ export function MultiCameraScreen(): React.ReactElement {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [zoomDisplay, setZoomDisplay] = useState<number | null>(null);
   const [zoomNonce, setZoomNonce] = useState(0);
+  const [currentZoom, setCurrentZoom] = useState(1);
   const [videoProgress, setVideoProgress] = useState<number | null>(null);
+  const [pipHintVisible, setPipHintVisible] = useState(false);
   const focusNonce = useRef(0);
   const lastZoomUpdate = useRef(0);
+  const pipHintChecked = useRef(false);
   const pipRef = useRef<PipCompositorHandle>(null);
   const flashOpacity = useRef(new Animated.Value(0)).current;
+  const styles = useThemedStyles(makeStyles);
 
   // Injecte le compositeur PiP (view-shot) dans le contrôleur natif.
   useEffect(() => {
@@ -68,7 +89,6 @@ export function MultiCameraScreen(): React.ReactElement {
   // Branche le composeur vidéo natif (Foreground Service) s'il est dans le build.
   useEffect(() => {
     if (!isVideoPipComposerAvailable) return;
-    requestVideoPipNotificationsPermission();
     cam.controller.setVideoComposer((primary, secondary, corner, bitRate, saveOriginals) =>
       composePipVideo(primary, secondary, corner, bitRate, saveOriginals),
     );
@@ -83,19 +103,59 @@ export function MultiCameraScreen(): React.ReactElement {
     };
   }, [cam.controller]);
 
+  // Notifications (barre de progression du Foreground Service) : demandées
+  // SEULEMENT une fois les permissions cœur accordées, pour ne pas entrer en
+  // collision avec les dialogues caméra/micro/galerie au 1er lancement (Android
+  // n'affiche qu'un dialogue de permission à la fois).
+  useEffect(() => {
+    if (!isVideoPipComposerAvailable || !permissions.allGranted) return;
+    requestVideoPipNotificationsPermission();
+  }, [permissions.allGranted]);
+
   // Réinitialise la progression quand plus aucun traitement n'est en cours.
   useEffect(() => {
     if (cam.processingCount === 0) setVideoProgress(null);
   }, [cam.processingCount]);
 
+  const dismissPipHint = useCallback(() => {
+    setPipHintVisible((visible) => {
+      if (visible) void AsyncStorage.setItem(PIP_HINT_KEY, '1').catch(() => {});
+      return false;
+    });
+  }, []);
+
+  // Hint d'inversion PiP : affiché une seule fois, au 1er lancement en multi-cam.
+  useEffect(() => {
+    if (cam.mode !== 'multi' || pipHintChecked.current) return;
+    pipHintChecked.current = true;
+    let cancelled = false;
+    void AsyncStorage.getItem(PIP_HINT_KEY)
+      .then((seen) => {
+        if (!cancelled && seen == null) setPipHintVisible(true);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [cam.mode]);
+
+  // Auto-masquage après 4 s.
+  useEffect(() => {
+    if (!pipHintVisible) return;
+    const id = setTimeout(dismissPipHint, 4000);
+    return () => clearTimeout(id);
+  }, [pipHintVisible, dismissPipHint]);
+
   const swap = useCallback(() => {
     haptics.selection();
+    dismissPipHint();
     setPrimarySlot((prev) => {
       const next: CameraSlot = prev === 'back' ? 'front' : 'back';
       cam.controller.setPrimarySlot(next);
+      setCurrentZoom(cam.controller.getZoomBounds(next).current);
       return next;
     });
-  }, [cam.controller]);
+  }, [cam.controller, dismissPipHint]);
 
   const toggleTorch = useCallback(() => {
     haptics.selection();
@@ -108,13 +168,38 @@ export function MultiCameraScreen(): React.ReactElement {
 
   const onSetPhotoFlash = useCallback((mode: PhotoFlashMode) => setPhotoFlash(mode), []);
 
+  const cyclePhotoFlash = useCallback(() => {
+    haptics.selection();
+    setPhotoFlash((prev) => (prev === 'off' ? 'auto' : prev === 'auto' ? 'on' : 'off'));
+  }, []);
+
   const onPhoto = useCallback(() => {
     haptics.medium();
-    // Feedback visuel INSTANTANÉ (flash d'obturateur), avant tout traitement async.
-    flashOpacity.setValue(0.85);
-    Animated.timing(flashOpacity, { toValue: 0, duration: 240, useNativeDriver: true }).start();
+    // Feedback visuel INSTANTANÉ (flash d'obturateur blanc), avant tout traitement async.
+    flashOpacity.setValue(0.9);
+    Animated.timing(flashOpacity, { toValue: 0, duration: 200, useNativeDriver: true }).start();
     void cam.controller.capturePhoto(photoFlash);
   }, [cam.controller, photoFlash, flashOpacity]);
+
+  const onSelectZoom = useCallback(
+    (level: number) => {
+      const { min, max } = cam.controller.getZoomBounds(primarySlot);
+      const z = Math.min(max, Math.max(min, level));
+      void cam.controller.setZoom(primarySlot, z);
+      setCurrentZoom(z);
+      setZoomDisplay(z);
+      setZoomNonce((n) => n + 1);
+      haptics.selection();
+    },
+    [cam.controller, primarySlot],
+  );
+
+  // Paliers de zoom rapides selon les bornes de la caméra principale.
+  const zoomLevels = useMemo(() => {
+    const { min, max } = cam.controller.getZoomBounds(primarySlot);
+    return buildZoomLevels(min, max);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cam.controller, primarySlot, cam.status]);
 
   const onToggleRecording = useCallback(() => {
     if (cam.isRecording) {
@@ -154,11 +239,14 @@ export function MultiCameraScreen(): React.ReactElement {
         if (now - lastZoomUpdate.current > 80) {
           lastZoomUpdate.current = now;
           setZoomDisplay(zoom);
+          setCurrentZoom(zoom);
           setZoomNonce((n) => n + 1);
         }
       })
       .onEnd(() => {
-        setZoomDisplay(cam.controller.getZoomBounds(primarySlot).current);
+        const { current } = cam.controller.getZoomBounds(primarySlot);
+        setZoomDisplay(current);
+        setCurrentZoom(current);
         setZoomNonce((n) => n + 1);
       });
 
@@ -171,9 +259,7 @@ export function MultiCameraScreen(): React.ReactElement {
     <PermissionGate permissions={permissions}>
       <View style={styles.root}>
         {cam.status === 'error' ? (
-          <View style={styles.center}>
-            <Text style={styles.msg}>{cam.errorMessage ?? 'Erreur caméra.'}</Text>
-          </View>
+          <CameraErrorView message={cam.errorMessage} onRetry={() => void cam.controller.retry()} />
         ) : (
           <>
             <MultiCamPreview
@@ -193,6 +279,9 @@ export function MultiCameraScreen(): React.ReactElement {
             <CameraTopBar
               modeLabel={modeLabel}
               torchOn={torchOn}
+              photoFlash={photoFlash}
+              flashSupported={cam.hasTorch}
+              onCyclePhotoFlash={cyclePhotoFlash}
               onOpenSettings={() => setSettingsOpen(true)}
             />
 
@@ -201,16 +290,27 @@ export function MultiCameraScreen(): React.ReactElement {
             {cam.mode === 'single' && cam.status === 'running' && <UnsupportedBanner />}
 
             <CaptureControls
+              mode={mode}
+              onSetMode={setMode}
               isRecording={cam.isRecording}
               isBusy={cam.isBusy}
               onPhoto={onPhoto}
               onToggleRecording={onToggleRecording}
+              onSwap={swap}
+              canSwap={cam.mode === 'multi'}
               lastCapture={cam.lastCapture}
               processing={cam.processingCount > 0}
               onOpenReview={() => setGalleryOpen(true)}
+              zoomLevels={zoomLevels}
+              currentZoom={currentZoom}
+              onSelectZoom={onSelectZoom}
             />
 
-            {/* Flash d'obturateur (feedback instantané) */}
+            {cam.mode === 'multi' && (
+              <PipHint visible={pipHintVisible} corner={cam.pipCorner} onDismiss={dismissPipHint} />
+            )}
+
+            {/* Flash d'obturateur (feedback instantané, blanc) */}
             <Animated.View pointerEvents="none" style={[styles.flash, { opacity: flashOpacity }]} />
 
             <SettingsSheet
@@ -238,6 +338,7 @@ export function MultiCameraScreen(): React.ReactElement {
               visible={galleryOpen}
               captures={cam.sessionCaptures}
               onClose={() => setGalleryOpen(false)}
+              onDelete={(c) => cam.controller.removeCapture(c)}
             />
 
             <Snackbar notice={cam.notice} />
@@ -251,9 +352,7 @@ export function MultiCameraScreen(): React.ReactElement {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  msg: { color: colors.onSurface, fontSize: 16, textAlign: 'center' },
-  flash: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#000' },
+  flash: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#fff' },
 });

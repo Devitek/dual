@@ -1,20 +1,32 @@
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Animated, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
-import { colors } from '../theme/colors';
+import { useColors, useThemedStyles, type Palette } from '../theme/theme';
+import { ModeSwitch, type CaptureMode } from './ModeSwitch';
+import { ZoomBar } from './ZoomBar';
 import type { CapturedMedia } from '../vision/MultiCamController';
 
 interface CaptureControlsProps {
+  mode: CaptureMode;
+  onSetMode: (mode: CaptureMode) => void;
   isRecording: boolean;
   isBusy: boolean;
   onPhoto: () => void;
   onToggleRecording: () => void;
+  /** Inversion arrière/avant (remplace l'ancien bouton rec de droite). */
+  onSwap: () => void;
+  /** false en mono-caméra : le bouton d'inversion est grisé. */
+  canSwap?: boolean;
   lastCapture: CapturedMedia | null;
   /** true si une composition/sauvegarde tourne en arrière-plan. */
   processing?: boolean;
   /** Ouvre la revue de la dernière capture. */
   onOpenReview: () => void;
+  // Paliers de zoom rapides
+  zoomLevels: number[];
+  currentZoom: number;
+  onSelectZoom: (level: number) => void;
 }
 
 function formatDuration(seconds: number): string {
@@ -24,19 +36,30 @@ function formatDuration(seconds: number): string {
 }
 
 /**
- * Barre de capture inférieure : [ miniature ] [ obturateur ] [ rec/stop ].
- * L'inversion de caméra est désormais dans le menu Paramètres (+ tap sur la vignette).
+ * Barre de capture inférieure — modèle appareil photo classique :
+ *   [ ZoomBar ] [ ModeSwitch Photo|Vidéo ] [ miniature · obturateur unique · inversion ].
+ * L'obturateur unique s'adapte au mode (photo/vidéo, repos/enregistrement).
  */
 export function CaptureControls({
+  mode,
+  onSetMode,
   isRecording,
   isBusy,
   onPhoto,
   onToggleRecording,
+  onSwap,
+  canSwap = true,
   lastCapture,
   processing = false,
   onOpenReview,
+  zoomLevels,
+  currentZoom,
+  onSelectZoom,
 }: CaptureControlsProps): React.ReactElement {
   const [elapsed, setElapsed] = useState(0);
+  const thumbScale = useRef(new Animated.Value(1)).current;
+  const colors = useColors();
+  const styles = useThemedStyles(makeStyles);
 
   useEffect(() => {
     if (!isRecording) {
@@ -48,7 +71,20 @@ export function CaptureControls({
     return () => clearInterval(id);
   }, [isRecording]);
 
-  const shutterDisabled = isBusy || isRecording;
+  // Léger « bounce » de la miniature à chaque nouvelle capture.
+  useEffect(() => {
+    if (lastCapture == null) return;
+    thumbScale.setValue(1);
+    Animated.sequence([
+      Animated.timing(thumbScale, { toValue: 1.15, duration: 110, useNativeDriver: true }),
+      Animated.spring(thumbScale, { toValue: 1, friction: 4, useNativeDriver: true }),
+    ]).start();
+  }, [lastCapture, thumbScale]);
+
+  const isVideo = mode === 'video';
+  const shutterDisabled = isVideo ? isBusy && !isRecording : isBusy;
+  const onShutter = isVideo ? onToggleRecording : onPhoto;
+  const swapDisabled = !canSwap || isRecording;
 
   return (
     <View style={styles.wrapper} pointerEvents="box-none">
@@ -59,81 +95,99 @@ export function CaptureControls({
         </View>
       )}
 
-      <View style={styles.bar}>
-        {/* Gauche : miniature de la dernière capture (+ indicateur de traitement) */}
-        <View style={styles.zone}>
-          {lastCapture != null ? (
+      <View style={styles.stack}>
+        <ZoomBar levels={zoomLevels} current={currentZoom} onSelect={onSelectZoom} />
+
+        <ModeSwitch mode={mode} onChange={onSetMode} disabled={isRecording} />
+
+        <View style={styles.bar}>
+          {/* Gauche : miniature de la dernière capture (+ indicateur de traitement) */}
+          <View style={styles.zone}>
+            {lastCapture != null ? (
+              <Animated.View style={{ transform: [{ scale: thumbScale }] }}>
+                <Pressable
+                  style={({ pressed }) => [styles.thumbWrap, pressed && styles.pressed]}
+                  onPress={onOpenReview}
+                  accessibilityLabel="Voir les médias de la session"
+                >
+                  {lastCapture.kind === 'photo' ? (
+                    <Image source={{ uri: lastCapture.primaryUri }} style={styles.thumb} />
+                  ) : (
+                    <View style={[styles.thumb, styles.videoThumb]}>
+                      <MaterialIcons name="play-arrow" size={22} color={colors.onSurface} />
+                    </View>
+                  )}
+                  {lastCapture.secondaryUri != null && (
+                    <View style={styles.dualBadge}>
+                      <Text style={styles.dualBadgeText}>PiP</Text>
+                    </View>
+                  )}
+                  {processing && (
+                    <View style={styles.processingOverlay}>
+                      <ActivityIndicator size="small" color={colors.onSurface} />
+                    </View>
+                  )}
+                </Pressable>
+              </Animated.View>
+            ) : processing ? (
+              <View style={[styles.thumbWrap, styles.processingEmpty]}>
+                <ActivityIndicator color={colors.onSurface} />
+              </View>
+            ) : null}
+          </View>
+
+          {/* Centre : obturateur unique (photo / vidéo repos / vidéo en cours) */}
+          <View style={styles.zone}>
             <Pressable
-              style={({ pressed }) => [styles.thumbWrap, pressed && styles.pressed]}
-              onPress={onOpenReview}
-              accessibilityLabel="Voir les médias de la session"
+              onPress={onShutter}
+              disabled={shutterDisabled}
+              style={styles.shutterOuter}
+              accessibilityRole="button"
+              accessibilityLabel={
+                isVideo
+                  ? isRecording
+                    ? "Arrêter l'enregistrement"
+                    : "Démarrer l'enregistrement"
+                  : 'Prendre une photo'
+              }
             >
-              {lastCapture.kind === 'photo' ? (
-                <Image source={{ uri: lastCapture.primaryUri }} style={styles.thumb} />
-              ) : (
-                <View style={[styles.thumb, styles.videoThumb]}>
-                  <MaterialIcons name="play-arrow" size={22} color={colors.onSurface} />
-                </View>
-              )}
-              {lastCapture.secondaryUri != null && (
-                <View style={styles.dualBadge}>
-                  <Text style={styles.dualBadgeText}>PiP</Text>
-                </View>
-              )}
-              {processing && (
-                <View style={styles.processingOverlay}>
-                  <ActivityIndicator size="small" color={colors.onSurface} />
-                </View>
-              )}
+              <View
+                style={[
+                  isVideo ? (isRecording ? styles.shutterRecStop : styles.shutterRecDot) : styles.shutterPhoto,
+                  shutterDisabled && styles.shutterBusy,
+                ]}
+              />
             </Pressable>
-          ) : processing ? (
-            <View style={[styles.thumbWrap, styles.processingEmpty]}>
-              <ActivityIndicator color={colors.onSurface} />
-            </View>
-          ) : null}
-        </View>
+          </View>
 
-        {/* Centre : obturateur photo */}
-        <View style={styles.zone}>
-          <Pressable
-            onPress={onPhoto}
-            disabled={shutterDisabled}
-            style={styles.shutterOuter}
-            accessibilityLabel="Prendre une photo"
-          >
-            <View style={[styles.shutterInner, shutterDisabled && styles.shutterBusy]} />
-          </Pressable>
-        </View>
-
-        {/* Droite : démarrer / arrêter la vidéo */}
-        <View style={styles.zone}>
-          <Pressable
-            onPress={onToggleRecording}
-            disabled={isBusy && !isRecording}
-            style={({ pressed }) => [
-              styles.recButton,
-              pressed && styles.pressed,
-              isBusy && !isRecording && styles.disabled,
-            ]}
-            accessibilityLabel={isRecording ? "Arrêter l'enregistrement" : "Démarrer l'enregistrement"}
-          >
-            <View style={isRecording ? styles.recStop : styles.recCircle} />
-          </Pressable>
+          {/* Droite : inversion des caméras */}
+          <View style={styles.zone}>
+            <Pressable
+              onPress={onSwap}
+              disabled={swapDisabled}
+              style={({ pressed }) => [styles.swapButton, pressed && styles.pressed, swapDisabled && styles.swapDisabled]}
+              accessibilityRole="button"
+              accessibilityLabel="Inverser les caméras"
+            >
+              <MaterialIcons name="cameraswitch" size={24} color={colors.onSurface} />
+            </Pressable>
+          </View>
         </View>
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   wrapper: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
-    paddingBottom: 42,
+    paddingBottom: 34,
     alignItems: 'center',
   },
+  stack: { alignItems: 'center', gap: 16, width: '100%' },
   timer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -142,7 +196,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 14,
     borderRadius: 20,
-    marginBottom: 18,
+    marginBottom: 16,
   },
   recDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.danger },
   timerText: { color: colors.onSurface, fontVariant: ['tabular-nums'], fontSize: 15, fontWeight: '600' },
@@ -153,27 +207,27 @@ const styles = StyleSheet.create({
   },
   zone: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   shutterOuter: {
-    width: 82,
-    height: 82,
-    borderRadius: 41,
-    borderWidth: 5,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    borderWidth: 4,
     borderColor: colors.onSurface,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  shutterInner: { width: 62, height: 62, borderRadius: 31, backgroundColor: colors.onSurface },
+  shutterPhoto: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.onSurface },
+  shutterRecDot: { width: 30, height: 30, borderRadius: 15, backgroundColor: colors.danger },
+  shutterRecStop: { width: 30, height: 30, borderRadius: 8, backgroundColor: colors.danger },
   shutterBusy: { opacity: 0.4 },
-  recButton: {
-    width: 62,
-    height: 62,
-    borderRadius: 31,
-    backgroundColor: colors.overlay,
+  swapButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(0,0,0,0.42)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  recCircle: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.danger },
-  recStop: { width: 24, height: 24, borderRadius: 6, backgroundColor: colors.danger },
-  disabled: { opacity: 0.35 },
+  swapDisabled: { opacity: 0.45 },
   pressed: { opacity: 0.7 },
   thumbWrap: {
     width: 52,

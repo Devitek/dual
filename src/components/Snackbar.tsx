@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text } from 'react-native';
 
-import { colors } from '../theme/colors';
+import { useThemedStyles, type Palette } from '../theme/theme';
 import { haptics } from '../utils/haptics';
 import type { Notice } from '../vision/MultiCamController';
 
@@ -14,6 +14,7 @@ const VISIBLE_MS = 3200;
 export function Snackbar({ notice }: { notice: Notice | null }): React.ReactElement | null {
   const [current, setCurrent] = useState<Notice | null>(null);
   const opacity = useRef(new Animated.Value(0)).current;
+  const styles = useThemedStyles(makeStyles);
 
   useEffect(() => {
     if (notice == null) return;
@@ -45,7 +46,7 @@ export function Snackbar({ notice }: { notice: Notice | null }): React.ReactElem
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   snack: {
     position: 'absolute',
     left: 16,
