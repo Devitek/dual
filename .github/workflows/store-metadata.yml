@@ -28,6 +28,17 @@ jobs:
       - name: Write Play service account key
         run: printf '%s' '${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}' > "$RUNNER_TEMP/play.json"
 
+      - name: Diagnostic — identité du compte de service (pas de secret loggé)
+        run: |
+          python3 - "$RUNNER_TEMP/play.json" <<'PY'
+          import json, sys
+          d = json.load(open(sys.argv[1]))
+          print("client_email :", d.get("client_email"))
+          print("project_id   :", d.get("project_id"))
+          print("type         :", d.get("type"))
+          print("private_key  :", "present" if d.get("private_key") else "MISSING")
+          PY
+
       - name: Upload listing (Fastlane supply — metadata only)
         env:
           PLAY_SERVICE_ACCOUNT_JSON_PATH: ${{ runner.temp }}/play.json
