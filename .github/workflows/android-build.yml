@@ -7,10 +7,20 @@ name: Android Build
 # NB : build de TEST (signature debug). Pour un AAB signé Play Store, ajouter un
 # keystore en secrets + `bundleRelease`, ou basculer sur EAS Build.
 
+# NB : release-please crée la release avec le GITHUB_TOKEN par défaut, ce qui
+# n'enclenche PAS l'event `release` (anti-récursion GitHub). Après une release,
+# lancer ce workflow manuellement (workflow_dispatch) : il attache l'APK à la
+# dernière release. Pour un déclenchement 100% auto, donner un PAT à
+# release-please (secrets) afin que l'event `release` cascade.
 on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Tag de release auquel attacher l'APK (défaut : dernière release)"
+        required: false
+        type: string
 
 jobs:
   build:
@@ -50,7 +60,11 @@ jobs:
           if-no-files-found: error
 
       - name: Attach APK to release
-        if: github.event_name == 'release'
+        if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "${{ github.event.release.tag_name }}" android/app/build/outputs/apk/debug/*.apk --clobber
+        run: |
+          TAG="${{ github.event.release.tag_name }}${{ inputs.release_tag }}"
+          if [ -z "$TAG" ]; then TAG="$(gh release view --json tagName -q .tagName)"; fi
+          echo "Attaching APK to release $TAG"
+          gh release upload "$TAG" android/app/build/outputs/apk/debug/*.apk --clobber
