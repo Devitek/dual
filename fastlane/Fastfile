@@ -23,17 +23,10 @@ platform :android do
     )
   end
 
-  desc "Pousse la FICHE Play (titres, descriptions, images, captures) sans binaire."
-  lane :metadata do
-    upload_to_play_store(
-      skip_upload_aab: true,
-      skip_upload_apk: true,
-      # Les notes de version (changelogs) s'attachent à une RELEASE (versionCode
-      # sur une piste), pas à la fiche : elles sont poussées par le lane `internal`
-      # avec l'AAB. Ici on ne pousse que titres / descriptions / images / captures.
-      skip_upload_changelogs: true,
-    )
-  end
+  # NB : la FICHE (titres/descriptions/images/captures) n'est PLUS poussée par
+  # fastlane supply — supply veut rattacher des notes de version à un versionCode
+  # même en « fiche seule », ce qui casse sur une app neuve. Elle est poussée via
+  # l'API Google Play brute : `store/upload_listing.py` (workflow store-metadata).
 
   # ---------------------------------------------------------------------------
   # Captures d'écran RÉELLES depuis un appareil branché (adb), pour remplacer les

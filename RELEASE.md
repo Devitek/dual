@@ -32,9 +32,19 @@ Garde une **sauvegarde** de `upload.keystore` hors du dépôt.
 ## 2. Compte de service Google (API Play) — une seule fois
 1. Google Cloud Console → crée un projet → **IAM & Admin → Service Accounts** →
    nouveau compte de service → crée une **clé JSON**.
-2. Play Console → **Users & permissions** (ou *API access*) → invite l'e-mail du
-   compte de service et donne-lui les droits *Releases* (Admin des versions).
-3. Secret GitHub :
+2. **⚠️ Rôle IAM Cloud (sinon 403)** : sur le **projet** Google Cloud, accorde au
+   compte de service le rôle **« Service Usage Consumer »**
+   (`roles/serviceusage.serviceUsageConsumer`). Les clients Google envoient un
+   en-tête `X-Goog-User-Project` (projet de quota) qui exige `serviceusage.services.use`.
+   Sans ce rôle : `The caller does not have permission`, même avec tous les droits Play.
+   ```bash
+   gcloud projects add-iam-policy-binding <PROJECT_ID> \
+     --member="serviceAccount:<SA_EMAIL>" \
+     --role="roles/serviceusage.serviceUsageConsumer"
+   ```
+3. Play Console → **Users & permissions** → invite l'e-mail du compte de service
+   avec les droits *Releases* + *Gérer la présence sur le Play Store*.
+4. Secret GitHub :
    ```bash
    gh secret set PLAY_SERVICE_ACCOUNT_JSON --repo Devitek/dual < play-service-account.json
    ```
@@ -71,8 +81,12 @@ Garde une **sauvegarde** de `upload.keystore` hors du dépôt.
 ```bash
 gh workflow run store-metadata.yml --repo Devitek/dual
 ```
-Le workflow **Store Metadata** pousse `fastlane/metadata/android/` (fr-FR + en-US)
-via `fastlane supply`. Aucune manip locale requise.
+Le workflow **Store Metadata** pousse `fastlane/metadata/android/` (6 langues :
+titres, descriptions, icône, feature graphic, captures phone + 7"/10") via l'**API
+Google Play brute** (`store/upload_listing.py`). On n'utilise PAS `fastlane supply`
+ici : supply veut rattacher des notes de version à un versionCode même en mode
+« fiche seule », ce qui casse sur une app neuve. Les **notes de version** restent
+poussées avec l'AAB par `release-android.yml` (fastlane `internal`).
 
 ## 6. (Option) Vraies captures TÉLÉPHONE depuis ton appareil — en local
 Les captures livrées sont des mockups. Pour des captures réelles de l'app :
