@@ -95,6 +95,26 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           echo "Resolved versionName=${NAME:-1.0.0} versionCode=${CODE} (tag=${TAG:-none})"
 
+      # IMPÉRATIF : le versionCode doit être posé dans app.json AVANT `expo
+      # prebuild`, car prebuild le fige dans android/app/build.gradle. Le flag
+      # Gradle `-Pandroid.injected.version.code` est IGNORÉ par le build RN/Expo
+      # (l'AAB repartait sinon sur versionCode 1 -> rejet Play « déjà utilisé »).
+      - name: Set versionCode / versionName in app.json (before prebuild)
+        env:
+          APP_VERSION_NAME: ${{ steps.ver.outputs.name }}
+          APP_VERSION_CODE: ${{ steps.ver.outputs.code }}
+        run: |
+          node -e '
+            const fs = require("fs");
+            const p = "app.json";
+            const a = JSON.parse(fs.readFileSync(p, "utf8"));
+            a.expo.version = process.env.APP_VERSION_NAME;
+            a.expo.android = a.expo.android || {};
+            a.expo.android.versionCode = Number(process.env.APP_VERSION_CODE);
+            fs.writeFileSync(p, JSON.stringify(a, null, 2) + "\n");
+            console.log("app.json -> version " + a.expo.version + " / versionCode " + a.expo.android.versionCode);
+          '
+
       - name: Expo prebuild (Android)
         run: npx expo prebuild --platform android --no-install
 
@@ -105,8 +125,6 @@ jobs:
         working-directory: android
         run: |
           ./gradlew bundleRelease --no-daemon \
-            -Pandroid.injected.version.code=${{ steps.ver.outputs.code }} \
-            -Pandroid.injected.version.name=${{ steps.ver.outputs.name }} \
             -Pandroid.injected.signing.store.file="$RUNNER_TEMP/upload.keystore" \
             -Pandroid.injected.signing.store.password="${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
             -Pandroid.injected.signing.key.alias="${{ secrets.ANDROID_KEY_ALIAS }}" \
