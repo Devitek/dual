@@ -28,9 +28,9 @@
       [
         "expo-media-library",
         {
-          "photosPermission": "TwinLens accède à votre galerie pour y enregistrer vos captures.",
           "savePhotosPermission": "TwinLens enregistre vos photos et vidéos dans votre galerie.",
-          "isAccessMediaLocationEnabled": true
+          "isAccessMediaLocationEnabled": false,
+          "granularPermissions": []
         }
       ],
       "expo-status-bar",

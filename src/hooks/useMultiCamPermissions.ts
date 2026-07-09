@@ -25,9 +25,13 @@ export function useMultiCamPermissions(): MultiCamPermissionsState {
     useCameraPermission();
   const { hasPermission: hasMicrophonePermission, requestPermission: requestMic } =
     useMicrophonePermission();
-  // Permission galerie COMPLÈTE (lecture+écriture) : sur Android, `writeOnly`
-  // ne suffit pas toujours pour `saveToLibraryAsync` selon la version d'OS.
-  const [media, requestMedia] = MediaLibrary.usePermissions();
+  // Permission galerie en ÉCRITURE SEULE (`writeOnly`). L'app n'a jamais besoin
+  // de LIRE la pellicule de l'utilisateur : elle ne fait qu'ENREGISTRER ses
+  // propres captures (sauvegarde native scoped via MediaStore + repli
+  // `saveToLibraryAsync`) et supprimer ses propres médias de session.
+  // → aucune permission READ_MEDIA_IMAGES/VIDEO n'est déclarée ni demandée,
+  //   ce qui évite la déclaration Play « accès photos/vidéos ».
+  const [media, requestMedia] = MediaLibrary.usePermissions({ writeOnly: true });
 
   const [isRequesting, setIsRequesting] = useState(false);
   const didAutoRequest = useRef(false);
@@ -83,7 +87,12 @@ export function useMultiCamPermissions(): MultiCamPermissionsState {
     hasCameraPermission,
     hasMicrophonePermission,
     hasMediaLibraryPermission,
-    allGranted: hasCameraPermission && hasMicrophonePermission && hasMediaLibraryPermission,
+    // Galerie = BEST-EFFORT, volontairement HORS du gate bloquant : la
+    // sauvegarde passe par le MediaStore scoped (aucune permission runtime
+    // requise sur Android 13+) et, en écriture seule, il n'y a rien à accorder
+    // sur 13+ — bloquer l'app dessus créerait un blocage impossible à lever.
+    // Seuls caméra + micro sont réellement indispensables au fonctionnement.
+    allGranted: hasCameraPermission && hasMicrophonePermission,
     isRequesting,
     canAskAgain,
     requestAll,
