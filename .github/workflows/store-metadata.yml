@@ -1,10 +1,13 @@
 name: Store Metadata (Play listing)
 
-# Pousse la FICHE Play (titres, descriptions, notes de version, icône, feature
-# graphic, captures) via Fastlane `supply`, SANS binaire. Manuel.
+# Pousse la FICHE Play (titres, descriptions, icône, feature graphic, captures
+# téléphone + 7"/10") via l'API Google Play Developer brute
+# (store/upload_listing.py). Manuel. Ne touche NI aux binaires NI aux notes de
+# version (celles-ci sont poussées avec l'AAB par release-android.yml).
 #
-# Secret requis : PLAY_SERVICE_ACCOUNT_JSON (cf. RELEASE.md).
-# Pré-requis : l'app doit exister dans la Play Console (1er AAB déjà déposé).
+# Secret requis : PLAY_SERVICE_ACCOUNT_JSON.
+# Pré-requis : app créée dans la Play Console + le compte de service a le rôle
+# IAM "Service Usage Consumer" sur le projet Google Cloud (sinon 403 quota).
 
 on:
   workflow_dispatch:
@@ -20,33 +23,17 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: ruby/setup-ruby@v1
+      - uses: actions/setup-python@v5
         with:
-          ruby-version: "3.3"
-          bundler-cache: true
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install --quiet google-auth requests
 
       - name: Write Play service account key
         run: printf '%s' '${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}' > "$RUNNER_TEMP/play.json"
 
-      - name: Diagnostic — identité du compte de service (pas de secret loggé)
-        run: |
-          python3 - "$RUNNER_TEMP/play.json" <<'PY'
-          import json, sys
-          d = json.load(open(sys.argv[1]))
-          print("client_email :", d.get("client_email"))
-          print("project_id   :", d.get("project_id"))
-          print("type         :", d.get("type"))
-          print("private_key  :", "present" if d.get("private_key") else "MISSING")
-          PY
-
-      # Les notes de version s'attachent à une release (versionCode), pas à la
-      # fiche. supply tente quand même de les traiter si les fichiers sont là
-      # (malgré skip_upload_changelogs) -> on les retire de la copie CI. Ils
-      # restent versionnés pour le lane `internal` qui les pousse avec l'AAB.
-      - name: Écarter les changelogs de la copie CI
-        run: rm -rf fastlane/metadata/android/*/changelogs
-
-      - name: Upload listing (Fastlane supply — metadata only)
+      - name: Upload listing (raw Play Developer API)
         env:
           PLAY_SERVICE_ACCOUNT_JSON_PATH: ${{ runner.temp }}/play.json
-        run: bundle exec fastlane android metadata
+        run: python3 store/upload_listing.py
