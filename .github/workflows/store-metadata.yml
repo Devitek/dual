@@ -39,43 +39,7 @@ jobs:
           print("private_key  :", "present" if d.get("private_key") else "MISSING")
           PY
 
-      - name: Diagnostic — séquence supply (insert/listing/tracks/details)
-        continue-on-error: true
-        run: |
-          pip install --quiet google-auth requests
-          python3 - "$RUNNER_TEMP/play.json" <<'PY'
-          import sys, json, requests
-          from google.oauth2 import service_account
-          import google.auth.transport.requests as gr
-          creds = service_account.Credentials.from_service_account_file(
-              sys.argv[1], scopes=["https://www.googleapis.com/auth/androidpublisher"])
-          creds.refresh(gr.Request())
-          H = {"Authorization": f"Bearer {creds.token}"}
-          pkg = "fr.devitek.twinlens"
-          base = f"https://androidpublisher.googleapis.com/androidpublisher/v3/applications/{pkg}"
-          r = requests.post(f"{base}/edits", headers=H)
-          print("edits.insert       :", r.status_code, r.text[:200])
-          eid = r.json().get("id") if r.ok else None
-          if eid:
-              r2 = requests.get(f"{base}/edits/{eid}/details", headers=H)
-              print("details.get        :", r2.status_code, r2.text[:200])
-              r3 = requests.get(f"{base}/edits/{eid}/tracks", headers=H)
-              print("tracks.list        :", r3.status_code, r3.text[:200])
-              r4 = requests.get(f"{base}/edits/{eid}/listings", headers=H)
-              print("listings.list      :", r4.status_code, r4.text[:200])
-              body = {"language":"fr-FR","title":"probe","shortDescription":"probe","fullDescription":"probe"}
-              r5 = requests.put(f"{base}/edits/{eid}/listings/fr-FR",
-                                headers={**H,"Content-Type":"application/json"}, data=json.dumps(body))
-              print("listings.update FR :", r5.status_code, r5.text[:300])
-              r6 = requests.delete(f"{base}/edits/{eid}", headers=H)  # abandonne l'edit (aucune modif publiée)
-              print("edits.delete       :", r6.status_code)
-          # Test hypothèse quota-project : mêmes creds + en-tête X-Goog-User-Project
-          proj = json.load(open(sys.argv[1]))["project_id"]
-          rq = requests.post(f"{base}/edits", headers={**H, "X-Goog-User-Project": proj})
-          print("insert +X-Goog-User-Project:", rq.status_code, rq.text[:300])
-          PY
-
       - name: Upload listing (Fastlane supply — metadata only)
         env:
           PLAY_SERVICE_ACCOUNT_JSON_PATH: ${{ runner.temp }}/play.json
-        run: bundle exec fastlane android metadata --verbose
+        run: bundle exec fastlane android metadata
