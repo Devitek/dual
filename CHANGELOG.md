@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.3.0](https://github.com/Devitek/dual/compare/v1.2.0...v1.3.0) (2026-07-09)
+
+
+### Features
+
+* **store-metadata:** push listing via raw Play API (bypass fastlane supply quirks) ([0b7093a](https://github.com/Devitek/dual/commit/0b7093af4fa8964bb3b6f4c5fbc6badb6ecb189d))
+
+
+### Bug Fixes
+
+* **store-metadata:** drop changelog dirs from CI copy before supply ([b1a19fd](https://github.com/Devitek/dual/commit/b1a19fdb61da97b2578f9766054fc0cdc257d7c7))
+* **store-metadata:** skip changelogs in metadata lane (they belong to a release) ([0606786](https://github.com/Devitek/dual/commit/060678684d572e23f7730387e14b2356524f1124))
+
 ## [1.2.0](https://github.com/Devitek/dual/compare/v1.1.0...v1.2.0) (2026-07-08)
 
 
