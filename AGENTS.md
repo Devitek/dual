@@ -110,7 +110,8 @@ La CI rejoue Typecheck + Doctor + `expo export` (bundle Metro). Ne pousse pas de
 ## 7. Play Console — rappels
 - Compte **personnel** → **test fermé ≥ 12 testeurs / 14 jours** avant Production.
 - Après chaque nouvel AAB : compléter les **déclarations d'autorisations sensibles** (au minimum FGS → « Transcodage multimédia »).
-- L'upload auto se fait en **draft** sur le canal interne : la mise en ligne reste une action humaine dans la console.
+- Le canal **interne** est **déployé automatiquement** (`release_status=completed` sur l'event `release`) : les testeurs reçoivent la maj sans action manuelle (l'interne ne passe pas par l'examen Google). Les pistes **fermé / ouvert / production** restent des actions humaines dans la console.
+- **Déclarations sensibles** = niveau APP (« Contenu de l'application ») : elles se basent sur le bundle **déployé le plus élevé**. Tant que l'ancienne version (avec la permission) reste déployée, la déclaration persiste — il faut que la nouvelle version **supersède** l'ancienne sur les pistes.
 
 ---
 
