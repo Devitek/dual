@@ -51,7 +51,8 @@ push/merge sur main → release-please met à jour la "release PR" (version + CH
 
 ### 2.4 versionCode
 - **Auto** : `versionCode = git rev-list --count HEAD` (monotone, indépendant du workflow). **Ne jamais** le fixer à la main. Ne réécris pas l'historique de `main` (casserait la monotonie).
-- `versionName` = tag sans le `v`.
+- `versionName` = tag sans le `v` (aligné sur `app.json` `$.expo.version`, géré par release-please).
+- **GOTCHA** : le versionCode/versionName doivent être écrits dans `app.json` (`$.expo.android.versionCode`, `$.expo.version`) **AVANT** `expo prebuild` (qui les fige dans `android/app/build.gradle`). Le flag Gradle `-Pandroid.injected.version.code` est **IGNORÉ** par le build RN/Expo → l'AAB repartirait sur `versionCode 1` et Play le rejette (« Version code 1 has already been used »). Voir l'étape `Set versionCode / versionName in app.json` de `release-android.yml`.
 
 ---
 
