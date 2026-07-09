@@ -153,8 +153,10 @@ jobs:
           path: ${{ steps.aab.outputs.path }}
           if-no-files-found: error
 
-      # Upload Play : AUTO sur l'event release (canal interne, draft), ou à la
-      # demande via workflow_dispatch (upload_to_play=true).
+      # Upload Play : AUTO sur l'event release → canal interne, DÉPLOYÉ
+      # (release_status=completed : l'interne ne passe pas par l'examen Google,
+      # les testeurs reçoivent la maj sans action manuelle). En manuel
+      # (workflow_dispatch), le défaut reste `draft` (ou le choix de l'input).
       - name: Write Play service account key
         if: ${{ github.event_name == 'release' || inputs.upload_to_play }}
         run: printf '%s' '${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}' > "$RUNNER_TEMP/play.json"
@@ -165,5 +167,5 @@ jobs:
           AAB_PATH: ${{ steps.aab.outputs.path }}
           PLAY_SERVICE_ACCOUNT_JSON_PATH: ${{ runner.temp }}/play.json
           SUPPLY_TRACK: ${{ inputs.track || 'internal' }}
-          SUPPLY_RELEASE_STATUS: ${{ inputs.release_status || 'draft' }}
+          SUPPLY_RELEASE_STATUS: ${{ github.event_name == 'release' && 'completed' || inputs.release_status || 'draft' }}
         run: bundle exec fastlane android internal
