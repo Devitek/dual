@@ -39,6 +39,13 @@ jobs:
           print("private_key  :", "present" if d.get("private_key") else "MISSING")
           PY
 
+      # Les notes de version s'attachent à une release (versionCode), pas à la
+      # fiche. supply tente quand même de les traiter si les fichiers sont là
+      # (malgré skip_upload_changelogs) -> on les retire de la copie CI. Ils
+      # restent versionnés pour le lane `internal` qui les pousse avec l'AAB.
+      - name: Écarter les changelogs de la copie CI
+        run: rm -rf fastlane/metadata/android/*/changelogs
+
       - name: Upload listing (Fastlane supply — metadata only)
         env:
           PLAY_SERVICE_ACCOUNT_JSON_PATH: ${{ runner.temp }}/play.json
