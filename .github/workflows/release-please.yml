@@ -4,6 +4,17 @@ name: Release Please
 # Conventional Commits (feat: / fix: / feat!: ...). release-please ouvre une
 # "release PR" ; à sa fusion sur main, il crée le tag + la release + le CHANGELOG,
 # et synchronise la version dans package.json et app.json.
+#
+# Au moment où une release est créée (release PR mergée), le job `build-aab`
+# CHAÎNE automatiquement le build de l'AAB signé (workflow réutilisable
+# release-android.yml) : plus aucune étape manuelle. Comme tout se passe dans le
+# MÊME run, ça contourne la limite « le GITHUB_TOKEN ne déclenche pas d'autre
+# workflow ».
+#
+# TOKEN : on utilise RELEASE_PLEASE_TOKEN (PAT fine-grained ou GitHub App) s'il
+# existe, pour que la PR de release DÉCLENCHE la CI normalement (compatible
+# branche main protégée avec checks obligatoires). Fallback sur le GITHUB_TOKEN
+# si le secret n'est pas défini.
 
 on:
   push:
@@ -16,8 +27,26 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.rp.outputs.release_created }}
+      tag_name: ${{ steps.rp.outputs.tag_name }}
     steps:
-      - uses: googleapis/release-please-action@v5
+      - id: rp
+        uses: googleapis/release-please-action@v5
         with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+  # Au merge de la PR de release : build de l'AAB signé + attache à la Release +
+  # upload automatique sur le canal INTERNE de Google Play (statut draft).
+  build-aab:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    uses: ./.github/workflows/release-android.yml
+    with:
+      tag: ${{ needs.release-please.outputs.tag_name }}
+      upload_to_play: true
+      track: internal
+      release_status: draft
+    secrets: inherit

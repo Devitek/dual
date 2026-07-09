@@ -1,22 +1,44 @@
 name: Release (Play Store)
 
-# Build d'un AAB SIGNÉ (upload key) et attachement à la release GitHub, puis
-# (optionnel) envoi sur Google Play via Fastlane `supply`. 100% gratuit (build
-# GitHub Actions, pas d'EAS) et MANUEL.
+# Build d'un AAB SIGNÉ (upload key), attaché à la GitHub Release, + upload Play
+# optionnel. 100% gratuit (build GitHub Actions, pas d'EAS).
 #
-# 1er dépôt Play : Google exige que le TOUT PREMIER AAB soit déposé À LA MAIN
-# dans la Play Console. Lance donc ce workflow avec `upload_to_play=false`
-# (défaut) pour récupérer l'AAB attaché à la release, puis dépose-le manuellement.
-# Ensuite, passe `upload_to_play=true` pour publier automatiquement via supply.
+# Deux modes d'appel :
+#   - workflow_call  : CHAÎNÉ depuis release-please (auto au merge de la PR de
+#                      release). C'est le chemin nominal.
+#   - workflow_dispatch : MANUEL (rebuild ponctuel / upload à la demande).
+#
+# versionCode = nombre de commits `git rev-list --count HEAD` : MONOTONE et
+#   INDÉPENDANT du workflow qui build (évite tout rejet Play « versionCode doit
+#   être supérieur »). Nécessite `fetch-depth: 0`.
+# versionName = tag sans le « v » (passé en entrée, sinon dernière release).
 #
 # Secrets requis : ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD,
 # ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD (+ PLAY_SERVICE_ACCOUNT_JSON si upload).
 
 on:
+  workflow_call:
+    inputs:
+      tag:
+        description: "Tag de la release à cibler (ex: v1.3.0). Vide = dernière release."
+        type: string
+        default: ""
+      upload_to_play:
+        description: "Envoyer aussi sur Google Play"
+        type: boolean
+        default: false
+      track:
+        description: "Piste Play (si upload)"
+        type: string
+        default: internal
+      release_status:
+        description: "Statut de la release Play (si upload)"
+        type: string
+        default: draft
   workflow_dispatch:
     inputs:
       upload_to_play:
-        description: "Envoyer aussi sur Google Play (laisser false pour le 1er dépôt manuel)"
+        description: "Envoyer aussi sur Google Play"
         type: boolean
         default: false
       track:
@@ -34,12 +56,18 @@ concurrency:
   group: release-android
   cancel-in-progress: false
 
+permissions:
+  contents: write
+
 jobs:
   release:
     name: Build signed AAB (+ optional Play upload)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Historique complet requis pour `git rev-list --count HEAD` (versionCode).
+          fetch-depth: 0
 
       - uses: actions/setup-node@v6
         with:
@@ -62,16 +90,21 @@ jobs:
       - name: Install JS dependencies
         run: npm ci
 
-      - name: Resolve version (from latest release; code = run number)
+      - name: Resolve version (name from tag, code from commit count)
         id: ver
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG="$(gh release view --json tagName -q .tagName 2>/dev/null || true)"
+          TAG="${{ inputs.tag }}"
+          if [ -z "$TAG" ]; then
+            TAG="$(gh release view --json tagName -q .tagName 2>/dev/null || true)"
+          fi
           NAME="$(echo "$TAG" | sed 's/^v//')"
+          CODE="$(git rev-list --count HEAD)"
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           echo "name=${NAME:-1.0.0}" >> "$GITHUB_OUTPUT"
-          echo "code=${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+          echo "code=${CODE}" >> "$GITHUB_OUTPUT"
+          echo "Resolved versionName=${NAME:-1.0.0} versionCode=${CODE} (tag=${TAG:-none})"
 
       - name: Expo prebuild (Android)
         run: npx expo prebuild --platform android --no-install
