@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.4.0](https://github.com/Devitek/dual/compare/v1.3.0...v1.4.0) (2026-07-10)
+
+
+### Features
+
+* **settings:** draggable bottom sheet + fix rounded corners ([758ed5d](https://github.com/Devitek/dual/commit/758ed5d3842143550ce9e9d0b8b0a9549a98b229))
+* **settings:** draggable bottom sheet + fix rounded-corner rendering ([c50333f](https://github.com/Devitek/dual/commit/c50333f40f237d96d3d4243713c54210dc290419))
+
+
+### Bug Fixes
+
+* **ci:** set Android versionCode in app.json before prebuild ([195c15c](https://github.com/Devitek/dual/commit/195c15c4e3ccc511909ee81b5f86be915cb983b5))
+* **settings:** drive sheet drag on JS thread (fix crash) ([0f6df3b](https://github.com/Devitek/dual/commit/0f6df3b654a7f7fa0cd5a89cc8c1832e0d562c5c))
+* **settings:** drive sheet drag on the JS thread (fix PanGestureHandler crash) ([4a931f5](https://github.com/Devitek/dual/commit/4a931f53a8651180cfc758ac14b4a0b694346b28))
+* **ui:** respect bottom safe-area inset (3-button nav overlap) ([186eb1e](https://github.com/Devitek/dual/commit/186eb1e9f8444ada9215dd9ce784bf641907962a))
+* **ui:** respect bottom safe-area inset (3-button navigation overlap) ([5968232](https://github.com/Devitek/dual/commit/5968232aa446a123ec668ac15175f57abc8bf93e))
+
 ## [1.3.0](https://github.com/Devitek/dual/compare/v1.2.0...v1.3.0) (2026-07-09)
 
 
