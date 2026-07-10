@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0](https://github.com/Devitek/dual/compare/v1.4.0...v1.5.0) (2026-07-10)
+
+
+### Features
+
+* **update:** non-intrusive in-app update prompt (Play In-App Updates) ([8ca2eb2](https://github.com/Devitek/dual/commit/8ca2eb27c09fcfa7dd1b834ca802e2a3b266449e))
+* **update:** non-intrusive in-app update prompt (Play In-App Updates) ([c183c0d](https://github.com/Devitek/dual/commit/c183c0d244b3f6944ce5c4a64dbfb510e5943040))
+
 ## [1.4.0](https://github.com/Devitek/dual/compare/v1.3.0...v1.4.0) (2026-07-10)
 
 
