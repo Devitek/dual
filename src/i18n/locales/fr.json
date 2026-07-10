@@ -124,5 +124,10 @@
     "processingFailed": "Traitement échoué : {{error}}",
     "qualityUnsupported": "Qualité non supportée — retour au réglage précédent.",
     "noCamera": "Aucune caméra disponible."
+  },
+  "update": {
+    "available": "Une nouvelle version est disponible.",
+    "cta": "Mettre à jour",
+    "later": "Plus tard"
   }
 }

@@ -8,6 +8,7 @@ import { useThemedStyles, type Palette } from '../theme/theme';
 import { useIsForeground } from '../hooks/useIsForeground';
 import { useMultiCamPermissions } from '../hooks/useMultiCamPermissions';
 import { useMultiCam } from '../hooks/useMultiCam';
+import { useInAppUpdate } from '../hooks/useInAppUpdate';
 import { PermissionGate } from '../components/PermissionGate';
 import { MultiCamPreview } from '../components/MultiCamPreview';
 import { CaptureControls } from '../components/CaptureControls';
@@ -22,6 +23,7 @@ import { SessionGallery } from '../components/SessionGallery';
 import { PipHint } from '../components/PipHint';
 import { PipCompositor, type PipCompositorHandle } from '../components/PipCompositor';
 import { Snackbar } from '../components/Snackbar';
+import { UpdateBanner } from '../components/UpdateBanner';
 import {
   composePipPhoto,
   composePipVideo,
@@ -57,6 +59,7 @@ export function MultiCameraScreen(): React.ReactElement {
 
   const cam = useMultiCam(isForeground, permissions.allGranted);
   const { t } = useTranslation();
+  const update = useInAppUpdate();
 
   const [primarySlot, setPrimarySlot] = useState<CameraSlot>('back');
   const [mode, setMode] = useState<CaptureMode>('photo');
@@ -292,6 +295,10 @@ export function MultiCameraScreen(): React.ReactElement {
               onCyclePhotoFlash={cyclePhotoFlash}
               onOpenSettings={() => setSettingsOpen(true)}
             />
+
+            {update.updateAvailable && (
+              <UpdateBanner onUpdate={update.startUpdate} onDismiss={update.snooze} />
+            )}
 
             <ProcessingIndicator count={cam.processingCount} progress={videoProgress} />
 
