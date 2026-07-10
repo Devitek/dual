@@ -221,7 +221,7 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
             keyExtractor={keyOf}
             numColumns={COLS}
             columnWrapperStyle={styles.rowGap}
-            contentContainerStyle={styles.list}
+            contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 16 }]}
             extraData={{ selectMode, sel: selected, posters }}
             renderItem={({ item }) => {
               const isSelected = selected.has(keyOf(item));

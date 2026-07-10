@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useColors, useThemedStyles, type Palette } from '../theme/theme';
 import { ModeSwitch, type CaptureMode } from './ModeSwitch';
@@ -62,6 +63,7 @@ export function CaptureControls({
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     if (!isRecording) {
@@ -89,7 +91,10 @@ export function CaptureControls({
   const swapDisabled = !canSwap || isRecording;
 
   return (
-    <View style={styles.wrapper} pointerEvents="box-none">
+    <View
+      style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom + 8, 34) }]}
+      pointerEvents="box-none"
+    >
       {isRecording && (
         <View style={styles.timer}>
           <View style={styles.recDot} />
@@ -182,7 +187,9 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    paddingBottom: 34,
+    // paddingBottom appliqué dynamiquement (safe-area) : réserve la barre
+    // système (navigation 3 boutons ~48dp vs gestuelle ~24dp) pour ne pas
+    // masquer l'obturateur et les contrôles.
     alignItems: 'center',
   },
   stack: { alignItems: 'center', gap: 16, width: '100%' },
