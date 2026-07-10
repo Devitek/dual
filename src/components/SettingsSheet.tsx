@@ -17,6 +17,7 @@ import {
   GestureHandlerRootView,
   PanGestureHandler,
   State,
+  type PanGestureHandlerGestureEvent,
   type PanGestureHandlerStateChangeEvent,
 } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -223,18 +224,20 @@ export function SettingsSheet({
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
 
-  // Bottom sheet draggable (sans reanimated) : translateY piloté par le geste
-  // (natif) + interpolations pour le clamp haut et le fondu du backdrop.
+  // Bottom sheet draggable (sans reanimated) : translateY (0 = ouvert, SCREEN_H =
+  // fermé) piloté par le geste puis animé au relâchement. TOUT en JS-driven
+  // (useNativeDriver:false) : `Animated.event` natif n'est pas accepté par
+  // `onGestureEvent` de PanGestureHandler, et setValue depuis le geste ne doit
+  // pas cohabiter avec des animations natives sur la même valeur.
   const translateY = useRef(new Animated.Value(SCREEN_H)).current;
-  const backdropOpacity = translateY.interpolate({ inputRange: [0, SCREEN_H], outputRange: [1, 0], extrapolate: 'clamp' });
-  const sheetTranslate = translateY.interpolate({
+  const backdropOpacity = translateY.interpolate({
     inputRange: [0, SCREEN_H],
-    outputRange: [0, SCREEN_H],
-    extrapolateLeft: 'clamp',
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
   });
 
   const dismiss = useCallback(() => {
-    Animated.timing(translateY, { toValue: SCREEN_H, duration: 220, useNativeDriver: true }).start(({ finished }) => {
+    Animated.timing(translateY, { toValue: SCREEN_H, duration: 220, useNativeDriver: false }).start(({ finished }) => {
       if (finished) onClose();
     });
   }, [translateY, onClose]);
@@ -242,12 +245,17 @@ export function SettingsSheet({
   useEffect(() => {
     if (!visible) return;
     translateY.setValue(SCREEN_H);
-    Animated.spring(translateY, { toValue: 0, useNativeDriver: true, bounciness: 3, speed: 14 }).start();
+    Animated.spring(translateY, { toValue: 0, useNativeDriver: false, bounciness: 3, speed: 14 }).start();
   }, [visible, translateY]);
 
-  const onPanGesture = useRef(
-    Animated.event([{ nativeEvent: { translationY: translateY } }], { useNativeDriver: true }),
-  ).current;
+  // Suit le doigt vers le bas uniquement (clamp haut à 0).
+  const onPanGesture = useCallback(
+    (e: PanGestureHandlerGestureEvent) => {
+      const ty = e.nativeEvent.translationY;
+      translateY.setValue(ty > 0 ? ty : 0);
+    },
+    [translateY],
+  );
 
   const onPanStateChange = useCallback(
     (e: PanGestureHandlerStateChangeEvent) => {
@@ -257,7 +265,7 @@ export function SettingsSheet({
       if (translationY > 120 || velocityY > 900) {
         dismiss();
       } else {
-        Animated.spring(translateY, { toValue: 0, useNativeDriver: true, bounciness: 2, speed: 16 }).start();
+        Animated.spring(translateY, { toValue: 0, useNativeDriver: false, bounciness: 2, speed: 16 }).start();
       }
     },
     [dismiss, translateY],
@@ -277,7 +285,7 @@ export function SettingsSheet({
         <Animated.View
           style={[
             styles.sheet,
-            { paddingBottom: Math.max(insets.bottom + 12, 28), transform: [{ translateY: sheetTranslate }] },
+            { paddingBottom: Math.max(insets.bottom + 12, 28), transform: [{ translateY }] },
           ]}
         >
           <PanGestureHandler
