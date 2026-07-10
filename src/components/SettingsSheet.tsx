@@ -2,6 +2,7 @@ import React from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Switch, Text, View, type ViewStyle } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useColors, useThemedStyles, type Palette } from '../theme/theme';
 import { haptics } from '../utils/haptics';
@@ -201,6 +202,7 @@ export function SettingsSheet({
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
 
   const saveOptions = SAVE_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
   const flashOptions = FLASH_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
@@ -209,7 +211,7 @@ export function SettingsSheet({
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} />
-      <View style={styles.sheet}>
+      <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom + 12, 28) }]}>
         <View style={styles.handle} />
         <Text style={styles.title}>{t('settings.title')}</Text>
 
@@ -289,7 +291,8 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
     borderTopRightRadius: 28,
     paddingHorizontal: 20,
     paddingTop: 12,
-    paddingBottom: 28,
+    // paddingBottom appliqué dynamiquement (safe-area) pour ne pas masquer les
+    // dernières options sous la barre système (navigation 3 boutons).
     maxHeight: '86%',
   },
   handle: {
