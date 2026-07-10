@@ -1,8 +1,27 @@
-import React from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Switch, Text, View, type ViewStyle } from 'react-native';
+import React, { useCallback, useEffect, useRef } from 'react';
+import {
+  Animated,
+  Dimensions,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
+  type ViewStyle,
+} from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import {
+  GestureHandlerRootView,
+  PanGestureHandler,
+  State,
+  type PanGestureHandlerStateChangeEvent,
+} from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const { height: SCREEN_H } = Dimensions.get('window');
 
 import { useColors, useThemedStyles, type Palette } from '../theme/theme';
 import { haptics } from '../utils/haptics';
@@ -204,24 +223,81 @@ export function SettingsSheet({
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
 
+  // Bottom sheet draggable (sans reanimated) : translateY piloté par le geste
+  // (natif) + interpolations pour le clamp haut et le fondu du backdrop.
+  const translateY = useRef(new Animated.Value(SCREEN_H)).current;
+  const backdropOpacity = translateY.interpolate({ inputRange: [0, SCREEN_H], outputRange: [1, 0], extrapolate: 'clamp' });
+  const sheetTranslate = translateY.interpolate({
+    inputRange: [0, SCREEN_H],
+    outputRange: [0, SCREEN_H],
+    extrapolateLeft: 'clamp',
+  });
+
+  const dismiss = useCallback(() => {
+    Animated.timing(translateY, { toValue: SCREEN_H, duration: 220, useNativeDriver: true }).start(({ finished }) => {
+      if (finished) onClose();
+    });
+  }, [translateY, onClose]);
+
+  useEffect(() => {
+    if (!visible) return;
+    translateY.setValue(SCREEN_H);
+    Animated.spring(translateY, { toValue: 0, useNativeDriver: true, bounciness: 3, speed: 14 }).start();
+  }, [visible, translateY]);
+
+  const onPanGesture = useRef(
+    Animated.event([{ nativeEvent: { translationY: translateY } }], { useNativeDriver: true }),
+  ).current;
+
+  const onPanStateChange = useCallback(
+    (e: PanGestureHandlerStateChangeEvent) => {
+      if (e.nativeEvent.oldState !== State.ACTIVE) return;
+      const { translationY, velocityY } = e.nativeEvent;
+      // Ferme si tiré suffisamment bas OU avec assez de vélocité ; sinon rebond.
+      if (translationY > 120 || velocityY > 900) {
+        dismiss();
+      } else {
+        Animated.spring(translateY, { toValue: 0, useNativeDriver: true, bounciness: 2, speed: 16 }).start();
+      }
+    },
+    [dismiss, translateY],
+  );
+
   const saveOptions = SAVE_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
   const flashOptions = FLASH_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
   const qualityOptions = QUALITY_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey), caption: o.caption }));
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose} />
-      <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom + 12, 28) }]}>
-        <View style={styles.handle} />
-        <Text style={styles.title}>{t('settings.title')}</Text>
+    <Modal visible={visible} transparent animationType="none" statusBarTranslucent onRequestClose={dismiss}>
+      <GestureHandlerRootView style={styles.gestureRoot}>
+        <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]}>
+          <Pressable style={styles.backdropPress} onPress={dismiss} />
+        </Animated.View>
 
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <Animated.View
+          style={[
+            styles.sheet,
+            { paddingBottom: Math.max(insets.bottom + 12, 28), transform: [{ translateY: sheetTranslate }] },
+          ]}
+        >
+          <PanGestureHandler
+            onGestureEvent={onPanGesture}
+            onHandlerStateChange={onPanStateChange}
+            activeOffsetY={[-8, 8]}
+          >
+            <View style={styles.dragZone}>
+              <View style={styles.handle} />
+              <Text style={styles.title}>{t('settings.title')}</Text>
+            </View>
+          </PanGestureHandler>
+
+          <ScrollView showsVerticalScrollIndicator={false}>
           {/* Caméra */}
           <Text style={styles.section}>{t('settings.sectionCamera')}</Text>
           <Pressable
             onPress={() => {
               onSwap();
-              onClose();
+              dismiss();
             }}
             disabled={!canSwap}
             style={[styles.row, !canSwap && styles.dim]}
@@ -277,24 +353,31 @@ export function SettingsSheet({
           <Text style={styles.section}>{t('settings.sectionQuality')}</Text>
           <Segmented options={qualityOptions} value={quality} onChange={onSetQuality} />
           <Text style={styles.hint}>{t('settings.qualityHint')}</Text>
-        </ScrollView>
-      </View>
+          </ScrollView>
+        </Animated.View>
+      </GestureHandlerRootView>
     </Modal>
   );
 }
 
 const makeStyles = (colors: Palette) => StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: colors.scrim },
+  gestureRoot: { flex: 1, justifyContent: 'flex-end' },
+  backdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: colors.scrim },
+  backdropPress: { flex: 1 },
   sheet: {
     backgroundColor: colors.surfaceContainer,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
+    // overflow:hidden -> clippe le fond aux coins arrondis (sinon Android laisse
+    // apparaître des coins carrés opaques au-dessus de l'arrondi).
+    overflow: 'hidden',
     paddingHorizontal: 20,
     paddingTop: 12,
     // paddingBottom appliqué dynamiquement (safe-area) pour ne pas masquer les
     // dernières options sous la barre système (navigation 3 boutons).
     maxHeight: '86%',
   },
+  dragZone: { paddingBottom: 4 },
   handle: {
     alignSelf: 'center',
     width: 40,
