@@ -124,5 +124,10 @@
     "processingFailed": "Processing failed: {{error}}",
     "qualityUnsupported": "Quality not supported — reverting to previous setting.",
     "noCamera": "No camera available."
+  },
+  "update": {
+    "available": "A new version is available.",
+    "cta": "Update",
+    "later": "Later"
   }
 }
