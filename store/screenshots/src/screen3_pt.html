@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="screens.css"></head>
+<!doctype html><html lang="pt"><head><meta charset="utf-8"><link rel="stylesheet" href="screens.css"></head>
 <body>
   <div class="viewfinder"></div>
   <div style="position:absolute;inset:0;background:rgba(0,0,0,.6)"></div>
@@ -8,17 +8,12 @@
     <h1>Configurações</h1>
 
     <div class="section">Câmera</div>
-    <div class="setrow">
-      <svg viewBox="0 0 24 24"><path d="M15 4l2 2h3v12H4V6h3l2-2z"/><path d="M9 12a3 3 0 013-3M15 12a3 3 0 01-3 3" stroke-width="1.7"/><path d="M12 8l2 1M12 16l-2-1" stroke-width="1.7"/></svg>
-      <span class="lbl">Trocar de câmera</span>
-    </div>
-    <div class="setrow">
-      <svg viewBox="0 0 24 24"><path d="M9 2h6v6l-3 4-3-4z"/><path d="M12 12v8"/></svg>
-      <span class="lbl">Lanterna</span><div class="switch off"></div>
-    </div>
-    <div class="setrow">
-      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><rect x="12" y="12" width="7" height="6" rx="1.4" fill="#D0BCFF" stroke="#D0BCFF"/></svg>
-      <span class="lbl">Prévia da 2ª câmera</span><div class="switch"></div>
+    <div class="setrow"><svg viewBox="0 0 24 24"><path d="M15 4l2 2h3v12H4V6h3l2-2z"/><path d="M9 12a3 3 0 013-3M15 12a3 3 0 01-3 3" stroke-width="1.7"/><path d="M12 8l2 1M12 16l-2-1" stroke-width="1.7"/></svg><span class="lbl">Trocar de câmera</span></div>
+    <div class="setrow"><svg viewBox="0 0 24 24"><path d="M9 2h6v6l-3 4-3-4z"/><path d="M12 12v8"/></svg><span class="lbl">Lanterna</span><div class="switch off"></div></div>
+    <div class="setrow"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><rect x="12" y="12" width="7" height="6" rx="1.4" fill="#D0BCFF" stroke="#D0BCFF"/></svg><span class="lbl">Prévia da 2ª câmera</span><div class="switch"></div></div>
+    <div class="setcol">
+      <div class="lbl"><svg viewBox="0 0 24 24"><path d="M7 2h9l-2 7h4L9 22l2-9H6z"/></svg>Flash da foto</div>
+      <div class="segbar"><div class="segcell on">Off</div><div class="segcell">Auto</div><div class="segcell">On</div></div>
     </div>
 
     <div class="section">Posição da miniatura</div>
@@ -33,7 +28,16 @@
     <div class="segbar"><div class="segcell on">PiP</div><div class="segcell">PiP + 2</div><div class="segcell">2 arquivos</div></div>
     <div class="optdesc">Uma imagem combinada: traseira + miniatura frontal.</div>
 
+    <div class="section">Gravação — Vídeo</div>
+    <div class="segbar"><div class="segcell on">PiP</div><div class="segcell">PiP + 2</div><div class="segcell">2 arquivos</div></div>
+    <div class="optdesc">Um vídeo combinado (recodificado ao fim da captura).</div>
+
     <div class="section">Qualidade</div>
-    <div class="segbar"><div class="segcell">Standard</div><div class="segcell on">Alta</div><div class="segcell">Max</div></div>
+    <div class="segbar">
+      <div class="segcell">Padrão<span class="cap">1080p·720p</span></div>
+      <div class="segcell on">Alta<span class="cap">1080p·1080p</span></div>
+      <div class="segcell">Máx<span class="cap">4K·1080p</span></div>
+    </div>
+    <div class="qhint">"Máx": foto em 4K, vídeo em 1080p. Mudar a qualidade reinicia brevemente as câmeras.</div>
   </div>
 </body></html>

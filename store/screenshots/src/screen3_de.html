@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="screens.css"></head>
+<!doctype html><html lang="de"><head><meta charset="utf-8"><link rel="stylesheet" href="screens.css"></head>
 <body>
   <div class="viewfinder"></div>
   <div style="position:absolute;inset:0;background:rgba(0,0,0,.6)"></div>
@@ -8,17 +8,12 @@
     <h1>Einstellungen</h1>
 
     <div class="section">Kamera</div>
-    <div class="setrow">
-      <svg viewBox="0 0 24 24"><path d="M15 4l2 2h3v12H4V6h3l2-2z"/><path d="M9 12a3 3 0 013-3M15 12a3 3 0 01-3 3" stroke-width="1.7"/><path d="M12 8l2 1M12 16l-2-1" stroke-width="1.7"/></svg>
-      <span class="lbl">Kameras wechseln</span>
-    </div>
-    <div class="setrow">
-      <svg viewBox="0 0 24 24"><path d="M9 2h6v6l-3 4-3-4z"/><path d="M12 12v8"/></svg>
-      <span class="lbl">Taschenlampe</span><div class="switch off"></div>
-    </div>
-    <div class="setrow">
-      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><rect x="12" y="12" width="7" height="6" rx="1.4" fill="#D0BCFF" stroke="#D0BCFF"/></svg>
-      <span class="lbl">Vorschau 2. Kamera</span><div class="switch"></div>
+    <div class="setrow"><svg viewBox="0 0 24 24"><path d="M15 4l2 2h3v12H4V6h3l2-2z"/><path d="M9 12a3 3 0 013-3M15 12a3 3 0 01-3 3" stroke-width="1.7"/><path d="M12 8l2 1M12 16l-2-1" stroke-width="1.7"/></svg><span class="lbl">Kameras wechseln</span></div>
+    <div class="setrow"><svg viewBox="0 0 24 24"><path d="M9 2h6v6l-3 4-3-4z"/><path d="M12 12v8"/></svg><span class="lbl">Taschenlampe</span><div class="switch off"></div></div>
+    <div class="setrow"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><rect x="12" y="12" width="7" height="6" rx="1.4" fill="#D0BCFF" stroke="#D0BCFF"/></svg><span class="lbl">Vorschau 2. Kamera</span><div class="switch"></div></div>
+    <div class="setcol">
+      <div class="lbl"><svg viewBox="0 0 24 24"><path d="M7 2h9l-2 7h4L9 22l2-9H6z"/></svg>Fotoblitz</div>
+      <div class="segbar"><div class="segcell on">Off</div><div class="segcell">Auto</div><div class="segcell">On</div></div>
     </div>
 
     <div class="section">Position der Miniatur</div>
@@ -33,7 +28,16 @@
     <div class="segbar"><div class="segcell on">PiP</div><div class="segcell">PiP + 2</div><div class="segcell">2 Dateien</div></div>
     <div class="optdesc">Ein zusammengeführtes Bild: hinten + Miniatur vorne.</div>
 
+    <div class="section">Aufnahme — Video</div>
+    <div class="segbar"><div class="segcell on">PiP</div><div class="segcell">PiP + 2</div><div class="segcell">2 Dateien</div></div>
+    <div class="optdesc">Ein zusammengeführtes Video (wird am Ende der Aufnahme neu codiert).</div>
+
     <div class="section">Qualität</div>
-    <div class="segbar"><div class="segcell">Standard</div><div class="segcell on">Hoch</div><div class="segcell">Max</div></div>
+    <div class="segbar">
+      <div class="segcell">Standard<span class="cap">1080p·720p</span></div>
+      <div class="segcell on">Hoch<span class="cap">1080p·1080p</span></div>
+      <div class="segcell">Max<span class="cap">4K·1080p</span></div>
+    </div>
+    <div class="qhint">„Max": Foto in 4K, Video in 1080p. Ein Qualitätswechsel startet die Kameras kurz neu.</div>
   </div>
 </body></html>
