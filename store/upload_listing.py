@@ -76,14 +76,16 @@ def main():
             if os.path.exists(single):
                 files = [single]
             elif os.path.isdir(folder):
-                files = sorted(glob.glob(os.path.join(folder, "*.png")))
+                files = sorted(glob.glob(os.path.join(folder, "*.png")) +
+                               glob.glob(os.path.join(folder, "*.jpg")))
             else:
                 continue
             s.delete(f"{base}/listings/{loc}/{t}")  # remplace : purge puis ré-upload
             for f in files:
+                ctype = "image/jpeg" if f.lower().endswith((".jpg", ".jpeg")) else "image/png"
                 with open(f, "rb") as fh:
                     r = s.post(f"{ubase}/listings/{loc}/{t}?uploadType=media",
-                               headers={"Content-Type": "image/png"}, data=fh.read())
+                               headers={"Content-Type": ctype}, data=fh.read())
                 if not r.ok:
                     die(f"images.upload {loc}/{t}/{os.path.basename(f)}", r)
             print(f"  images {loc}/{t}: {len(files)}")

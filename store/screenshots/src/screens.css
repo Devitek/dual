@@ -12,11 +12,8 @@ body {
 }
 .viewfinder {
   position: absolute; inset: 0;
-  /* Simule le flux caméra arrière (plein cadre). */
-  background:
-    radial-gradient(120% 80% at 30% 15%, rgba(208,188,255,.18), transparent 60%),
-    radial-gradient(120% 90% at 80% 90%, rgba(79,55,139,.55), transparent 55%),
-    linear-gradient(160deg, #2a3550 0%, #1b2233 40%, #0f1116 100%);
+  /* Vrai flux caméra arrière = photo réelle (assets/scene.jpg). */
+  background: #1b2233 url('assets/scene.jpg') center/cover no-repeat;
 }
 .scene {
   position: absolute; inset: 0;
@@ -52,10 +49,9 @@ body {
     linear-gradient(160deg, #3a2f4a, #241d2e);
 }
 .pip .face {
-  position: absolute; left: 50%; top: 44%; transform: translate(-50%,-50%);
-  width: 150px; height: 175px; border-radius: 50% 50% 46% 46%;
-  background: radial-gradient(circle at 50% 35%, #f0cdb0, #d3a488);
-  box-shadow: 0 20px 40px rgba(0,0,0,.35);
+  /* Vraie 2e caméra (avant) = photo réelle (assets/face.jpg), remplit la vignette. */
+  position: absolute; inset: 0;
+  background: #2b2540 url('assets/face.jpg') center/cover no-repeat;
 }
 .pip .swap {
   position: absolute; right: 16px; bottom: 16px;
@@ -165,8 +161,9 @@ svg { fill: none; stroke: #E6E0E9; stroke-width: 2; }
   background:
     radial-gradient(90% 55% at 50% 16%, rgba(208,188,255,.22), transparent 62%),
     linear-gradient(160deg, #2a2140 0%, #1b1626 46%, #141218 100%); }
-.freebadge { font-size: 168px; font-weight: 900; color: #EADDFF; letter-spacing: -3px; line-height: .9; }
-.freebadge .pct { color: #D0BCFF; }
+.freebadge { text-align: center; line-height: .98; }
+.freebadge .pct { display: block; font-size: 96px; font-weight: 900; color: #D0BCFF; letter-spacing: 2px; }
+.freebadge .word { display: block; font-size: 132px; font-weight: 900; color: #EADDFF; letter-spacing: -2px; }
 .freeline { font-size: 56px; font-weight: 800; color: #E6E0E9; text-align: center; line-height: 1.2; }
 .freelist { display: flex; flex-direction: column; gap: 32px; margin-top: 10px; }
 .freeitem { display: flex; align-items: center; gap: 28px; font-size: 48px; color: #E6E0E9; font-weight: 700; }
@@ -177,10 +174,14 @@ svg { fill: none; stroke: #E6E0E9; stroke-width: 2; }
 
 /* ===================== Écran photo réelle (photo_*.html) ===================== */
 /* .photobg reçoit une VRAIE capture PiP via style inline (assets/xxx.jpg). */
-.photobg { position: absolute; inset: 0; background-size: cover; background-position: center;
-  background-color: #1b2233; }
+.photobg { position: absolute; inset: 0; background: #1b2233 url('assets/scene.jpg') center/cover no-repeat; }
 .photoscrim { position: absolute; inset: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,.32) 0%, transparent 26%, transparent 60%, rgba(0,0,0,.74) 100%); }
+  background: linear-gradient(180deg, rgba(0,0,0,.32) 0%, transparent 26%, transparent 58%, rgba(0,0,0,.78) 100%); }
+/* Vignette PiP (2e caméra) posée sur la scène — vraie photo (assets/face.jpg). */
+.photopip { position: absolute; top: 210px; right: 56px; width: 322px; height: 452px;
+  border-radius: 46px; overflow: hidden; border: 6px solid rgba(255,255,255,.9);
+  box-shadow: 0 16px 38px rgba(0,0,0,.55);
+  background: #2b2540 url('assets/face.jpg') center/cover no-repeat; }
 .freetag { position: absolute; top: 130px; left: 50%; transform: translateX(-50%);
   padding: 20px 46px; border-radius: 40px; background: #D0BCFF; color: #381E72;
   font-size: 40px; font-weight: 900; letter-spacing: 1px; }
