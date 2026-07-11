@@ -142,3 +142,40 @@ svg { fill: none; stroke: #E6E0E9; stroke-width: 2; }
 .cell .play svg { width: 52px; height: 52px; fill: #fff; stroke: none; }
 .cell .dur { position: absolute; right: 16px; bottom: 16px; padding: 8px 18px; border-radius: 20px;
   background: rgba(0,0,0,.6); font-size: 28px; font-weight: 700; }
+
+/* ===================== Bandeau de légende (localisé) ===================== */
+/* À superposer en haut d'un mockup UI pour expliquer le bénéfice. */
+.caption { position: absolute; left: 0; right: 0; top: 150px; text-align: center; padding: 0 70px; z-index: 5; }
+.caption h2 { font-size: 62px; line-height: 1.14; font-weight: 800; color: #EADDFF; letter-spacing: -0.5px;
+  text-shadow: 0 4px 24px rgba(0,0,0,.55); }
+.caption p { margin-top: 16px; font-size: 36px; color: rgba(230,224,233,.86); font-weight: 500;
+  text-shadow: 0 2px 14px rgba(0,0,0,.5); }
+
+/* ===================== Écran « 100% GRATUIT / sans pub » (free_*.html) ===================== */
+.freewrap { position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 56px; padding: 0 90px;
+  background:
+    radial-gradient(90% 55% at 50% 16%, rgba(208,188,255,.22), transparent 62%),
+    linear-gradient(160deg, #2a2140 0%, #1b1626 46%, #141218 100%); }
+.freebadge { font-size: 168px; font-weight: 900; color: #EADDFF; letter-spacing: -3px; line-height: .9; }
+.freebadge .pct { color: #D0BCFF; }
+.freeline { font-size: 56px; font-weight: 800; color: #E6E0E9; text-align: center; line-height: 1.2; }
+.freelist { display: flex; flex-direction: column; gap: 32px; margin-top: 10px; }
+.freeitem { display: flex; align-items: center; gap: 28px; font-size: 48px; color: #E6E0E9; font-weight: 700; }
+.freeitem .x { width: 70px; height: 70px; border-radius: 50%; background: rgba(125,217,143,.18);
+  color: #7DD98F; font-size: 42px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+.freefoot { position: absolute; bottom: 150px; left: 0; right: 0; text-align: center;
+  font-size: 42px; font-weight: 700; color: rgba(230,224,233,.72); }
+
+/* ===================== Écran photo réelle (photo_*.html) ===================== */
+/* .photobg reçoit une VRAIE capture PiP via style inline (assets/xxx.jpg). */
+.photobg { position: absolute; inset: 0; background-size: cover; background-position: center;
+  background-color: #1b2233; }
+.photoscrim { position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,.32) 0%, transparent 26%, transparent 60%, rgba(0,0,0,.74) 100%); }
+.freetag { position: absolute; top: 130px; left: 50%; transform: translateX(-50%);
+  padding: 20px 46px; border-radius: 40px; background: #D0BCFF; color: #381E72;
+  font-size: 40px; font-weight: 900; letter-spacing: 1px; }
+.photocap { position: absolute; left: 0; right: 0; bottom: 180px; text-align: center; padding: 0 80px; }
+.photocap h2 { font-size: 64px; font-weight: 800; color: #fff; line-height: 1.12; text-shadow: 0 4px 22px rgba(0,0,0,.6); }
+.photocap p { margin-top: 16px; font-size: 40px; color: rgba(255,255,255,.88); font-weight: 500; text-shadow: 0 2px 14px rgba(0,0,0,.5); }
