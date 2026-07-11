@@ -94,13 +94,21 @@ svg { fill: none; stroke: #E6E0E9; stroke-width: 2; }
 .hint { position: absolute; left: 0; right: 0; text-align: center; color: rgba(230,224,233,.9); font-size: 30px; font-weight: 600; }
 
 /* --- Settings sheet (screen3) --- */
-.sheet { position: absolute; left: 0; right: 0; bottom: 0; height: 1860px; background: #211F26;
-  border-radius: 76px 76px 0 0; padding: 40px 60px; }
-.handle { width: 110px; height: 11px; border-radius: 6px; background: #938F99; margin: 0 auto 44px; }
-.sheet h1 { font-size: 60px; font-weight: 700; margin-bottom: 24px; }
-.section { color: #D0BCFF; font-size: 32px; font-weight: 800; letter-spacing: 1.4px;
-  text-transform: uppercase; margin: 46px 0 22px; }
-.setrow { display: flex; align-items: center; gap: 36px; padding: 28px 0; }
+.sheet { position: absolute; left: 0; right: 0; top: 130px; bottom: 0; background: #211F26;
+  border-radius: 76px 76px 0 0; padding: 34px 60px 0; overflow: hidden; }
+.handle { width: 110px; height: 11px; border-radius: 6px; background: #938F99; margin: 0 auto 34px; }
+.sheet h1 { font-size: 58px; font-weight: 700; margin-bottom: 18px; }
+.section { color: #D0BCFF; font-size: 31px; font-weight: 800; letter-spacing: 1.4px;
+  text-transform: uppercase; margin: 32px 0 16px; }
+.setrow { display: flex; align-items: center; gap: 36px; padding: 20px 0; }
+/* Contrôle en colonne (libellé + segmented), ex. Flash photo */
+.setcol { padding: 16px 0; }
+.setcol .lbl { display: flex; align-items: center; gap: 36px; font-size: 42px; color: #E6E0E9; margin-bottom: 18px; }
+.setcol .lbl svg { width: 56px; height: 56px; }
+/* Légende de résolution sous un segment (Qualité) */
+.segcell .cap { display: block; font-size: 23px; color: #938F99; margin-top: 5px; font-weight: 600; letter-spacing: .3px; }
+.segcell.on .cap { color: #CAC4D0; }
+.qhint { color: #938F99; font-size: 27px; line-height: 1.35; margin-top: 18px; }
 .setrow svg { width: 56px; height: 56px; }
 .setrow .lbl { flex: 1; font-size: 42px; color: #E6E0E9; }
 .switch { width: 132px; height: 76px; border-radius: 40px; background: #4F378B; position: relative; }
