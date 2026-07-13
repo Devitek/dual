@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.0](https://github.com/Devitek/dual/compare/v1.5.0...v1.6.0) (2026-07-13)
+
+
+### Features
+
+* **camera:** volume-key shutter/zoom + camera button ([08cfd60](https://github.com/Devitek/dual/commit/08cfd60fcee52c4ca7dad06f7187733dec2d55e0))
+* **camera:** volume-key shutter/zoom + physical camera button ([898b354](https://github.com/Devitek/dual/commit/898b354a74293d8d47074f8a774665edf3399c65))
+
 ## [1.5.0](https://github.com/Devitek/dual/compare/v1.4.0...v1.5.0) (2026-07-10)
 
 
