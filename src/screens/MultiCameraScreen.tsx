@@ -9,6 +9,7 @@ import { useIsForeground } from '../hooks/useIsForeground';
 import { useMultiCamPermissions } from '../hooks/useMultiCamPermissions';
 import { useMultiCam } from '../hooks/useMultiCam';
 import { useInAppUpdate } from '../hooks/useInAppUpdate';
+import { useVolumeShutter } from '../hooks/useVolumeShutter';
 import { PermissionGate } from '../components/PermissionGate';
 import { MultiCamPreview } from '../components/MultiCamPreview';
 import { CaptureControls } from '../components/CaptureControls';
@@ -36,9 +37,12 @@ import type { FocusPoint } from '../components/FocusIndicator';
 import { pipCanvasForQuality } from '../vision/MultiCamController';
 import type { CameraSlot, CaptureQuality, SaveMode } from '../vision/MultiCamController';
 import type { PipCorner } from '../services/pipComposer';
+import type { VolumeKeyAction } from '../native/volumeKeys';
 
 /** Clé de persistance du hint « touchez la vignette » (1er lancement). */
 const PIP_HINT_KEY = 'tl_seen_pip_hint';
+/** Clé de persistance de l'action des touches de volume ('volume'|'shutter'|'zoom'). */
+const VOLUME_KEY_ACTION_KEY = 'tl_volume_key_action';
 
 /** Paliers de zoom rapides dérivés des bornes de la caméra principale. */
 function buildZoomLevels(min: number, max: number): number[] {
@@ -73,6 +77,7 @@ export function MultiCameraScreen(): React.ReactElement {
   const [currentZoom, setCurrentZoom] = useState(1);
   const [videoProgress, setVideoProgress] = useState<number | null>(null);
   const [pipHintVisible, setPipHintVisible] = useState(false);
+  const [volumeKeyAction, setVolumeKeyActionState] = useState<VolumeKeyAction>('volume');
   const focusNonce = useRef(0);
   const lastZoomUpdate = useRef(0);
   const pipHintChecked = useRef(false);
@@ -226,6 +231,47 @@ export function MultiCameraScreen(): React.ReactElement {
     cam.controller.setShowSecondaryPreview(!cam.showSecondaryPreview);
   }, [cam.controller, cam.showSecondaryPreview]);
 
+  // --- Touches de volume (obturateur / zoom) ---
+  useEffect(() => {
+    void AsyncStorage.getItem(VOLUME_KEY_ACTION_KEY)
+      .then((v) => {
+        if (v === 'shutter' || v === 'zoom' || v === 'volume') setVolumeKeyActionState(v);
+      })
+      .catch(() => {});
+  }, []);
+
+  const setVolumeKeyAction = useCallback((a: VolumeKeyAction) => {
+    setVolumeKeyActionState(a);
+    void AsyncStorage.setItem(VOLUME_KEY_ACTION_KEY, a).catch(() => {});
+  }, []);
+
+  const zoomBy = useCallback(
+    (dir: 'in' | 'out') => {
+      const { min, max, current } = cam.controller.getZoomBounds(primarySlot);
+      const step = Math.max(0.1, (max - min) / 15);
+      const z = Math.min(max, Math.max(min, current + (dir === 'in' ? step : -step)));
+      void cam.controller.setZoom(primarySlot, z);
+      setCurrentZoom(z);
+      setZoomDisplay(z);
+      setZoomNonce((n) => n + 1);
+      haptics.selection();
+    },
+    [cam.controller, primarySlot],
+  );
+
+  // Redirige les touches matérielles vers l'obturateur/zoom, seulement quand la
+  // caméra est prête et qu'aucun sheet/galerie n'est ouvert (sinon volume normal).
+  useVolumeShutter({
+    action: volumeKeyAction,
+    enabled:
+      cam.status === 'running' && permissions.allGranted && !settingsOpen && !galleryOpen,
+    onShutter: () => {
+      if (mode === 'photo') onPhoto();
+      else onToggleRecording();
+    },
+    onZoom: zoomBy,
+  });
+
   // Tap-to-focus + pinch-to-zoom sur la caméra principale.
   const gesture = useMemo(() => {
     const tap = Gesture.Tap()
@@ -350,6 +396,8 @@ export function MultiCameraScreen(): React.ReactElement {
               onSetPipCorner={setPipCorner}
               quality={cam.captureQuality}
               onSetQuality={setQuality}
+              volumeKeyAction={volumeKeyAction}
+              onSetVolumeKeyAction={setVolumeKeyAction}
             />
 
             <SessionGallery

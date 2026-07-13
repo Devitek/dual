@@ -13,6 +13,7 @@ CE QUE VOUS OBTENEZ
 • 🙈 Mode surprise : masquez l'aperçu du selfie et découvrez votre réaction après coup
 • 💾 Gardez le clip fusionné, les 2 fichiers bruts, ou tout
 • 🔍 Zoom rapide, mise au point tactile, zoom par pincement, flash & torche
+• 🔊 Déclencheur par touches de volume (ou zoom) — compatible télécommandes Bluetooth
 • 🗂️ Galerie de session avec lecture intégrée, partage & suppression
 • 🎨 Couleurs Material You (Android 12+) · 🌍 6 langues
 • 🔒 100% sur l'appareil — aucun compte, aucune inscription, aucun serveur, aucun pistage

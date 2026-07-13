@@ -29,6 +29,7 @@ import { haptics } from '../utils/haptics';
 import type { CaptureQuality, SaveMode } from '../vision/MultiCamController';
 import type { PipCorner } from '../services/pipComposer';
 import type { PhotoFlashMode } from './CameraTopBar';
+import type { VolumeKeyAction } from '../native/volumeKeys';
 
 interface Option<T extends string> {
   value: T;
@@ -193,6 +194,8 @@ interface SettingsSheetProps {
   onSetPipCorner: (corner: PipCorner) => void;
   quality: CaptureQuality;
   onSetQuality: (quality: CaptureQuality) => void;
+  volumeKeyAction: VolumeKeyAction;
+  onSetVolumeKeyAction: (action: VolumeKeyAction) => void;
 }
 
 /** Feuille inférieure Material 3 des paramètres caméra + enregistrement. */
@@ -218,6 +221,8 @@ export function SettingsSheet({
   onSetPipCorner,
   quality,
   onSetQuality,
+  volumeKeyAction,
+  onSetVolumeKeyAction,
 }: SettingsSheetProps): React.ReactElement {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
@@ -274,6 +279,11 @@ export function SettingsSheet({
   const saveOptions = SAVE_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
   const flashOptions = FLASH_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
   const qualityOptions = QUALITY_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey), caption: o.caption }));
+  const volumeKeyOptions: { value: VolumeKeyAction; label: string }[] = [
+    { value: 'volume', label: t('settings.volKeyVolume') },
+    { value: 'shutter', label: t('settings.volKeyShutter') },
+    { value: 'zoom', label: t('settings.volKeyZoom') },
+  ];
 
   return (
     <Modal visible={visible} transparent animationType="none" statusBarTranslucent onRequestClose={dismiss}>
@@ -344,6 +354,14 @@ export function SettingsSheet({
               <Text style={styles.rowLabel}>{t('settings.flashPhoto')}</Text>
             </View>
             <Segmented options={flashOptions} value={photoFlash} onChange={onSetPhotoFlash} disabled={!flashSupported} />
+          </View>
+
+          <View style={styles.rowCol}>
+            <View style={styles.rowHeader}>
+              <MaterialIcons name="volume-up" size={22} color={colors.onSurface} />
+              <Text style={styles.rowLabel}>{t('settings.volumeKeys')}</Text>
+            </View>
+            <Segmented options={volumeKeyOptions} value={volumeKeyAction} onChange={onSetVolumeKeyAction} />
           </View>
 
           <Text style={styles.section}>{t('settings.sectionPipCorner')}</Text>

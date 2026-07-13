@@ -70,7 +70,11 @@
     "cornerTopLeft": "oben links",
     "cornerTopRight": "oben rechts",
     "cornerBottomRight": "unten rechts",
-    "cornerBottomLeft": "unten links"
+    "cornerBottomLeft": "unten links",
+    "volumeKeys": "Lautstärketasten",
+    "volKeyVolume": "Lautstärke",
+    "volKeyShutter": "Auslöser",
+    "volKeyZoom": "Zoom"
   },
   "gallery": {
     "title": "Sitzungsmedien",
