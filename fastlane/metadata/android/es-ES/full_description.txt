@@ -13,6 +13,7 @@ QUÉ INCLUYE
 • 🙈 Modo sorpresa: oculta la vista previa del selfie y descubre tu reacción después
 • 💾 Guarda el clip combinado, los 2 archivos originales o todo
 • 🔍 Zoom rápido, enfoque táctil, zoom con pellizco, flash y linterna
+• 🔊 Disparador con teclas de volumen (o zoom) — compatible con mandos Bluetooth
 • 🗂️ Galería de sesión con reproducción, compartir y eliminar
 • 🎨 Colores Material You (Android 12+) · 🌍 6 idiomas
 • 🔒 100% en el dispositivo: sin cuenta, sin registro, sin servidores, sin rastreo

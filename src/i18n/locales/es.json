@@ -70,7 +70,11 @@
     "cornerTopLeft": "arriba a la izquierda",
     "cornerTopRight": "arriba a la derecha",
     "cornerBottomRight": "abajo a la derecha",
-    "cornerBottomLeft": "abajo a la izquierda"
+    "cornerBottomLeft": "abajo a la izquierda",
+    "volumeKeys": "Teclas de volumen",
+    "volKeyVolume": "Volumen",
+    "volKeyShutter": "Disparador",
+    "volKeyZoom": "Zoom"
   },
   "gallery": {
     "title": "Medios de la sesión",

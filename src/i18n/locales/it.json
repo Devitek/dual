@@ -70,7 +70,11 @@
     "cornerTopLeft": "in alto a sinistra",
     "cornerTopRight": "in alto a destra",
     "cornerBottomRight": "in basso a destra",
-    "cornerBottomLeft": "in basso a sinistra"
+    "cornerBottomLeft": "in basso a sinistra",
+    "volumeKeys": "Tasti volume",
+    "volKeyVolume": "Volume",
+    "volKeyShutter": "Scatto",
+    "volKeyZoom": "Zoom"
   },
   "gallery": {
     "title": "Contenuti della sessione",

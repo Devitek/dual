@@ -70,7 +70,11 @@
     "cornerTopLeft": "top left",
     "cornerTopRight": "top right",
     "cornerBottomRight": "bottom right",
-    "cornerBottomLeft": "bottom left"
+    "cornerBottomLeft": "bottom left",
+    "volumeKeys": "Volume keys",
+    "volKeyVolume": "Volume",
+    "volKeyShutter": "Shutter",
+    "volKeyZoom": "Zoom"
   },
   "gallery": {
     "title": "Session media",

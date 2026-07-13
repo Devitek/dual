@@ -13,6 +13,7 @@ COSA INCLUDE
 • 🙈 Modalità sorpresa: nascondi l'anteprima del selfie e scopri la tua reazione dopo
 • 💾 Tieni il clip combinato, i 2 file originali o tutto
 • 🔍 Zoom rapido, messa a fuoco al tocco, zoom a pizzico, flash e torcia
+• 🔊 Scatto con i tasti volume (o zoom) — compatibile con telecomandi Bluetooth
 • 🗂️ Galleria della sessione con riproduzione, condivisione ed eliminazione
 • 🎨 Colori Material You (Android 12+) · 🌍 6 lingue
 • 🔒 100% sul dispositivo: nessun account, nessuna registrazione, nessun server, nessun tracciamento

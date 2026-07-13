@@ -19,11 +19,30 @@ class VideoPipComposerModule : Module(), PipComposerBus.Listener {
 
   override fun definition() = ModuleDefinition {
     Name("VideoPipComposer")
-    Events("onProgress", "onComplete", "onError")
+    Events("onProgress", "onComplete", "onError", "onVolumeKey")
 
-    OnCreate { PipComposerBus.listener = this@VideoPipComposerModule }
+    OnCreate {
+      PipComposerBus.listener = this@VideoPipComposerModule
+      // Émetteur des touches matérielles (obturateur/zoom) vers le JS.
+      KeyEventInterceptor.onKey = { key ->
+        this@VideoPipComposerModule.sendEvent("onVolumeKey", mapOf("key" to key))
+      }
+    }
+    OnActivityEntersForeground {
+      appContext.currentActivity?.let { KeyEventInterceptor.install(it) }
+    }
+    OnActivityEntersBackground {
+      KeyEventInterceptor.uninstall()
+    }
     OnDestroy {
+      KeyEventInterceptor.uninstall()
+      KeyEventInterceptor.onKey = null
       if (PipComposerBus.listener === this@VideoPipComposerModule) PipComposerBus.listener = null
+    }
+
+    // Mode « effectif » des touches de volume : "off" | "volume" | "shutter" | "zoom".
+    AsyncFunction("setVolumeKeyMode") { mode: String ->
+      KeyEventInterceptor.mode = KeyEventInterceptor.parseMode(mode)
     }
 
     AsyncFunction("composePip") {

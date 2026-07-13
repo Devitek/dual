@@ -13,6 +13,7 @@ WHAT YOU GET
 • 🙈 Surprise mode: hide the selfie preview and discover your reaction later
 • 💾 Keep the merged clip, both raw files, or all of them
 • 🔍 Quick zoom, tap-to-focus, pinch-to-zoom, flash & torch
+• 🔊 Volume-key shutter or zoom — also works with Bluetooth selfie remotes
 • 🗂️ Session gallery with in-app playback, share & delete
 • 🎨 Material You colors (Android 12+) · 🌍 6 languages
 • 🔒 100% on-device — no account, no sign-up, no servers, no tracking
