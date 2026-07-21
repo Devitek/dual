@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.1](https://github.com/Devitek/dual/compare/v1.6.0...v1.6.1) (2026-07-21)
+
+
+### Bug Fixes
+
+* **deps:** release accumulated dependency updates ([cfc1ee4](https://github.com/Devitek/dual/commit/cfc1ee47a60cb15eea4e0bccf7cf8c12dc58907e))
+* **deps:** release accumulated dependency updates (v1.6.1) ([37f1d59](https://github.com/Devitek/dual/commit/37f1d59f31d04e133310880ed0c442c1534fc420))
+
 ## [1.6.0](https://github.com/Devitek/dual/compare/v1.5.0...v1.6.0) (2026-07-13)
 
 
