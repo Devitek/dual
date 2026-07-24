@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.10.0](https://github.com/Devitek/dual/compare/v1.9.0...v1.10.0) (2026-07-24)
+
+
+### Features
+
+* **capture:** draggable/resizable PiP inset, 1-tap share, opt-in watermark ([90e81c5](https://github.com/Devitek/dual/commit/90e81c5754562f95262f5a0d9ba3120dee861c8d))
+* **capture:** freeform PiP inset + 1-tap share + opt-in watermark ([a81517c](https://github.com/Devitek/dual/commit/a81517cb93e7c238b590380d81923ccf971fdcf1))
+
+
+### Bug Fixes
+
+* **capture:** add watermark props to SettingsSheet (missed in prior commit) ([071c8df](https://github.com/Devitek/dual/commit/071c8df1d79f85414f3ac518c850e51f6671a953))
+
 ## [1.9.0](https://github.com/Devitek/dual/compare/v1.8.0...v1.9.0) (2026-07-24)
 
 
