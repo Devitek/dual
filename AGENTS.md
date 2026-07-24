@@ -4,13 +4,14 @@
 > qui travaille sur ce dépôt. **Respecte-le sans exception.** En cas de doute,
 > demande avant d'agir.
 
-## 0. TL;DR — les 6 règles d'or
+## 0. TL;DR — les 7 règles d'or
 1. **Conventional Commits obligatoires** (`feat:`, `fix:`, `ci:`, `chore:`, `docs:`…). C'est ce qui pilote la version.
 2. **Jamais de push direct sur `main`** → passe par une **branche + PR**. La CI (`Typecheck · Doctor · Bundle`) doit être verte.
 3. **Jamais** créer un tag/release à la main, ni bumper une version à la main. **release-please** possède `package.json`, `app.json` (`$.expo.version`), `CHANGELOG.md` et `.release-please-manifest.json`.
 4. **Média = écriture seule.** Ne **JAMAIS** réintroduire `READ_MEDIA_IMAGES/VIDEO/AUDIO` ni `ACCESS_MEDIA_LOCATION`.
 5. **`android/` et `ios/` sont générés** (CNG, gitignorés). Ne les édite pas : modifie `app.json` / config plugins / le module natif local.
 6. **Avant de livrer** : `npm run lint` (tsc) vert, `npx expo-doctor` OK, et si tu touches aux permissions → `expo prebuild` + vérif du manifest.
+7. **Réglages utilisateur = TOUT persister** via la source unique `src/services/settings.ts`. Un réglage non persisté « repart au défaut » à chaque mort du process (fréquent sur Samsung). Voir §8.
 
 ---
 
@@ -115,5 +116,20 @@ La CI rejoue Typecheck + Doctor + `expo export` (bundle Metro). Ne pousse pas de
 
 ---
 
-## 8. Fichiers à tenir à jour quand tu changes le comportement
+## 8. Persistance des réglages (IMPÉRATIF)
+
+Contexte : un testeur (Samsung S24 Ultra / One UI) a signalé « les réglages reviennent régulièrement au défaut ». Cause : les surcouches agressives **tuent le process en arrière-plan très souvent**, donc **tout réglage non persisté repart au défaut** à la relance. La réponse = **tout persister** (on ne peut/doit pas empêcher l'OS de tuer l'app).
+
+- **Source unique** : `src/services/settings.ts` — `SETTINGS_KEYS` + `PersistedSettings` + `loadPersistedSettings()` + `saveSetting()`. **Ne persiste JAMAIS un réglage « à la main »** (`AsyncStorage.setItem` éparpillé) ailleurs.
+- **Checklist pour AJOUTER un réglage** (les 3 sont obligatoires) :
+  1. l'ajouter à `SETTINGS_KEYS` **et** `PersistedSettings` **et** le valider dans `loadPersistedSettings()` ;
+  2. l'**appliquer au montage** dans `applyPersisted(...)` de `MultiCameraScreen` (contrôleur ou state) ;
+  3. appeler `saveSetting('<clé>', value)` dans son setter.
+- **Garde-fou** : `loadPersistedSettings()` relit **toutes** les clés de `SETTINGS_KEYS` en un passage → impossible d'écrire une clé sans la relire (bug historique : la disposition était écrite mais jamais restaurée).
+- **Exceptions volontairement NON persistées** : la **torche** (sécurité — pas de lampe rallumée au lancement), le **hint PiP** (`tl_seen_pip_hint`, one-shot), le **géotag** (dans `useGeotag`, conditionné à la permission), `primarySlot` (risque en mono-caméra).
+- **Test de non-régression** : forcer l'arrêt de l'app (paramètres → forcer l'arrêt, ou swipe des récents) puis relancer → **tous** les réglages doivent tenir.
+
+---
+
+## 9. Fichiers à tenir à jour quand tu changes le comportement
 - `AGENTS.md` (ce fichier), `RELEASE.md` (procédures/gotchas Play), `TODO.md` (état d'avancement), `CHANGELOG.md` (**auto** via release-please — ne pas éditer à la main).

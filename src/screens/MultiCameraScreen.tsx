@@ -39,52 +39,18 @@ import { pipCanvasForQuality } from '../vision/MultiCamController';
 import type { CameraSlot, CaptureQuality, CaptureSpeed, SaveMode } from '../vision/MultiCamController';
 import type { CompositionLayout, PipCorner, PipInset } from '../services/pipComposer';
 import type { VolumeKeyAction } from '../native/volumeKeys';
+import {
+  loadPersistedSettings,
+  saveSetting,
+  type PersistedSettings,
+  type TimerSeconds,
+} from '../services/settings';
 
-/** Clé de persistance du hint « touchez la vignette » (1er lancement). */
+/** Clé du hint « touchez la vignette » (1er lancement — one-shot, hors réglages). */
 const PIP_HINT_KEY = 'tl_seen_pip_hint';
-/** Clé de persistance de l'action des touches de volume ('volume'|'shutter'|'zoom'). */
-const VOLUME_KEY_ACTION_KEY = 'tl_volume_key_action';
-/** Clé de persistance de l'anti-flou « Ne bougez pas » ('1'|'0'). */
-const STABILIZATION_KEY = 'tl_stabilization';
-/** Clé de persistance du compromis vitesse capture ('speed'|'balanced'|'quality'). */
-const CAPTURE_SPEED_KEY = 'tl_capture_speed';
-/** Clé de persistance du retardateur (secondes : '0'|'3'|'10'). */
-const TIMER_KEY = 'tl_timer';
-/** Clé de persistance du son d'obturateur ('1'|'0'). */
-const SHUTTER_SOUND_KEY = 'tl_shutter_sound';
-/** Clé de persistance de la disposition de fusion ('pip'|'sideBySide'|'topBottom'). */
-const LAYOUT_KEY = 'tl_layout';
-/** Clé de persistance de la position/taille libre de la vignette (JSON {x,y,w} ou absent). */
-const PIP_INSET_KEY = 'tl_pip_inset';
-/** Clé de persistance du filigrane TwinLens ('1'|'0'). */
-const WATERMARK_KEY = 'tl_watermark';
-/** Valeurs possibles du retardateur (secondes). */
-const TIMER_VALUES = [0, 3, 10] as const;
-export type TimerSeconds = (typeof TIMER_VALUES)[number];
 
-/** Parse la position/taille libre de la vignette depuis AsyncStorage (JSON validé). */
-function parsePipInset(raw: string | null | undefined): PipInset | null {
-  if (raw == null) return null;
-  try {
-    const v = JSON.parse(raw) as Partial<PipInset>;
-    if (
-      typeof v?.x === 'number' &&
-      typeof v?.y === 'number' &&
-      typeof v?.w === 'number' &&
-      v.x >= 0 &&
-      v.x <= 1 &&
-      v.y >= 0 &&
-      v.y <= 1 &&
-      v.w > 0 &&
-      v.w <= 1
-    ) {
-      return { x: v.x, y: v.y, w: v.w };
-    }
-  } catch {
-    /* JSON invalide -> ignoré */
-  }
-  return null;
-}
+// Réexport pour compat (le type vit désormais dans services/settings).
+export type { TimerSeconds };
 
 /** Paliers de zoom rapides dérivés des bornes de la caméra principale. */
 function buildZoomLevels(min: number, max: number): number[] {
@@ -238,11 +204,20 @@ export function MultiCameraScreen(): React.ReactElement {
     });
   }, [cam.controller]);
 
-  const onSetPhotoFlash = useCallback((mode: PhotoFlashMode) => setPhotoFlash(mode), []);
+  const onSetPhotoFlash = useCallback((m: PhotoFlashMode) => {
+    setPhotoFlash(m);
+    saveSetting('photoFlash', m);
+  }, []);
 
   const cyclePhotoFlash = useCallback(() => {
     haptics.selection();
-    setPhotoFlash((prev) => (prev === 'off' ? 'auto' : prev === 'auto' ? 'on' : 'off'));
+    const next: PhotoFlashMode = photoFlash === 'off' ? 'auto' : photoFlash === 'auto' ? 'on' : 'off';
+    onSetPhotoFlash(next);
+  }, [photoFlash, onSetPhotoFlash]);
+
+  const onSetMode = useCallback((m: CaptureMode) => {
+    setMode(m);
+    saveSetting('mode', m);
   }, []);
 
   // Capture réelle : flash blanc instantané puis capture async (l'overlay
@@ -326,113 +301,126 @@ export function MultiCameraScreen(): React.ReactElement {
     }
   }, [cam.controller, cam.isRecording]);
 
-  const setPhotoSaveMode = useCallback((m: SaveMode) => cam.controller.setPhotoSaveMode(m), [cam.controller]);
-  const setVideoSaveMode = useCallback((m: SaveMode) => cam.controller.setVideoSaveMode(m), [cam.controller]);
+  const setPhotoSaveMode = useCallback(
+    (m: SaveMode) => {
+      cam.controller.setPhotoSaveMode(m);
+      saveSetting('photoSaveMode', m);
+    },
+    [cam.controller],
+  );
+  const setVideoSaveMode = useCallback(
+    (m: SaveMode) => {
+      cam.controller.setVideoSaveMode(m);
+      saveSetting('videoSaveMode', m);
+    },
+    [cam.controller],
+  );
   const setPipCorner = useCallback(
     (c: PipCorner) => {
       cam.controller.setPipCorner(c); // réinitialise aussi la position libre
-      void AsyncStorage.removeItem(PIP_INSET_KEY).catch(() => {});
+      saveSetting('pipCorner', c);
+      saveSetting('pipInset', null); // retour au coin
     },
     [cam.controller],
   );
   const setLayout = useCallback(
     (l: CompositionLayout) => {
       cam.controller.setLayout(l);
-      void AsyncStorage.setItem(LAYOUT_KEY, l).catch(() => {});
+      saveSetting('layout', l);
     },
     [cam.controller],
   );
   const onMovePip = useCallback(
     (inset: PipInset) => {
       cam.controller.setPipInset(inset);
-      void AsyncStorage.setItem(PIP_INSET_KEY, JSON.stringify(inset)).catch(() => {});
+      saveSetting('pipInset', inset);
     },
     [cam.controller],
   );
   const setWatermark = useCallback(
     (value: boolean) => {
       cam.controller.setWatermark(value);
-      void AsyncStorage.setItem(WATERMARK_KEY, value ? '1' : '0').catch(() => {});
+      saveSetting('watermark', value);
     },
     [cam.controller],
   );
-  const setQuality = useCallback((q: CaptureQuality) => void cam.controller.setQuality(q), [cam.controller]);
+  const setQuality = useCallback(
+    (q: CaptureQuality) => {
+      void cam.controller.setQuality(q);
+      saveSetting('captureQuality', q);
+    },
+    [cam.controller],
+  );
 
   const toggleSecondaryPreview = useCallback(() => {
     haptics.selection();
-    cam.controller.setShowSecondaryPreview(!cam.showSecondaryPreview);
+    const next = !cam.showSecondaryPreview;
+    cam.controller.setShowSecondaryPreview(next);
+    saveSetting('showSecondaryPreview', next);
   }, [cam.controller, cam.showSecondaryPreview]);
-
-  // --- Touches de volume (obturateur / zoom) ---
-  useEffect(() => {
-    void AsyncStorage.getItem(VOLUME_KEY_ACTION_KEY)
-      .then((v) => {
-        if (v === 'shutter' || v === 'zoom' || v === 'volume') setVolumeKeyActionState(v);
-      })
-      .catch(() => {});
-  }, []);
 
   const setVolumeKeyAction = useCallback((a: VolumeKeyAction) => {
     setVolumeKeyActionState(a);
-    void AsyncStorage.setItem(VOLUME_KEY_ACTION_KEY, a).catch(() => {});
+    saveSetting('volumeKeyAction', a);
   }, []);
 
-  // --- Anti-flou / vitesse / retardateur (persistés) ---
+  // Restaure TOUS les réglages persistés (source unique : services/settings) et les
+  // applique au contrôleur / state. Corrige le « reset au démarrage » : sur Samsung
+  // le process est tué souvent, donc CHAQUE réglage doit être persisté + restauré ici.
+  const applyPersisted = useCallback(
+    (s: Partial<PersistedSettings>) => {
+      const c = cam.controller;
+      if (s.stabilization != null) setStabilizationState(s.stabilization);
+      if (s.captureSpeed != null) void c.setCaptureSpeed(s.captureSpeed);
+      if (s.timerSeconds != null) setTimerSecondsState(s.timerSeconds);
+      if (s.shutterSound != null) c.setShutterSound(s.shutterSound);
+      if (s.layout != null) c.setLayout(s.layout);
+      if (s.watermark != null) c.setWatermark(s.watermark);
+      if (s.volumeKeyAction != null) setVolumeKeyActionState(s.volumeKeyAction);
+      if (s.photoSaveMode != null) c.setPhotoSaveMode(s.photoSaveMode);
+      if (s.videoSaveMode != null) c.setVideoSaveMode(s.videoSaveMode);
+      if (s.pipCorner != null) c.setPipCorner(s.pipCorner); // remet aussi pipInset à null
+      if (s.pipInset != null) c.setPipInset(s.pipInset); // -> restauré APRÈS le coin
+      if (s.captureQuality != null) void c.setQuality(s.captureQuality);
+      if (s.showSecondaryPreview != null) c.setShowSecondaryPreview(s.showSecondaryPreview);
+      if (s.photoFlash != null) setPhotoFlash(s.photoFlash);
+      if (s.mode != null) setMode(s.mode);
+    },
+    [cam.controller],
+  );
+
   useEffect(() => {
-     void AsyncStorage.multiGet([
-       STABILIZATION_KEY,
-       CAPTURE_SPEED_KEY,
-       TIMER_KEY,
-       SHUTTER_SOUND_KEY,
-       LAYOUT_KEY,
-       PIP_INSET_KEY,
-       WATERMARK_KEY,
-     ])
-       .then((entries) => {
-         const map = Object.fromEntries(entries);
-         if (map[STABILIZATION_KEY] === '0') setStabilizationState(false);
-         const speed = map[CAPTURE_SPEED_KEY];
-         if (speed === 'speed' || speed === 'balanced' || speed === 'quality') {
-           void cam.controller.setCaptureSpeed(speed);
-         }
-         const timer = Number(map[TIMER_KEY]);
-         if (timer === 3 || timer === 10) setTimerSecondsState(timer);
-         if (map[SHUTTER_SOUND_KEY] === '0') cam.controller.setShutterSound(false);
-         const layout = map[LAYOUT_KEY];
-         if (layout === 'pip' || layout === 'sideBySide' || layout === 'topBottom') {
-           cam.controller.setLayout(layout);
-         }
-         const inset = parsePipInset(map[PIP_INSET_KEY]);
-         if (inset != null) cam.controller.setPipInset(inset);
-         if (map[WATERMARK_KEY] === '1') cam.controller.setWatermark(true);
-       })
-       .catch(() => {});
-    // Au montage uniquement ; le contrôleur applique la vitesse au (re)build session.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    let cancelled = false;
+    void loadPersistedSettings().then((s) => {
+      if (!cancelled) applyPersisted(s);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [applyPersisted]);
 
   const setStabilization = useCallback((value: boolean) => {
     setStabilizationState(value);
-    void AsyncStorage.setItem(STABILIZATION_KEY, value ? '1' : '0').catch(() => {});
+    saveSetting('stabilization', value);
   }, []);
 
   const setCaptureSpeed = useCallback(
     (s: CaptureSpeed) => {
       void cam.controller.setCaptureSpeed(s);
-      void AsyncStorage.setItem(CAPTURE_SPEED_KEY, s).catch(() => {});
+      saveSetting('captureSpeed', s);
     },
     [cam.controller],
   );
 
   const setTimerSeconds = useCallback((s: TimerSeconds) => {
     setTimerSecondsState(s);
-    void AsyncStorage.setItem(TIMER_KEY, String(s)).catch(() => {});
+    saveSetting('timerSeconds', s);
   }, []);
 
   const setShutterSound = useCallback(
     (value: boolean) => {
       cam.controller.setShutterSound(value);
-      void AsyncStorage.setItem(SHUTTER_SOUND_KEY, value ? '1' : '0').catch(() => {});
+      saveSetting('shutterSound', value);
     },
     [cam.controller],
   );
@@ -573,7 +561,7 @@ export function MultiCameraScreen(): React.ReactElement {
 
             <CaptureControls
               mode={mode}
-              onSetMode={setMode}
+              onSetMode={onSetMode}
               isRecording={cam.isRecording}
               isBusy={cam.isBusy}
               onPhoto={onPhoto}
