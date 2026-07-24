@@ -38,6 +38,25 @@ doctor, mais n'a pas encore tourné sur un appareil. Points à vérifier/ajuster
       tâche de fond via la même file, avec un **composeur vidéo injectable**
       (`setVideoComposer`).
 
+## Roadmap capture — features (marché dual-cam)
+
+Suite au retour utilisateurs (photos floues : le téléphone bouge pendant la
+capture réelle ~0,5–1 s, alors que le flash d'obturateur donne un faux signal
+« c'est pris »). Découpage en vagues, chacune une PR `feat:`.
+
+- [x] **Vague 1 — Anti-flou** (v1.7.0) : réglage vitesse de capture
+      (`speed`/`balanced`/`quality`, défaut `balanced` au lieu de `quality` +
+      coupure de la fusion multi-frames en mode `speed`), overlay « Ne bougez
+      pas » lié à `isBusy` + haptique de fin, retardateur 3 s / 10 s (tap =
+      annuler). 100 % JS. Réglages persistés `tl_stabilization` /
+      `tl_capture_speed` / `tl_timer`. **À valider sur device** : ressenti de la
+      latence en `balanced`/`speed`, timing de l'overlay, retardateur.
+- [ ] **Vague 2 — Mises en page** (photo) : côte-à-côte / haut-bas en plus du PiP
+      + tap sur l'incrust' pour inverser. Touche le compositeur natif photo.
+- [ ] **Vague 3 — Incrust' libre** (drag/resize, JS-driven, pas de reanimated) +
+      partage 1 tap (`expo-sharing`) + watermark **opt-in** (OFF par défaut).
+- [ ] **Vague 4 — Mises en page vidéo** : `PipGlRenderer` GL (le morceau lourd).
+
 ## Fusion PiP vidéo on-device — module natif (v1, À VALIDER SUR DEVICE)
 
 - [~] **`modules/video-pip-composer`** — module Expo Android (Kotlin) : MediaCodec
@@ -85,11 +104,14 @@ doctor, mais n'a pas encore tourné sur un appareil. Points à vérifier/ajuster
 - [x] §6 Finitions : safe-area (voir ci-dessus), hitSlop PiP, **Material You**
       (couleur système, voir Reste/dette). App renommée `fr.devitek.twinlens`.
 
-## 🚚 Livraison / Store — BLOQUÉ (compte développeur non vérifié)
+## 🚚 Livraison / Store — ✅ RÉSOLU (pipeline automatisé)
 
-Tout ce qui suit est en attente d'un **compte Google Play Console vérifié**
-(vérification d'identité, frais unique). Le pipeline CI/build actuel produit un
-APK **debug-signé de TEST** ; rien n'est encore prêt pour une publication Store.
+> **Statut (v1.7.0)** : compte vérifié, **AAB signé** buildé par
+> `release-android.yml` et **déployé automatiquement** sur le canal **interne**
+> Play à chaque release (release-please → tag → build → upload `supply`). Fiche
+> store (6 langues), captures, confidentialité et Data safety en place. La
+> checklist historique ci-dessous est conservée pour mémoire (tout est fait, hors
+> promotion manuelle vers les pistes fermé/ouvert/production).
 
 ### Préalable — compte & accès
 - [ ] Créer/vérifier le **compte Google Play Console** (identité vérifiée).
