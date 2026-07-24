@@ -2,7 +2,7 @@
   "expo": {
     "name": "TwinLens",
     "slug": "dual",
-    "version": "1.8.0",
+    "version": "1.9.0",
     "orientation": "portrait",
     "scheme": "dual",
     "userInterfaceStyle": "dark",
