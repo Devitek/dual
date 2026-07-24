@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.9.0](https://github.com/Devitek/dual/compare/v1.8.0...v1.9.0) (2026-07-24)
+
+
+### Features
+
+* **capture:** opt-in photo geotagging (on-device GPS EXIF) ([6a28d0f](https://github.com/Devitek/dual/commit/6a28d0f3f88eb5908e84df804af000576da80593))
+* **capture:** opt-in photo geotagging (on-device GPS EXIF) ([c27291f](https://github.com/Devitek/dual/commit/c27291f83d567124de5e39e7926032040a13603a))
+
 ## [1.8.0](https://github.com/Devitek/dual/compare/v1.7.0...v1.8.0) (2026-07-24)
 
 
