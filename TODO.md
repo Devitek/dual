@@ -65,10 +65,12 @@ capture réelle ~0,5–1 s, alors que le flash d'obturateur donne un faux signal
       l'activation ; **jamais** en arrière-plan. GPS écrit dans l'EXIF **on-device**
       via piexifjs (`src/services/exifGps.ts`, `src/hooks/useGeotag.ts`) — 100 % JS,
       routé via le compositeur JS view-shot (le natif sauvegarde en interne).
-      ⚠️ **Play** : nécessite la **déclaration d'autorisation de localisation** +
-      màj **Data safety** (localisation, on-device, non partagée) + politique de
-      confidentialité (faite, docs/privacy.html). **À valider sur device** : dialogue
-      de permission, présence des tags GPS dans l'EXIF de la photo sauvegardée.
+      ✅ **Play** : localisation **premier plan** → **AUCUNE déclaration requise** (le
+      formulaire « Autorisations sensibles → Localisation » ne concerne QUE
+      `ACCESS_BACKGROUND_LOCATION`, absent ici). **Data safety inchangée** (traitement
+      100 % on-device = pas de « collecte » au sens Google). Politique de
+      confidentialité déjà à jour (docs/privacy.html). **À valider sur device** :
+      dialogue de permission + présence des tags GPS dans l'EXIF de la photo.
 - [ ] **Vague 3 — Incrust' libre** (drag/resize, JS-driven, pas de reanimated) +
       partage 1 tap (`expo-sharing`) + watermark **opt-in** (OFF par défaut).
 - [ ] **Vague 4 — Layouts natifs** (photo `PhotoPipComposer` Canvas + vidéo

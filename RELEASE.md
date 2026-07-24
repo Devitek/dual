@@ -55,14 +55,21 @@ Garde une **sauvegarde** de `upload.keystore` hors du dépôt.
 - Fiche : les textes/images sont déjà prêts dans `fastlane/metadata/android/`
   (fr-FR + en-US). Tu peux les saisir à la main, **ou** les pousser (étape 5).
 - **Politique de confidentialité** : `https://devitek.github.io/dual/privacy.html`.
-- **Data safety** : « aucune donnée collectée / partagée » (tout est local).
-  - ⚠️ **Depuis v1.9.0 (géotag opt-in)** : l'app inclut `ACCESS_FINE_LOCATION`
-    (premier plan). Compléter dans la Play Console : (1) **déclaration
-    d'autorisation de localisation** (usage = géomarquer les photos de l'utilisateur,
-    **pas** d'arrière-plan) ; (2) **Data safety** → *Location · Approximate/Precise
-    location* : collectée **oui** (traitement sur l'appareil), **partagée non**,
-    optionnelle, non utilisée pour le suivi/pub. La localisation ne quitte jamais
-    l'appareil (écrite dans l'EXIF de la photo).
+- **Data safety** : « aucune donnée collectée / partagée » (tout est local) — **reste
+  valable même avec le géotag (v1.9.0)**. La localisation est **traitée uniquement sur
+  l'appareil** (écrite dans l'EXIF de la photo) et **n'est jamais transmise**. Au sens
+  Google, « collecte » = données envoyées **hors de l'appareil** → il n'y a donc **rien
+  à déclarer** comme collecté/partagé. Ne rien changer.
+  - ✅ **Géotag = localisation PREMIER PLAN uniquement** (`ACCESS_FINE_LOCATION` +
+    `COARSE`, **jamais** `ACCESS_BACKGROUND_LOCATION`). Le **formulaire de déclaration
+    de localisation N'APPARAÎT PAS et n'est PAS requis** : d'après la doc Google
+    (*Understanding location in the background permissions*), ce formulaire ne se
+    déclenche **que** si le manifeste contient `ACCESS_BACKGROUND_LOCATION`. **Rien à
+    remplir** côté « Autorisations sensibles » pour la localisation.
+  - Pas de « prominent disclosure » séparée à ajouter : exigée pour le **background**
+    seulement ; ici le réglage opt-in + le prompt de permission système suffisent.
+  - Politique de confidentialité (`docs/privacy.html`) : déjà à jour (géotag optionnel,
+    on-device, jamais partagé).
 - **Content rating** (IARC), audience cible, déclaration pub = non.
 - **1er dépôt manuel** : Google exige que le **premier AAB** soit déposé à la main.
   Lance `gh workflow run release-android.yml -f upload_to_play=false` → l'**AAB
