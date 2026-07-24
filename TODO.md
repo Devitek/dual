@@ -60,6 +60,15 @@ capture réelle ~0,5–1 s, alors que le flash d'obturateur donne un faux signal
       Tap-pour-inverser réutilisé (existait déjà). **Vidéo reste en PiP** pour
       l'instant. Réglage `tl_layout`. **À valider sur device** : rendu/cadrage des
       moitiés, geste focus/zoom sur la moitié principale.
+- [x] **Géolocalisation des photos** (v1.9.0) : réglage **opt-in** `tl_geotag`
+      (OFF par défaut). Permission localisation **premier plan** (fine) demandée à
+      l'activation ; **jamais** en arrière-plan. GPS écrit dans l'EXIF **on-device**
+      via piexifjs (`src/services/exifGps.ts`, `src/hooks/useGeotag.ts`) — 100 % JS,
+      routé via le compositeur JS view-shot (le natif sauvegarde en interne).
+      ⚠️ **Play** : nécessite la **déclaration d'autorisation de localisation** +
+      màj **Data safety** (localisation, on-device, non partagée) + politique de
+      confidentialité (faite, docs/privacy.html). **À valider sur device** : dialogue
+      de permission, présence des tags GPS dans l'EXIF de la photo sauvegardée.
 - [ ] **Vague 3 — Incrust' libre** (drag/resize, JS-driven, pas de reanimated) +
       partage 1 tap (`expo-sharing`) + watermark **opt-in** (OFF par défaut).
 - [ ] **Vague 4 — Layouts natifs** (photo `PhotoPipComposer` Canvas + vidéo

@@ -56,6 +56,13 @@ Garde une **sauvegarde** de `upload.keystore` hors du dépôt.
   (fr-FR + en-US). Tu peux les saisir à la main, **ou** les pousser (étape 5).
 - **Politique de confidentialité** : `https://devitek.github.io/dual/privacy.html`.
 - **Data safety** : « aucune donnée collectée / partagée » (tout est local).
+  - ⚠️ **Depuis v1.9.0 (géotag opt-in)** : l'app inclut `ACCESS_FINE_LOCATION`
+    (premier plan). Compléter dans la Play Console : (1) **déclaration
+    d'autorisation de localisation** (usage = géomarquer les photos de l'utilisateur,
+    **pas** d'arrière-plan) ; (2) **Data safety** → *Location · Approximate/Precise
+    location* : collectée **oui** (traitement sur l'appareil), **partagée non**,
+    optionnelle, non utilisée pour le suivi/pub. La localisation ne quitte jamais
+    l'appareil (écrite dans l'EXIF de la photo).
 - **Content rating** (IARC), audience cible, déclaration pub = non.
 - **1er dépôt manuel** : Google exige que le **premier AAB** soit déposé à la main.
   Lance `gh workflow run release-android.yml -f upload_to_play=false` → l'**AAB
