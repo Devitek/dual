@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Animated, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Gesture } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
@@ -35,7 +35,7 @@ import {
 import { haptics } from '../utils/haptics';
 import type { FocusPoint } from '../components/FocusIndicator';
 import { pipCanvasForQuality } from '../vision/MultiCamController';
-import type { CameraSlot, CaptureQuality, SaveMode } from '../vision/MultiCamController';
+import type { CameraSlot, CaptureQuality, CaptureSpeed, SaveMode } from '../vision/MultiCamController';
 import type { PipCorner } from '../services/pipComposer';
 import type { VolumeKeyAction } from '../native/volumeKeys';
 
@@ -43,6 +43,15 @@ import type { VolumeKeyAction } from '../native/volumeKeys';
 const PIP_HINT_KEY = 'tl_seen_pip_hint';
 /** Clé de persistance de l'action des touches de volume ('volume'|'shutter'|'zoom'). */
 const VOLUME_KEY_ACTION_KEY = 'tl_volume_key_action';
+/** Clé de persistance de l'anti-flou « Ne bougez pas » ('1'|'0'). */
+const STABILIZATION_KEY = 'tl_stabilization';
+/** Clé de persistance du compromis vitesse capture ('speed'|'balanced'|'quality'). */
+const CAPTURE_SPEED_KEY = 'tl_capture_speed';
+/** Clé de persistance du retardateur (secondes : '0'|'3'|'10'). */
+const TIMER_KEY = 'tl_timer';
+/** Valeurs possibles du retardateur (secondes). */
+const TIMER_VALUES = [0, 3, 10] as const;
+export type TimerSeconds = (typeof TIMER_VALUES)[number];
 
 /** Paliers de zoom rapides dérivés des bornes de la caméra principale. */
 function buildZoomLevels(min: number, max: number): number[] {
@@ -78,11 +87,17 @@ export function MultiCameraScreen(): React.ReactElement {
   const [videoProgress, setVideoProgress] = useState<number | null>(null);
   const [pipHintVisible, setPipHintVisible] = useState(false);
   const [volumeKeyAction, setVolumeKeyActionState] = useState<VolumeKeyAction>('volume');
+  const [stabilization, setStabilizationState] = useState(true);
+  const [timerSeconds, setTimerSecondsState] = useState<TimerSeconds>(0);
+  const [countdown, setCountdown] = useState<number | null>(null);
   const focusNonce = useRef(0);
   const lastZoomUpdate = useRef(0);
   const pipHintChecked = useRef(false);
   const pipRef = useRef<PipCompositorHandle>(null);
   const flashOpacity = useRef(new Animated.Value(0)).current;
+  const holdStillOpacity = useRef(new Animated.Value(0)).current;
+  const wasBusy = useRef(false);
+  const countdownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const styles = useThemedStyles(makeStyles);
 
   // Injecte le compositeur PiP (view-shot) dans le contrôleur natif.
@@ -183,13 +198,56 @@ export function MultiCameraScreen(): React.ReactElement {
     setPhotoFlash((prev) => (prev === 'off' ? 'auto' : prev === 'auto' ? 'on' : 'off'));
   }, []);
 
-  const onPhoto = useCallback(() => {
+  // Capture réelle : flash blanc instantané puis capture async (l'overlay
+  // « Ne bougez pas » est piloté séparément par l'état isBusy du contrôleur).
+  const doCapture = useCallback(() => {
     haptics.medium();
-    // Feedback visuel INSTANTANÉ (flash d'obturateur blanc), avant tout traitement async.
     flashOpacity.setValue(0.9);
     Animated.timing(flashOpacity, { toValue: 0, duration: 200, useNativeDriver: true }).start();
     void cam.controller.capturePhoto(photoFlash);
   }, [cam.controller, photoFlash, flashOpacity]);
+
+  const cancelCountdown = useCallback(() => {
+    if (countdownTimer.current != null) {
+      clearInterval(countdownTimer.current);
+      countdownTimer.current = null;
+    }
+    setCountdown(null);
+  }, []);
+
+  // Obturateur photo : capture immédiate, ou décompte du retardateur. Un second
+  // appui pendant le décompte l'annule. Le décompte ne fait QUE décrémenter un
+  // état (updater pur) ; le tick haptique et la capture à 0 sont gérés par l'effet
+  // ci-dessous (évite tout effet de bord dans un updater — safe en StrictMode).
+  const onPhoto = useCallback(() => {
+    if (countdownTimer.current != null) {
+      cancelCountdown();
+      return;
+    }
+    if (timerSeconds <= 0) {
+      doCapture();
+      return;
+    }
+    setCountdown(timerSeconds);
+    countdownTimer.current = setInterval(() => {
+      setCountdown((prev) => (prev == null ? null : prev - 1));
+    }, 1000);
+  }, [timerSeconds, doCapture, cancelCountdown]);
+
+  // Pilote le décompte : bip à chaque seconde, capture quand il atteint 0.
+  useEffect(() => {
+    if (countdown == null) return;
+    if (countdown <= 0) {
+      if (countdownTimer.current != null) {
+        clearInterval(countdownTimer.current);
+        countdownTimer.current = null;
+      }
+      setCountdown(null);
+      doCapture();
+    } else {
+      haptics.selection();
+    }
+  }, [countdown, doCapture]);
 
   const onSelectZoom = useCallback(
     (level: number) => {
@@ -244,6 +302,68 @@ export function MultiCameraScreen(): React.ReactElement {
     setVolumeKeyActionState(a);
     void AsyncStorage.setItem(VOLUME_KEY_ACTION_KEY, a).catch(() => {});
   }, []);
+
+  // --- Anti-flou / vitesse / retardateur (persistés) ---
+  useEffect(() => {
+    void AsyncStorage.multiGet([STABILIZATION_KEY, CAPTURE_SPEED_KEY, TIMER_KEY])
+      .then((entries) => {
+        const map = Object.fromEntries(entries);
+        if (map[STABILIZATION_KEY] === '0') setStabilizationState(false);
+        const speed = map[CAPTURE_SPEED_KEY];
+        if (speed === 'speed' || speed === 'balanced' || speed === 'quality') {
+          void cam.controller.setCaptureSpeed(speed);
+        }
+        const timer = Number(map[TIMER_KEY]);
+        if (timer === 3 || timer === 10) setTimerSecondsState(timer);
+      })
+      .catch(() => {});
+    // Au montage uniquement ; le contrôleur applique la vitesse au (re)build session.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const setStabilization = useCallback((value: boolean) => {
+    setStabilizationState(value);
+    void AsyncStorage.setItem(STABILIZATION_KEY, value ? '1' : '0').catch(() => {});
+  }, []);
+
+  const setCaptureSpeed = useCallback(
+    (s: CaptureSpeed) => {
+      void cam.controller.setCaptureSpeed(s);
+      void AsyncStorage.setItem(CAPTURE_SPEED_KEY, s).catch(() => {});
+    },
+    [cam.controller],
+  );
+
+  const setTimerSeconds = useCallback((s: TimerSeconds) => {
+    setTimerSecondsState(s);
+    void AsyncStorage.setItem(TIMER_KEY, String(s)).catch(() => {});
+  }, []);
+
+  // Overlay « Ne bougez pas » : visible exactement pendant la capture réelle
+  // (fenêtre isBusy) en mode photo, si l'anti-flou est actif.
+  const holdStillVisible = stabilization && mode === 'photo' && cam.isBusy;
+  useEffect(() => {
+    Animated.timing(holdStillOpacity, {
+      toValue: holdStillVisible ? 1 : 0,
+      duration: holdStillVisible ? 90 : 160,
+      useNativeDriver: true,
+    }).start();
+  }, [holdStillVisible, holdStillOpacity]);
+
+  // Haptique de fin : quand la capture photo se termine (isBusy true -> false),
+  // signale « c'est bon, tu peux rebouger ».
+  useEffect(() => {
+    if (wasBusy.current && !cam.isBusy && mode === 'photo') haptics.light();
+    wasBusy.current = cam.isBusy;
+  }, [cam.isBusy, mode]);
+
+  // Annule un décompte en cours si on quitte le mode photo ou qu'un panneau s'ouvre.
+  useEffect(() => {
+    if (mode !== 'photo' || settingsOpen || galleryOpen) cancelCountdown();
+  }, [mode, settingsOpen, galleryOpen, cancelCountdown]);
+
+  // Nettoyage du timer au démontage.
+  useEffect(() => () => cancelCountdown(), [cancelCountdown]);
 
   const zoomBy = useCallback(
     (dir: 'in' | 'out') => {
@@ -374,6 +494,24 @@ export function MultiCameraScreen(): React.ReactElement {
             {/* Flash d'obturateur (feedback instantané, blanc) */}
             <Animated.View pointerEvents="none" style={[styles.flash, { opacity: flashOpacity }]} />
 
+            {/* Anti-flou : voile sombre + « Ne bougez pas » pendant la capture réelle */}
+            <Animated.View pointerEvents="none" style={[styles.holdStill, { opacity: holdStillOpacity }]}>
+              <Text style={styles.holdStillText}>{t('capture.holdStill')}</Text>
+            </Animated.View>
+
+            {/* Retardateur : décompte plein écran, tap = annuler */}
+            {countdown != null && (
+              <Pressable
+                style={styles.countdown}
+                onPress={cancelCountdown}
+                accessibilityRole="button"
+                accessibilityLabel={t('capture.cancelTimerA11y')}
+              >
+                <Text style={styles.countdownText}>{countdown}</Text>
+                <Text style={styles.countdownHint}>{t('capture.cancelTimer')}</Text>
+              </Pressable>
+            )}
+
             <SettingsSheet
               visible={settingsOpen}
               onClose={() => setSettingsOpen(false)}
@@ -398,6 +536,12 @@ export function MultiCameraScreen(): React.ReactElement {
               onSetQuality={setQuality}
               volumeKeyAction={volumeKeyAction}
               onSetVolumeKeyAction={setVolumeKeyAction}
+              stabilization={stabilization}
+              onToggleStabilization={() => setStabilization(!stabilization)}
+              captureSpeed={cam.captureSpeed}
+              onSetCaptureSpeed={setCaptureSpeed}
+              timerSeconds={timerSeconds}
+              onSetTimerSeconds={setTimerSeconds}
             />
 
             <SessionGallery
@@ -421,4 +565,27 @@ export function MultiCameraScreen(): React.ReactElement {
 const makeStyles = (colors: Palette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
   flash: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#fff' },
+  holdStill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.82)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  holdStillText: { color: '#fff', fontSize: 22, fontWeight: '700', letterSpacing: 0.5 },
+  countdown: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  countdownText: { color: '#fff', fontSize: 120, fontWeight: '200', fontVariant: ['tabular-nums'] },
+  countdownHint: { color: 'rgba(255,255,255,0.85)', fontSize: 15, marginTop: 8 },
 });

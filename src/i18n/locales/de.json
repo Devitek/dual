@@ -23,7 +23,10 @@
     "shutterPhotoA11y": "Foto aufnehmen",
     "recStartA11y": "Aufnahme starten",
     "recStopA11y": "Aufnahme stoppen",
-    "swapA11y": "Kameras wechseln"
+    "swapA11y": "Kameras wechseln",
+    "holdStill": "Nicht bewegen…",
+    "cancelTimer": "Zum Abbrechen tippen",
+    "cancelTimerA11y": "Timer abbrechen"
   },
   "mode": {
     "photo": "FOTO",
@@ -74,7 +77,18 @@
     "volumeKeys": "Lautstärketasten",
     "volKeyVolume": "Lautstärke",
     "volKeyShutter": "Auslöser",
-    "volKeyZoom": "Zoom"
+    "volKeyZoom": "Zoom",
+    "sectionCapture": "Aufnahme",
+    "stabilization": "Anti-Unschärfe (still halten)",
+    "stabilizationDesc": "Dunkelt den Bildschirm während der Aufnahme ab, damit du das Telefon bis zur Aufnahme ruhig hältst.",
+    "captureSpeed": "Aufnahmetempo",
+    "speedFast": "Schnell",
+    "speedBalanced": "Ausgewogen",
+    "speedQuality": "Qualität",
+    "timer": "Selbstauslöser",
+    "timerOff": "Off",
+    "timer3s": "3 s",
+    "timer10s": "10 s"
   },
   "gallery": {
     "title": "Sitzungsmedien",
@@ -127,6 +141,7 @@
     "recError": "Aufnahme ({{slot}}): {{error}}",
     "processingFailed": "Verarbeitung fehlgeschlagen: {{error}}",
     "qualityUnsupported": "Qualität nicht unterstützt – zurück zur vorherigen Einstellung.",
+    "speedUnsupported": "Aufnahmetempo nicht unterstützt – zurück zur vorherigen Einstellung.",
     "noCamera": "Keine Kamera verfügbar."
   },
   "update": {

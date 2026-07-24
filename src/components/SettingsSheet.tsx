@@ -26,7 +26,7 @@ const { height: SCREEN_H } = Dimensions.get('window');
 
 import { useColors, useThemedStyles, type Palette } from '../theme/theme';
 import { haptics } from '../utils/haptics';
-import type { CaptureQuality, SaveMode } from '../vision/MultiCamController';
+import type { CaptureQuality, CaptureSpeed, SaveMode } from '../vision/MultiCamController';
 import type { PipCorner } from '../services/pipComposer';
 import type { PhotoFlashMode } from './CameraTopBar';
 import type { VolumeKeyAction } from '../native/volumeKeys';
@@ -146,6 +146,18 @@ const FLASH_OPTION_KEYS: { value: PhotoFlashMode; labelKey: string }[] = [
   { value: 'on', labelKey: 'settings.flashOn' },
 ];
 
+const SPEED_OPTION_KEYS: { value: CaptureSpeed; labelKey: string }[] = [
+  { value: 'speed', labelKey: 'settings.speedFast' },
+  { value: 'balanced', labelKey: 'settings.speedBalanced' },
+  { value: 'quality', labelKey: 'settings.speedQuality' },
+];
+
+const TIMER_OPTION_KEYS: { value: '0' | '3' | '10'; labelKey: string }[] = [
+  { value: '0', labelKey: 'settings.timerOff' },
+  { value: '3', labelKey: 'settings.timer3s' },
+  { value: '10', labelKey: 'settings.timer10s' },
+];
+
 // Les légendes de résolution ne se traduisent pas (specs techniques universelles).
 const QUALITY_OPTION_KEYS: { value: CaptureQuality; labelKey: string; caption: string }[] = [
   { value: 'standard', labelKey: 'settings.qualityStandard', caption: '1080p·720p' },
@@ -196,6 +208,12 @@ interface SettingsSheetProps {
   onSetQuality: (quality: CaptureQuality) => void;
   volumeKeyAction: VolumeKeyAction;
   onSetVolumeKeyAction: (action: VolumeKeyAction) => void;
+  stabilization: boolean;
+  onToggleStabilization: () => void;
+  captureSpeed: CaptureSpeed;
+  onSetCaptureSpeed: (speed: CaptureSpeed) => void;
+  timerSeconds: number;
+  onSetTimerSeconds: (seconds: 0 | 3 | 10) => void;
 }
 
 /** Feuille inférieure Material 3 des paramètres caméra + enregistrement. */
@@ -223,6 +241,12 @@ export function SettingsSheet({
   onSetQuality,
   volumeKeyAction,
   onSetVolumeKeyAction,
+  stabilization,
+  onToggleStabilization,
+  captureSpeed,
+  onSetCaptureSpeed,
+  timerSeconds,
+  onSetTimerSeconds,
 }: SettingsSheetProps): React.ReactElement {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
@@ -284,6 +308,8 @@ export function SettingsSheet({
     { value: 'shutter', label: t('settings.volKeyShutter') },
     { value: 'zoom', label: t('settings.volKeyZoom') },
   ];
+  const speedOptions = SPEED_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
+  const timerOptions = TIMER_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
 
   return (
     <Modal visible={visible} transparent animationType="none" statusBarTranslucent onRequestClose={dismiss}>
@@ -362,6 +388,40 @@ export function SettingsSheet({
               <Text style={styles.rowLabel}>{t('settings.volumeKeys')}</Text>
             </View>
             <Segmented options={volumeKeyOptions} value={volumeKeyAction} onChange={onSetVolumeKeyAction} />
+          </View>
+
+          {/* Capture : anti-flou, vitesse, retardateur */}
+          <Text style={styles.section}>{t('settings.sectionCapture')}</Text>
+          <View style={styles.row}>
+            <MaterialIcons name="blur-off" size={22} color={colors.onSurface} />
+            <Text style={styles.rowLabel}>{t('settings.stabilization')}</Text>
+            <Switch
+              value={stabilization}
+              onValueChange={onToggleStabilization}
+              trackColor={{ true: colors.primary, false: colors.outlineVariant }}
+              thumbColor={colors.onPrimary}
+            />
+          </View>
+          <Text style={styles.optDesc}>{t('settings.stabilizationDesc')}</Text>
+
+          <View style={styles.rowCol}>
+            <View style={styles.rowHeader}>
+              <MaterialIcons name="speed" size={22} color={colors.onSurface} />
+              <Text style={styles.rowLabel}>{t('settings.captureSpeed')}</Text>
+            </View>
+            <Segmented options={speedOptions} value={captureSpeed} onChange={onSetCaptureSpeed} />
+          </View>
+
+          <View style={styles.rowCol}>
+            <View style={styles.rowHeader}>
+              <MaterialIcons name="timer" size={22} color={colors.onSurface} />
+              <Text style={styles.rowLabel}>{t('settings.timer')}</Text>
+            </View>
+            <Segmented
+              options={timerOptions}
+              value={String(timerSeconds) as '0' | '3' | '10'}
+              onChange={(v) => onSetTimerSeconds(Number(v) as 0 | 3 | 10)}
+            />
           </View>
 
           <Text style={styles.section}>{t('settings.sectionPipCorner')}</Text>
