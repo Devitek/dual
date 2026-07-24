@@ -81,6 +81,12 @@ capture réelle ~0,5–1 s, alors que le flash d'obturateur donne un faux signal
       bug : la disposition (Vague 2) était sauvée mais jamais restaurée (`LAYOUT_KEY`
       absent du `multiGet`). **À valider sur device** : ressenti drag/pinch, bornes,
       désambiguïsation tap↔drag, placement du filigrane.
+- [x] **Persistance centralisée des réglages** (v1.10.1) : `src/services/settings.ts`
+      (source unique `SETTINGS_KEYS` + `loadPersistedSettings` + `saveSetting`).
+      Corrige le « les réglages reviennent au défaut » (retour testeur S24 Ultra /
+      One UI qui tue le process souvent) : les 6 réglages jamais persistés (sauvegarde
+      photo/vidéo, coin PiP, qualité, mode surprise, flash photo) + le mode photo/vidéo
+      le sont désormais. Chargement en un seul passage (anti-régression). Voir AGENTS.md §8.
 - [ ] **Vague 4 — Layouts natifs** (photo `PhotoPipComposer` Canvas + vidéo
       `PipGlRenderer` GL) : robustesse Foreground Service + layouts vidéo.
 
