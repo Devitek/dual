@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.1](https://github.com/Devitek/dual/compare/v1.10.0...v1.10.1) (2026-07-24)
+
+
+### Bug Fixes
+
+* **settings:** persist all user settings (centralized store) ([3325d08](https://github.com/Devitek/dual/commit/3325d08c9bda6a810bee37e14479cc2b51040123))
+* **settings:** persist all user settings (centralized store) ([15732ff](https://github.com/Devitek/dual/commit/15732ff9c15c09d1c241ed1055558b0a72087655))
+
 ## [1.10.0](https://github.com/Devitek/dual/compare/v1.9.0...v1.10.0) (2026-07-24)
 
 
