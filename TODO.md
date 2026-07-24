@@ -71,8 +71,16 @@ capture réelle ~0,5–1 s, alors que le flash d'obturateur donne un faux signal
       100 % on-device = pas de « collecte » au sens Google). Politique de
       confidentialité déjà à jour (docs/privacy.html). **À valider sur device** :
       dialogue de permission + présence des tags GPS dans l'EXIF de la photo.
-- [ ] **Vague 3 — Incrust' libre** (drag/resize, JS-driven, pas de reanimated) +
-      partage 1 tap (`expo-sharing`) + watermark **opt-in** (OFF par défaut).
+- [x] **Vague 3 — Incrust' libre + partage + watermark** (v1.10.0, **100 % JS**) :
+      vignette PiP **déplaçable (pan) + redimensionnable (pinch)**, JS-driven
+      Animated + gesture-handler (reanimated absent → pas de worklet), tap = swap
+      conservé. Position/taille normalisées persistées (`tl_pip_inset`) ; choisir un
+      coin réinitialise. **Partage 1 tap** (`expo-sharing`) sur l'aperçu photo/vidéo
+      plein écran. **Watermark « TwinLens » opt-in** (OFF, `tl_watermark`). Les
+      insets libres + watermark passent par le compositeur JS view-shot. Corrige un
+      bug : la disposition (Vague 2) était sauvée mais jamais restaurée (`LAYOUT_KEY`
+      absent du `multiGet`). **À valider sur device** : ressenti drag/pinch, bornes,
+      désambiguïsation tap↔drag, placement du filigrane.
 - [ ] **Vague 4 — Layouts natifs** (photo `PhotoPipComposer` Canvas + vidéo
       `PipGlRenderer` GL) : robustesse Foreground Service + layouts vidéo.
 
