@@ -49,6 +49,8 @@ const STABILIZATION_KEY = 'tl_stabilization';
 const CAPTURE_SPEED_KEY = 'tl_capture_speed';
 /** Clé de persistance du retardateur (secondes : '0'|'3'|'10'). */
 const TIMER_KEY = 'tl_timer';
+/** Clé de persistance du son d'obturateur ('1'|'0'). */
+const SHUTTER_SOUND_KEY = 'tl_shutter_sound';
 /** Valeurs possibles du retardateur (secondes). */
 const TIMER_VALUES = [0, 3, 10] as const;
 export type TimerSeconds = (typeof TIMER_VALUES)[number];
@@ -305,7 +307,7 @@ export function MultiCameraScreen(): React.ReactElement {
 
   // --- Anti-flou / vitesse / retardateur (persistés) ---
   useEffect(() => {
-    void AsyncStorage.multiGet([STABILIZATION_KEY, CAPTURE_SPEED_KEY, TIMER_KEY])
+    void AsyncStorage.multiGet([STABILIZATION_KEY, CAPTURE_SPEED_KEY, TIMER_KEY, SHUTTER_SOUND_KEY])
       .then((entries) => {
         const map = Object.fromEntries(entries);
         if (map[STABILIZATION_KEY] === '0') setStabilizationState(false);
@@ -315,6 +317,7 @@ export function MultiCameraScreen(): React.ReactElement {
         }
         const timer = Number(map[TIMER_KEY]);
         if (timer === 3 || timer === 10) setTimerSecondsState(timer);
+        if (map[SHUTTER_SOUND_KEY] === '0') cam.controller.setShutterSound(false);
       })
       .catch(() => {});
     // Au montage uniquement ; le contrôleur applique la vitesse au (re)build session.
@@ -338,6 +341,14 @@ export function MultiCameraScreen(): React.ReactElement {
     setTimerSecondsState(s);
     void AsyncStorage.setItem(TIMER_KEY, String(s)).catch(() => {});
   }, []);
+
+  const setShutterSound = useCallback(
+    (value: boolean) => {
+      cam.controller.setShutterSound(value);
+      void AsyncStorage.setItem(SHUTTER_SOUND_KEY, value ? '1' : '0').catch(() => {});
+    },
+    [cam.controller],
+  );
 
   // Overlay « Ne bougez pas » : visible exactement pendant la capture réelle
   // (fenêtre isBusy) en mode photo, si l'anti-flou est actif.
@@ -542,6 +553,8 @@ export function MultiCameraScreen(): React.ReactElement {
               onSetCaptureSpeed={setCaptureSpeed}
               timerSeconds={timerSeconds}
               onSetTimerSeconds={setTimerSeconds}
+              shutterSound={cam.shutterSound}
+              onToggleShutterSound={() => setShutterSound(!cam.shutterSound)}
             />
 
             <SessionGallery

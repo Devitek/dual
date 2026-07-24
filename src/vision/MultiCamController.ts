@@ -76,6 +76,9 @@ export interface MultiCamSnapshot {
   /** Compromis vitesse/qualité de la capture photo. `speed` = obturateur le
    *  plus rapide + fusion multi-frames coupée (anti-flou de bougé). */
   captureSpeed: CaptureSpeed;
+  /** Son d'obturateur système à la prise photo. Le SYSTÈME peut le forcer dans
+   *  certaines régions (Japon/Corée) — le réglage est alors sans effet. */
+  shutterSound: boolean;
   /** Aperçu LIVE de la 2e caméra (vignette). `false` = « mode surprise ».
    *  N'affecte NI la capture NI la fusion PiP — seulement l'affichage live. */
   showSecondaryPreview: boolean;
@@ -134,6 +137,8 @@ const INITIAL: MultiCamSnapshot = {
   captureQuality: 'high',
   // Compromis par défaut : obturateur réactif sans sacrifier la qualité.
   captureSpeed: 'balanced',
+  // Son d'obturateur activé par défaut (comportement système habituel).
+  shutterSound: true,
   // Aperçu de la 2e caméra activé par défaut ; désactivable pour la surprise.
   showSecondaryPreview: true,
 };
@@ -408,6 +413,11 @@ export class MultiCamController {
     }
   }
 
+  /** Active/désactive le son d'obturateur système (appliqué à la prochaine prise). */
+  setShutterSound(value: boolean): void {
+    this.update({ shutterSound: value });
+  }
+
   setPrimarySlot(slot: CameraSlot): void {
     this.primarySlot = slot;
   }
@@ -500,10 +510,12 @@ export class MultiCamController {
       // En mode « rapide », on coupe la fusion multi-frames : moins de latence et
       // moins de « fantômes » sur un sujet qui bouge (levier anti-flou direct).
       const fast = this.snapshot.captureSpeed === 'speed' ? { enableVirtualDeviceFusion: false } : {};
+      // Son d'obturateur : uniquement sur la principale (jamais de double clic),
+      // et selon le réglage utilisateur.
       const [primaryFile, secondaryFile] = await Promise.all([
-        primaryOutput.capturePhotoToFile({ flashMode: flash, ...fast }, {}),
+        primaryOutput.capturePhotoToFile({ flashMode: flash, enableShutterSound: this.snapshot.shutterSound, ...fast }, {}),
         secondaryOutput != null
-          ? secondaryOutput.capturePhotoToFile({ flashMode: 'off', ...fast }, {})
+          ? secondaryOutput.capturePhotoToFile({ flashMode: 'off', enableShutterSound: false, ...fast }, {})
           : Promise.resolve(null),
       ]);
       primaryPath = primaryFile.filePath;

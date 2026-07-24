@@ -88,7 +88,9 @@
     "timer": "Retardateur",
     "timerOff": "Off",
     "timer3s": "3 s",
-    "timer10s": "10 s"
+    "timer10s": "10 s",
+    "shutterSound": "Son d’obturateur",
+    "shutterSoundDesc": "Coupe le clic de capture. Certaines régions l’imposent au niveau système."
   },
   "gallery": {
     "title": "Médias de la session",

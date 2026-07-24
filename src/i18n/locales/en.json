@@ -88,7 +88,9 @@
     "timer": "Self-timer",
     "timerOff": "Off",
     "timer3s": "3s",
-    "timer10s": "10s"
+    "timer10s": "10s",
+    "shutterSound": "Shutter sound",
+    "shutterSoundDesc": "Turn off the capture click. Some regions force it on system-wide."
   },
   "gallery": {
     "title": "Session media",

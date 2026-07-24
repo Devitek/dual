@@ -214,6 +214,8 @@ interface SettingsSheetProps {
   onSetCaptureSpeed: (speed: CaptureSpeed) => void;
   timerSeconds: number;
   onSetTimerSeconds: (seconds: 0 | 3 | 10) => void;
+  shutterSound: boolean;
+  onToggleShutterSound: () => void;
 }
 
 /** Feuille inférieure Material 3 des paramètres caméra + enregistrement. */
@@ -247,6 +249,8 @@ export function SettingsSheet({
   onSetCaptureSpeed,
   timerSeconds,
   onSetTimerSeconds,
+  shutterSound,
+  onToggleShutterSound,
 }: SettingsSheetProps): React.ReactElement {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
@@ -423,6 +427,18 @@ export function SettingsSheet({
               onChange={(v) => onSetTimerSeconds(Number(v) as 0 | 3 | 10)}
             />
           </View>
+
+          <View style={styles.row}>
+            <MaterialIcons name="volume-off" size={22} color={colors.onSurface} />
+            <Text style={styles.rowLabel}>{t('settings.shutterSound')}</Text>
+            <Switch
+              value={shutterSound}
+              onValueChange={onToggleShutterSound}
+              trackColor={{ true: colors.primary, false: colors.outlineVariant }}
+              thumbColor={colors.onPrimary}
+            />
+          </View>
+          <Text style={styles.optDesc}>{t('settings.shutterSoundDesc')}</Text>
 
           <Text style={styles.section}>{t('settings.sectionPipCorner')}</Text>
           <CornerPicker value={pipCorner} onChange={onSetPipCorner} />
