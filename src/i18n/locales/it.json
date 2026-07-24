@@ -88,7 +88,9 @@
     "timer": "Autoscatto",
     "timerOff": "Off",
     "timer3s": "3 s",
-    "timer10s": "10 s"
+    "timer10s": "10 s",
+    "shutterSound": "Suono dell’otturatore",
+    "shutterSoundDesc": "Disattiva il clic di scatto. Alcune regioni lo impongono a livello di sistema."
   },
   "gallery": {
     "title": "Contenuti della sessione",

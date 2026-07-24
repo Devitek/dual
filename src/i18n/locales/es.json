@@ -88,7 +88,9 @@
     "timer": "Temporizador",
     "timerOff": "Off",
     "timer3s": "3 s",
-    "timer10s": "10 s"
+    "timer10s": "10 s",
+    "shutterSound": "Sonido del obturador",
+    "shutterSoundDesc": "Desactiva el clic de captura. Algunas regiones lo imponen a nivel del sistema."
   },
   "gallery": {
     "title": "Medios de la sesión",

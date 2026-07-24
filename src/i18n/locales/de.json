@@ -88,7 +88,9 @@
     "timer": "Selbstauslöser",
     "timerOff": "Off",
     "timer3s": "3 s",
-    "timer10s": "10 s"
+    "timer10s": "10 s",
+    "shutterSound": "Auslöserton",
+    "shutterSoundDesc": "Schaltet das Auslösergeräusch aus. In einigen Regionen ist es systemweit vorgeschrieben."
   },
   "gallery": {
     "title": "Sitzungsmedien",
