@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.0](https://github.com/Devitek/dual/compare/v1.6.1...v1.7.0) (2026-07-24)
+
+
+### Features
+
+* **capture:** anti-blur hold-still overlay, capture speed and self-timer ([bb344f9](https://github.com/Devitek/dual/commit/bb344f96a432428f80aa433f4d9effb7a3976727))
+* **capture:** anti-blur hold-still, capture speed & self-timer ([587e67a](https://github.com/Devitek/dual/commit/587e67a2cca945af69caaf331d3c620a37a7a6f0))
+
 ## [1.6.1](https://github.com/Devitek/dual/compare/v1.6.0...v1.6.1) (2026-07-21)
 
 
