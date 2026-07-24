@@ -27,7 +27,7 @@ const { height: SCREEN_H } = Dimensions.get('window');
 import { useColors, useThemedStyles, type Palette } from '../theme/theme';
 import { haptics } from '../utils/haptics';
 import type { CaptureQuality, CaptureSpeed, SaveMode } from '../vision/MultiCamController';
-import type { PipCorner } from '../services/pipComposer';
+import type { CompositionLayout, PipCorner } from '../services/pipComposer';
 import type { PhotoFlashMode } from './CameraTopBar';
 import type { VolumeKeyAction } from '../native/volumeKeys';
 
@@ -158,6 +158,12 @@ const TIMER_OPTION_KEYS: { value: '0' | '3' | '10'; labelKey: string }[] = [
   { value: '10', labelKey: 'settings.timer10s' },
 ];
 
+const LAYOUT_OPTION_KEYS: { value: CompositionLayout; labelKey: string }[] = [
+  { value: 'pip', labelKey: 'settings.layoutPip' },
+  { value: 'sideBySide', labelKey: 'settings.layoutSideBySide' },
+  { value: 'topBottom', labelKey: 'settings.layoutTopBottom' },
+];
+
 // Les légendes de résolution ne se traduisent pas (specs techniques universelles).
 const QUALITY_OPTION_KEYS: { value: CaptureQuality; labelKey: string; caption: string }[] = [
   { value: 'standard', labelKey: 'settings.qualityStandard', caption: '1080p·720p' },
@@ -204,6 +210,8 @@ interface SettingsSheetProps {
   onSetVideoSaveMode: (mode: SaveMode) => void;
   pipCorner: PipCorner;
   onSetPipCorner: (corner: PipCorner) => void;
+  layout: CompositionLayout;
+  onSetLayout: (layout: CompositionLayout) => void;
   quality: CaptureQuality;
   onSetQuality: (quality: CaptureQuality) => void;
   volumeKeyAction: VolumeKeyAction;
@@ -239,6 +247,8 @@ export function SettingsSheet({
   onSetVideoSaveMode,
   pipCorner,
   onSetPipCorner,
+  layout,
+  onSetLayout,
   quality,
   onSetQuality,
   volumeKeyAction,
@@ -314,6 +324,7 @@ export function SettingsSheet({
   ];
   const speedOptions = SPEED_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
   const timerOptions = TIMER_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
+  const layoutOptions = LAYOUT_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
 
   return (
     <Modal visible={visible} transparent animationType="none" statusBarTranslucent onRequestClose={dismiss}>
@@ -440,8 +451,15 @@ export function SettingsSheet({
           </View>
           <Text style={styles.optDesc}>{t('settings.shutterSoundDesc')}</Text>
 
-          <Text style={styles.section}>{t('settings.sectionPipCorner')}</Text>
-          <CornerPicker value={pipCorner} onChange={onSetPipCorner} />
+          <Text style={styles.section}>{t('settings.sectionLayout')}</Text>
+          <Segmented options={layoutOptions} value={layout} onChange={onSetLayout} />
+          {layout === 'pip' && (
+            <View style={styles.rowCol}>
+              <Text style={styles.optDesc}>{t('settings.sectionPipCorner')}</Text>
+              <CornerPicker value={pipCorner} onChange={onSetPipCorner} />
+            </View>
+          )}
+          <Text style={styles.hint}>{t('settings.layoutHint')}</Text>
 
           {/* Enregistrement */}
           <Text style={styles.section}>{t('settings.sectionRecPhoto')}</Text>

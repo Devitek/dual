@@ -11,7 +11,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 
 import { useColors, useThemedStyles, type Palette } from '../theme/theme';
 import { FocusIndicator, type FocusPoint } from './FocusIndicator';
-import type { PipCorner } from '../services/pipComposer';
+import type { CompositionLayout, PipCorner } from '../services/pipComposer';
 import type { CameraSlot } from '../vision/MultiCamController';
 
 /** Position de la vignette PiP selon le coin (dégage la barre haute / basse). */
@@ -36,7 +36,9 @@ interface MultiCamPreviewProps {
   focusPoint: FocusPoint | null;
   /** Coin où placer la vignette. */
   pipCorner: PipCorner;
-  /** Tap sur la vignette => inverser les caméras. */
+  /** Disposition d'affichage (pip / côte-à-côte / haut-bas). */
+  layout: CompositionLayout;
+  /** Tap sur la vignette (ou la 2e moitié) => inverser les caméras. */
   onTapSecondary: () => void;
   /** Afficher l'aperçu live de la 2e caméra (false = « mode surprise »). */
   showSecondaryPreview: boolean;
@@ -56,6 +58,7 @@ export function MultiCamPreview({
   gesture,
   focusPoint,
   pipCorner,
+  layout,
   onTapSecondary,
   showSecondaryPreview,
 }: MultiCamPreviewProps): React.ReactElement {
@@ -65,10 +68,57 @@ export function MultiCamPreview({
   const mainPreview = primarySlot === 'back' ? backPreview : frontPreview;
   const pipPreview = primarySlot === 'back' ? frontPreview : backPreview;
   const showPip = isMultiCam && pipPreview != null;
+  // Disposition « écran partagé » : uniquement en multi-cam avec 2e caméra dispo.
+  const isSplit = layout !== 'pip' && showPip;
 
   return (
     <View style={StyleSheet.absoluteFill}>
-      {mainPreview != null ? (
+      {mainPreview == null ? (
+        <View style={[StyleSheet.absoluteFill, styles.placeholder]}>
+          {isStarting && <ActivityIndicator color={colors.primary} size="large" />}
+          {isStarting && <Text style={styles.placeholderText}>{t('preview.starting')}</Text>}
+        </View>
+      ) : isSplit ? (
+        <View style={[StyleSheet.absoluteFill, { flexDirection: layout === 'sideBySide' ? 'row' : 'column' }]}>
+          <GestureDetector gesture={gesture}>
+            <View style={styles.splitHalf}>
+              <NativePreviewView
+                style={StyleSheet.absoluteFill}
+                previewOutput={mainPreview}
+                resizeMode="cover"
+                implementationMode="compatible"
+              />
+            </View>
+          </GestureDetector>
+          {showSecondaryPreview ? (
+            <Pressable
+              style={styles.splitHalf}
+              onPress={onTapSecondary}
+              accessibilityRole="button"
+              accessibilityLabel={t('capture.swapA11y')}
+            >
+              <NativePreviewView
+                style={StyleSheet.absoluteFill}
+                previewOutput={pipPreview}
+                resizeMode="cover"
+                implementationMode="compatible"
+              />
+              <View style={styles.splitSwap} pointerEvents="none">
+                <Text style={styles.pipHintText}>⇆</Text>
+              </View>
+            </Pressable>
+          ) : (
+            <View
+              style={[styles.splitHalf, styles.splitHidden]}
+              accessible
+              accessibilityLabel={t('preview.hiddenSecondaryA11y')}
+            >
+              <MaterialIcons name="visibility-off" size={22} color={colors.onSurfaceVariant} />
+              <Text style={styles.hiddenChipText}>{t('preview.hiddenSecondary')}</Text>
+            </View>
+          )}
+        </View>
+      ) : (
         <GestureDetector gesture={gesture}>
           <View style={StyleSheet.absoluteFill}>
             <NativePreviewView
@@ -78,16 +128,11 @@ export function MultiCamPreview({
             />
           </View>
         </GestureDetector>
-      ) : (
-        <View style={[StyleSheet.absoluteFill, styles.placeholder]}>
-          {isStarting && <ActivityIndicator color={colors.primary} size="large" />}
-          {isStarting && <Text style={styles.placeholderText}>{t('preview.starting')}</Text>}
-        </View>
       )}
 
       <FocusIndicator point={focusPoint} />
 
-      {showPip && showSecondaryPreview && (
+      {!isSplit && showPip && showSecondaryPreview && (
         <Pressable
           style={[styles.pip, pipPositionStyle(pipCorner)]}
           onPress={onTapSecondary}
@@ -110,7 +155,7 @@ export function MultiCamPreview({
       )}
 
       {/* Mode surprise : la 2e caméra tourne mais son aperçu est masqué. */}
-      {showPip && !showSecondaryPreview && (
+      {!isSplit && showPip && !showSecondaryPreview && (
         <View
           style={[styles.hiddenChip, pipPositionStyle(pipCorner)]}
           pointerEvents="none"
@@ -163,6 +208,21 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
     justifyContent: 'center',
   },
   pipHintText: { color: colors.onSurface, fontSize: 14, fontWeight: '700' },
+  splitHalf: { flex: 1, overflow: 'hidden', backgroundColor: colors.background },
+  splitHidden: { alignItems: 'center', justifyContent: 'center', gap: 8 },
+  splitSwap: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    width: 34,
+    height: 34,
+    marginLeft: -17,
+    marginTop: -17,
+    borderRadius: 17,
+    backgroundColor: colors.overlayStrong,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   hiddenChip: {
     position: 'absolute',
     flexDirection: 'row',

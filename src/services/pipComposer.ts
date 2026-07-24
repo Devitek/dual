@@ -13,6 +13,14 @@
 
 export type PipCorner = 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
 
+/**
+ * Disposition de la fusion des deux caméras.
+ *  - `pip`        : principale plein cadre + vignette (incrustation).
+ *  - `sideBySide` : deux moitiés côte à côte (rendu paysage 3:2).
+ *  - `topBottom`  : deux moitiés empilées (rendu portrait 2:3).
+ */
+export type CompositionLayout = 'pip' | 'sideBySide' | 'topBottom';
+
 export interface PipLayout {
   /** largeur de la vignette en fraction de la largeur du rendu (0..1). */
   insetWidthRatio: number;
