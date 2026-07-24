@@ -95,7 +95,9 @@
     "timer3s": "3s",
     "timer10s": "10s",
     "shutterSound": "Shutter sound",
-    "shutterSoundDesc": "Turn off the capture click. Some regions force it on system-wide."
+    "shutterSoundDesc": "Turn off the capture click. Some regions force it on system-wide.",
+    "geotag": "Location in photos",
+    "geotagDesc": "Embed GPS coordinates in your photos' metadata, on-device — like your native camera. Off by default; asks for location permission when enabled."
   },
   "gallery": {
     "title": "Session media",
@@ -149,6 +151,7 @@
     "processingFailed": "Processing failed: {{error}}",
     "qualityUnsupported": "Quality not supported — reverting to previous setting.",
     "speedUnsupported": "Capture speed not supported — reverting to previous setting.",
+    "locationDenied": "Location permission denied — geotagging stays off.",
     "noCamera": "No camera available."
   },
   "update": {

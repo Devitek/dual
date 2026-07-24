@@ -95,7 +95,9 @@
     "timer3s": "3 s",
     "timer10s": "10 s",
     "shutterSound": "Auslöserton",
-    "shutterSoundDesc": "Schaltet das Auslösergeräusch aus. In einigen Regionen ist es systemweit vorgeschrieben."
+    "shutterSoundDesc": "Schaltet das Auslösergeräusch aus. In einigen Regionen ist es systemweit vorgeschrieben.",
+    "geotag": "Standort in Fotos",
+    "geotagDesc": "Bettet GPS-Koordinaten in die Metadaten deiner Fotos ein, auf dem Gerät — wie die native Kamera. Standardmäßig aus; fragt beim Aktivieren nach der Standortberechtigung."
   },
   "gallery": {
     "title": "Sitzungsmedien",
@@ -149,6 +151,7 @@
     "processingFailed": "Verarbeitung fehlgeschlagen: {{error}}",
     "qualityUnsupported": "Qualität nicht unterstützt – zurück zur vorherigen Einstellung.",
     "speedUnsupported": "Aufnahmetempo nicht unterstützt – zurück zur vorherigen Einstellung.",
+    "locationDenied": "Standortberechtigung verweigert – Geotagging bleibt aus.",
     "noCamera": "Keine Kamera verfügbar."
   },
   "update": {

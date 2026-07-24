@@ -38,7 +38,14 @@
       "expo-font",
       "expo-sharing",
       "expo-video",
-      "expo-localization"
+      "expo-localization",
+      [
+        "expo-location",
+        {
+          "isAndroidBackgroundLocationEnabled": false,
+          "isAndroidForegroundServiceEnabled": false
+        }
+      ]
     ]
   }
 }

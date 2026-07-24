@@ -10,6 +10,7 @@ import { useMultiCamPermissions } from '../hooks/useMultiCamPermissions';
 import { useMultiCam } from '../hooks/useMultiCam';
 import { useInAppUpdate } from '../hooks/useInAppUpdate';
 import { useVolumeShutter } from '../hooks/useVolumeShutter';
+import { useGeotag } from '../hooks/useGeotag';
 import { PermissionGate } from '../components/PermissionGate';
 import { MultiCamPreview } from '../components/MultiCamPreview';
 import { CaptureControls } from '../components/CaptureControls';
@@ -77,6 +78,7 @@ export function MultiCameraScreen(): React.ReactElement {
   const cam = useMultiCam(isForeground, permissions.allGranted);
   const { t } = useTranslation();
   const update = useInAppUpdate();
+  const geo = useGeotag();
 
   const [primarySlot, setPrimarySlot] = useState<CameraSlot>('back');
   const [mode, setMode] = useState<CaptureMode>('photo');
@@ -145,6 +147,19 @@ export function MultiCameraScreen(): React.ReactElement {
   useEffect(() => {
     if (cam.processingCount === 0) setVideoProgress(null);
   }, [cam.processingCount]);
+
+  // Géotag : reflète l'état actif dans le contrôleur et lui fournit la position.
+  useEffect(() => {
+    cam.controller.setGeotag(geo.enabled);
+    cam.controller.setLocationProvider(geo.getCoords);
+    return () => cam.controller.setLocationProvider(null);
+  }, [cam.controller, geo.enabled, geo.getCoords]);
+
+  const onToggleGeotag = useCallback(() => {
+    void geo.requestToggle().then((res) => {
+      if (res === 'denied') cam.controller.showNotice('error', t('notices.locationDenied'));
+    });
+  }, [geo, cam.controller, t]);
 
   const dismissPipHint = useCallback(() => {
     setPipHintVisible((visible) => {
@@ -571,6 +586,8 @@ export function MultiCameraScreen(): React.ReactElement {
               onSetTimerSeconds={setTimerSeconds}
               shutterSound={cam.shutterSound}
               onToggleShutterSound={() => setShutterSound(!cam.shutterSound)}
+              geotag={geo.enabled}
+              onToggleGeotag={onToggleGeotag}
             />
 
             <SessionGallery
