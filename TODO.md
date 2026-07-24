@@ -51,11 +51,19 @@ capture réelle ~0,5–1 s, alors que le flash d'obturateur donne un faux signal
       annuler). 100 % JS. Réglages persistés `tl_stabilization` /
       `tl_capture_speed` / `tl_timer`. **À valider sur device** : ressenti de la
       latence en `balanced`/`speed`, timing de l'overlay, retardateur.
-- [ ] **Vague 2 — Mises en page** (photo) : côte-à-côte / haut-bas en plus du PiP
-      + tap sur l'incrust' pour inverser. Touche le compositeur natif photo.
+- [x] **Son d'obturateur désactivable** (v1.8.0) : réglage `tl_shutter_sound`,
+      appliqué par-capture (`enableShutterSound`) sur la principale uniquement.
+      Le système peut le forcer dans certaines régions (JP/KR).
+- [x] **Vague 2 — Mises en page** (photo, v1.8.0) : PiP / côte-à-côte / haut-bas.
+      **100 % JS** : les layouts non-PiP passent par le compositeur JS view-shot
+      (côte-à-côte → 3:2, haut-bas → 2:3) ; le compositeur natif reste sur le PiP.
+      Tap-pour-inverser réutilisé (existait déjà). **Vidéo reste en PiP** pour
+      l'instant. Réglage `tl_layout`. **À valider sur device** : rendu/cadrage des
+      moitiés, geste focus/zoom sur la moitié principale.
 - [ ] **Vague 3 — Incrust' libre** (drag/resize, JS-driven, pas de reanimated) +
       partage 1 tap (`expo-sharing`) + watermark **opt-in** (OFF par défaut).
-- [ ] **Vague 4 — Mises en page vidéo** : `PipGlRenderer` GL (le morceau lourd).
+- [ ] **Vague 4 — Layouts natifs** (photo `PhotoPipComposer` Canvas + vidéo
+      `PipGlRenderer` GL) : robustesse Foreground Service + layouts vidéo.
 
 ## Fusion PiP vidéo on-device — module natif (v1, À VALIDER SUR DEVICE)
 
