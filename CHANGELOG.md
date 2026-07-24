@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.8.0](https://github.com/Devitek/dual/compare/v1.7.0...v1.8.0) (2026-07-24)
+
+
+### Features
+
+* **capture:** add a toggle to disable the shutter sound ([2bf3368](https://github.com/Devitek/dual/commit/2bf3368616f1639033555b2d3aa57233ffd8efeb))
+* **capture:** side-by-side & top-bottom layouts (photo) ([73640ea](https://github.com/Devitek/dual/commit/73640ea2bbbf74784ab36bf4218f7d46c2d6e5a2))
+* **capture:** side-by-side & top-bottom layouts for photos ([a563cc1](https://github.com/Devitek/dual/commit/a563cc144c90586cdda37c32d7e2cc36952e76df))
+* **capture:** toggle to disable the shutter sound ([c5d5e5f](https://github.com/Devitek/dual/commit/c5d5e5f475d8212d045dec98ef0893e312d39c63))
+
 ## [1.7.0](https://github.com/Devitek/dual/compare/v1.6.1...v1.7.0) (2026-07-24)
 
 
