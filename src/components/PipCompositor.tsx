@@ -1,9 +1,15 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { Image, StyleSheet, View, type ImageStyle } from 'react-native';
+import { Image, StyleSheet, Text, View, type ImageStyle } from 'react-native';
 import ViewShot, { type ViewShotRef } from 'react-native-view-shot';
 
 import { useThemedStyles, type Palette } from '../theme/theme';
-import { DEFAULT_PIP_LAYOUT, type CompositionLayout, type PipCorner } from '../services/pipComposer';
+import {
+  DEFAULT_PIP_LAYOUT,
+  PIP_INSET_ASPECT,
+  type CompositionLayout,
+  type PipCorner,
+  type PipInset,
+} from '../services/pipComposer';
 
 export interface PipCompositorHandle {
   /** Compose la version PiP (principale + vignette) et renvoie l'URI du JPEG. */
@@ -52,8 +58,14 @@ function canvasSize(layout: CompositionLayout, cw: number): { w: number; h: numb
 
 export const PipCompositor = forwardRef<
   PipCompositorHandle,
-  { corner: PipCorner; canvasWidth: number; layout: CompositionLayout }
->(function PipCompositor({ corner, canvasWidth, layout }, ref) {
+  {
+    corner: PipCorner;
+    canvasWidth: number;
+    layout: CompositionLayout;
+    pipInset: PipInset | null;
+    watermark: boolean;
+  }
+>(function PipCompositor({ corner, canvasWidth, layout, pipInset, watermark }, ref) {
     const shotRef = useRef<ViewShotRef>(null);
     const [job, setJob] = useState<{ primary: string; secondary: string; id: number } | null>(null);
     const pending = useRef<Pending | null>(null);
@@ -111,6 +123,18 @@ export const PipCompositor = forwardRef<
     const insetW = canvasW * DEFAULT_PIP_LAYOUT.insetWidthRatio;
     const insetH = insetW * (canvasH / canvasW);
     const margin = canvasW * DEFAULT_PIP_LAYOUT.marginRatio;
+    // Position/taille de la vignette : libre (drag/pinch) si `pipInset`, sinon le coin.
+    const insetStyle: ImageStyle =
+      pipInset != null
+        ? {
+            width: pipInset.w * canvasW,
+            height: pipInset.w * canvasW * PIP_INSET_ASPECT,
+            left: pipInset.x * canvasW,
+            top: pipInset.y * canvasH,
+          }
+        : insetPositionStyle(corner, insetW, insetH, margin);
+    const watermarkFontSize = Math.round(canvasW * 0.03);
+    const watermarkPad = Math.round(canvasW * 0.028);
 
     return (
       <View style={styles.offscreen} pointerEvents="none">
@@ -135,7 +159,7 @@ export const PipCompositor = forwardRef<
                 fadeDuration={0}
                 onLoad={onImageSettled}
                 onError={onImageSettled}
-                style={[styles.inset, insetPositionStyle(corner, insetW, insetH, margin)]}
+                style={[styles.inset, insetStyle]}
               />
             </>
           )}
@@ -159,6 +183,14 @@ export const PipCompositor = forwardRef<
               />
             </View>
           )}
+          {job != null && watermark && (
+            <Text
+              style={[styles.watermark, { fontSize: watermarkFontSize, right: watermarkPad, bottom: watermarkPad }]}
+              pointerEvents="none"
+            >
+              TwinLens
+            </Text>
+          )}
         </ViewShot>
       </View>
     );
@@ -173,4 +205,14 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
   inset: { position: 'absolute', borderRadius: 24, borderWidth: 6, borderColor: '#FFFFFF' },
   split: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   half: { flex: 1 },
+  watermark: {
+    position: 'absolute',
+    color: '#FFFFFF',
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    opacity: 0.9,
+    textShadowColor: 'rgba(0,0,0,0.55)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
 });

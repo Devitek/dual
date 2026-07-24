@@ -97,7 +97,10 @@
     "shutterSound": "Auslöserton",
     "shutterSoundDesc": "Schaltet das Auslösergeräusch aus. In einigen Regionen ist es systemweit vorgeschrieben.",
     "geotag": "Standort in Fotos",
-    "geotagDesc": "Bettet GPS-Koordinaten in die Metadaten deiner Fotos ein, auf dem Gerät — wie die native Kamera. Standardmäßig aus; fragt beim Aktivieren nach der Standortberechtigung."
+    "geotagDesc": "Bettet GPS-Koordinaten in die Metadaten deiner Fotos ein, auf dem Gerät — wie die native Kamera. Standardmäßig aus; fragt beim Aktivieren nach der Standortberechtigung.",
+    "pipDragHint": "Tipp: Miniatur ziehen zum Verschieben, zoomen (Pinch) zum Skalieren.",
+    "watermark": "TwinLens-Wasserzeichen",
+    "watermarkDesc": "Fügt ein kleines „TwinLens“ in die Ecke zusammengeführter Fotos ein. Standardmäßig aus."
   },
   "gallery": {
     "title": "Sitzungsmedien",

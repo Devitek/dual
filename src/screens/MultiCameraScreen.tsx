@@ -37,7 +37,7 @@ import { haptics } from '../utils/haptics';
 import type { FocusPoint } from '../components/FocusIndicator';
 import { pipCanvasForQuality } from '../vision/MultiCamController';
 import type { CameraSlot, CaptureQuality, CaptureSpeed, SaveMode } from '../vision/MultiCamController';
-import type { CompositionLayout, PipCorner } from '../services/pipComposer';
+import type { CompositionLayout, PipCorner, PipInset } from '../services/pipComposer';
 import type { VolumeKeyAction } from '../native/volumeKeys';
 
 /** Clé de persistance du hint « touchez la vignette » (1er lancement). */
@@ -54,9 +54,37 @@ const TIMER_KEY = 'tl_timer';
 const SHUTTER_SOUND_KEY = 'tl_shutter_sound';
 /** Clé de persistance de la disposition de fusion ('pip'|'sideBySide'|'topBottom'). */
 const LAYOUT_KEY = 'tl_layout';
+/** Clé de persistance de la position/taille libre de la vignette (JSON {x,y,w} ou absent). */
+const PIP_INSET_KEY = 'tl_pip_inset';
+/** Clé de persistance du filigrane TwinLens ('1'|'0'). */
+const WATERMARK_KEY = 'tl_watermark';
 /** Valeurs possibles du retardateur (secondes). */
 const TIMER_VALUES = [0, 3, 10] as const;
 export type TimerSeconds = (typeof TIMER_VALUES)[number];
+
+/** Parse la position/taille libre de la vignette depuis AsyncStorage (JSON validé). */
+function parsePipInset(raw: string | null | undefined): PipInset | null {
+  if (raw == null) return null;
+  try {
+    const v = JSON.parse(raw) as Partial<PipInset>;
+    if (
+      typeof v?.x === 'number' &&
+      typeof v?.y === 'number' &&
+      typeof v?.w === 'number' &&
+      v.x >= 0 &&
+      v.x <= 1 &&
+      v.y >= 0 &&
+      v.y <= 1 &&
+      v.w > 0 &&
+      v.w <= 1
+    ) {
+      return { x: v.x, y: v.y, w: v.w };
+    }
+  } catch {
+    /* JSON invalide -> ignoré */
+  }
+  return null;
+}
 
 /** Paliers de zoom rapides dérivés des bornes de la caméra principale. */
 function buildZoomLevels(min: number, max: number): number[] {
@@ -300,11 +328,31 @@ export function MultiCameraScreen(): React.ReactElement {
 
   const setPhotoSaveMode = useCallback((m: SaveMode) => cam.controller.setPhotoSaveMode(m), [cam.controller]);
   const setVideoSaveMode = useCallback((m: SaveMode) => cam.controller.setVideoSaveMode(m), [cam.controller]);
-  const setPipCorner = useCallback((c: PipCorner) => cam.controller.setPipCorner(c), [cam.controller]);
+  const setPipCorner = useCallback(
+    (c: PipCorner) => {
+      cam.controller.setPipCorner(c); // réinitialise aussi la position libre
+      void AsyncStorage.removeItem(PIP_INSET_KEY).catch(() => {});
+    },
+    [cam.controller],
+  );
   const setLayout = useCallback(
     (l: CompositionLayout) => {
       cam.controller.setLayout(l);
       void AsyncStorage.setItem(LAYOUT_KEY, l).catch(() => {});
+    },
+    [cam.controller],
+  );
+  const onMovePip = useCallback(
+    (inset: PipInset) => {
+      cam.controller.setPipInset(inset);
+      void AsyncStorage.setItem(PIP_INSET_KEY, JSON.stringify(inset)).catch(() => {});
+    },
+    [cam.controller],
+  );
+  const setWatermark = useCallback(
+    (value: boolean) => {
+      cam.controller.setWatermark(value);
+      void AsyncStorage.setItem(WATERMARK_KEY, value ? '1' : '0').catch(() => {});
     },
     [cam.controller],
   );
@@ -331,23 +379,34 @@ export function MultiCameraScreen(): React.ReactElement {
 
   // --- Anti-flou / vitesse / retardateur (persistés) ---
   useEffect(() => {
-    void AsyncStorage.multiGet([STABILIZATION_KEY, CAPTURE_SPEED_KEY, TIMER_KEY, SHUTTER_SOUND_KEY])
-      .then((entries) => {
-        const map = Object.fromEntries(entries);
-        if (map[STABILIZATION_KEY] === '0') setStabilizationState(false);
-        const speed = map[CAPTURE_SPEED_KEY];
-        if (speed === 'speed' || speed === 'balanced' || speed === 'quality') {
-          void cam.controller.setCaptureSpeed(speed);
-        }
-        const timer = Number(map[TIMER_KEY]);
-        if (timer === 3 || timer === 10) setTimerSecondsState(timer);
-        if (map[SHUTTER_SOUND_KEY] === '0') cam.controller.setShutterSound(false);
-        const layout = map[LAYOUT_KEY];
-        if (layout === 'pip' || layout === 'sideBySide' || layout === 'topBottom') {
-          cam.controller.setLayout(layout);
-        }
-      })
-      .catch(() => {});
+     void AsyncStorage.multiGet([
+       STABILIZATION_KEY,
+       CAPTURE_SPEED_KEY,
+       TIMER_KEY,
+       SHUTTER_SOUND_KEY,
+       LAYOUT_KEY,
+       PIP_INSET_KEY,
+       WATERMARK_KEY,
+     ])
+       .then((entries) => {
+         const map = Object.fromEntries(entries);
+         if (map[STABILIZATION_KEY] === '0') setStabilizationState(false);
+         const speed = map[CAPTURE_SPEED_KEY];
+         if (speed === 'speed' || speed === 'balanced' || speed === 'quality') {
+           void cam.controller.setCaptureSpeed(speed);
+         }
+         const timer = Number(map[TIMER_KEY]);
+         if (timer === 3 || timer === 10) setTimerSecondsState(timer);
+         if (map[SHUTTER_SOUND_KEY] === '0') cam.controller.setShutterSound(false);
+         const layout = map[LAYOUT_KEY];
+         if (layout === 'pip' || layout === 'sideBySide' || layout === 'topBottom') {
+           cam.controller.setLayout(layout);
+         }
+         const inset = parsePipInset(map[PIP_INSET_KEY]);
+         if (inset != null) cam.controller.setPipInset(inset);
+         if (map[WATERMARK_KEY] === '1') cam.controller.setWatermark(true);
+       })
+       .catch(() => {});
     // Au montage uniquement ; le contrôleur applique la vitesse au (re)build session.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -486,8 +545,10 @@ export function MultiCameraScreen(): React.ReactElement {
               gesture={gesture}
               focusPoint={focusPoint}
               pipCorner={cam.pipCorner}
+              pipInset={cam.pipInset}
               layout={cam.layout}
               onTapSecondary={swap}
+              onMovePip={onMovePip}
               showSecondaryPreview={cam.showSecondaryPreview}
             />
 
@@ -588,6 +649,8 @@ export function MultiCameraScreen(): React.ReactElement {
               onToggleShutterSound={() => setShutterSound(!cam.shutterSound)}
               geotag={geo.enabled}
               onToggleGeotag={onToggleGeotag}
+              watermark={cam.watermark}
+              onToggleWatermark={() => setWatermark(!cam.watermark)}
             />
 
             <SessionGallery
@@ -602,7 +665,14 @@ export function MultiCameraScreen(): React.ReactElement {
         )}
 
         {/* Surface de composition PiP (hors-écran) */}
-        <PipCompositor ref={pipRef} corner={cam.pipCorner} canvasWidth={pipCanvasForQuality(cam.captureQuality)} layout={cam.layout} />
+        <PipCompositor
+          ref={pipRef}
+          corner={cam.pipCorner}
+          canvasWidth={pipCanvasForQuality(cam.captureQuality)}
+          layout={cam.layout}
+          pipInset={cam.pipInset}
+          watermark={cam.watermark}
+        />
       </View>
     </PermissionGate>
   );
