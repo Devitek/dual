@@ -226,6 +226,8 @@ interface SettingsSheetProps {
   onToggleShutterSound: () => void;
   geotag: boolean;
   onToggleGeotag: () => void;
+  watermark: boolean;
+  onToggleWatermark: () => void;
 }
 
 /** Feuille inférieure Material 3 des paramètres caméra + enregistrement. */
@@ -265,6 +267,8 @@ export function SettingsSheet({
   onToggleShutterSound,
   geotag,
   onToggleGeotag,
+  watermark,
+  onToggleWatermark,
 }: SettingsSheetProps): React.ReactElement {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
@@ -473,9 +477,22 @@ export function SettingsSheet({
             <View style={styles.rowCol}>
               <Text style={styles.optDesc}>{t('settings.sectionPipCorner')}</Text>
               <CornerPicker value={pipCorner} onChange={onSetPipCorner} />
+              <Text style={styles.optDesc}>{t('settings.pipDragHint')}</Text>
             </View>
           )}
           <Text style={styles.hint}>{t('settings.layoutHint')}</Text>
+
+          <View style={styles.row}>
+            <MaterialIcons name="branding-watermark" size={22} color={colors.onSurface} />
+            <Text style={styles.rowLabel}>{t('settings.watermark')}</Text>
+            <Switch
+              value={watermark}
+              onValueChange={onToggleWatermark}
+              trackColor={{ true: colors.primary, false: colors.outlineVariant }}
+              thumbColor={colors.onPrimary}
+            />
+          </View>
+          <Text style={styles.optDesc}>{t('settings.watermarkDesc')}</Text>
 
           {/* Enregistrement */}
           <Text style={styles.section}>{t('settings.sectionRecPhoto')}</Text>

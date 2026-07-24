@@ -21,6 +21,23 @@ export type PipCorner = 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left
  */
 export type CompositionLayout = 'pip' | 'sideBySide' | 'topBottom';
 
+/**
+ * Position/taille LIBRE de la vignette PiP, en fractions du cadre (0..1) :
+ * `x`/`y` = coin haut-gauche, `w` = largeur. `null` ⇒ on utilise le coin (`PipCorner`).
+ * La hauteur est dérivée d'un ratio portrait fixe à l'affichage/composition.
+ */
+export interface PipInset {
+  x: number;
+  y: number;
+  w: number;
+}
+
+/** Ratio hauteur/largeur de la vignette (portrait), partagé preview ↔ composition. */
+export const PIP_INSET_ASPECT = 172 / 120;
+/** Bornes de largeur de la vignette (fraction du cadre) pour le redimensionnement. */
+export const PIP_INSET_MIN_W = 0.18;
+export const PIP_INSET_MAX_W = 0.42;
+
 export interface PipLayout {
   /** largeur de la vignette en fraction de la largeur du rendu (0..1). */
   insetWidthRatio: number;

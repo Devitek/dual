@@ -143,14 +143,17 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
   const selectedItems = data.filter((i) => selected.has(keyOf(i)));
   const firstSelected = selectedItems[0];
 
-  const shareSelected = useCallback(async () => {
-    if (firstSelected == null) return;
+  const shareItem = useCallback(async (item: CapturedMedia | null | undefined) => {
+    if (item == null) return;
+    haptics.selection();
     try {
-      if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(firstSelected.primaryUri);
+      if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(item.primaryUri);
     } catch {
       /* partage indisponible pour cette URI */
     }
-  }, [firstSelected]);
+  }, []);
+
+  const shareSelected = useCallback(() => shareItem(firstSelected), [shareItem, firstSelected]);
 
   const openSelected = useCallback(async () => {
     if (firstSelected == null) return;
@@ -300,10 +303,19 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
         )}
       </View>
 
-      {/* Aperçu photo plein écran */}
+      {/* Aperçu photo plein écran (tap = fermer ; le bouton Partager capture son tap) */}
       {preview != null && (
         <Pressable style={styles.fullscreen} onPress={() => setPreview(null)}>
           <Image source={{ uri: preview.primaryUri }} style={styles.fullImg} resizeMode="contain" />
+          <Pressable
+            style={styles.shareFab}
+            onPress={() => shareItem(preview)}
+            accessibilityRole="button"
+            accessibilityLabel={t('gallery.share')}
+          >
+            <MaterialIcons name="share" size={20} color={colors.onPrimary} />
+            <Text style={styles.shareFabText}>{t('gallery.share')}</Text>
+          </Pressable>
           <Text style={styles.tapHint}>{t('gallery.closePhotoHint')}</Text>
         </Pressable>
       )}
@@ -321,6 +333,15 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
             accessibilityLabel={t('gallery.closeVideoA11y')}
           >
             <MaterialIcons name="close" size={26} color="#fff" />
+          </Pressable>
+          <Pressable
+            style={styles.shareFab}
+            onPress={() => shareItem(playing)}
+            accessibilityRole="button"
+            accessibilityLabel={t('gallery.share')}
+          >
+            <MaterialIcons name="share" size={20} color={colors.onPrimary} />
+            <Text style={styles.shareFabText}>{t('gallery.share')}</Text>
           </Pressable>
         </View>
       )}
@@ -452,6 +473,19 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
   fullImg: { width: '100%', height: '82%' },
   fullVideo: { width: '100%', height: '82%' },
   tapHint: { color: colors.onSurfaceVariant, fontSize: 13, marginTop: 14 },
+  shareFab: {
+    position: 'absolute',
+    bottom: 40,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 22,
+    borderRadius: 26,
+    backgroundColor: colors.primary,
+  },
+  shareFabText: { color: colors.onPrimary, fontSize: 15, fontWeight: '700' },
   videoClose: {
     position: 'absolute',
     top: 46,

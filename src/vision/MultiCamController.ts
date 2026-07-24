@@ -20,7 +20,7 @@ import { saveToLibraryAsync } from 'expo-media-library/legacy';
 import * as MediaLibrary from 'expo-media-library';
 
 import { getFileSize, toFileUri } from '../utils/fileSystem';
-import type { CompositionLayout, PipCorner } from '../services/pipComposer';
+import type { CompositionLayout, PipCorner, PipInset } from '../services/pipComposer';
 import { writeGpsToJpeg, type GpsCoords } from '../services/exifGps';
 import i18n from '../i18n';
 
@@ -72,6 +72,10 @@ export interface MultiCamSnapshot {
   /** Disposition de la fusion PHOTO (pip / côte-à-côte / haut-bas). La vidéo
    *  reste en PiP (composeur natif) pour l'instant. */
   layout: CompositionLayout;
+  /** Position/taille LIBRE de la vignette (drag/pinch). `null` ⇒ coin (`pipCorner`). */
+  pipInset: PipInset | null;
+  /** Ajouter un discret filigrane « TwinLens » à la composition. Opt-in (OFF). */
+  watermark: boolean;
   /** Toutes les captures de la session courante (pour la galerie). */
   sessionCaptures: CapturedMedia[];
   /** Nombre de traitements (composition/sauvegarde) en cours en arrière-plan. */
@@ -139,6 +143,8 @@ const INITIAL: MultiCamSnapshot = {
   videoSaveMode: 'pip',
   pipCorner: 'top-right',
   layout: 'pip',
+  pipInset: null,
+  watermark: false,
   sessionCaptures: [],
   processingCount: 0,
   captureQuality: 'high',
@@ -466,8 +472,19 @@ export class MultiCamController {
     this.update({ videoSaveMode: mode });
   }
 
+  /** Choisir un coin réinitialise la position libre de la vignette. */
   setPipCorner(corner: PipCorner): void {
-    this.update({ pipCorner: corner });
+    this.update({ pipCorner: corner, pipInset: null });
+  }
+
+  /** Position/taille libre de la vignette (drag/pinch). `null` = revenir au coin. */
+  setPipInset(inset: PipInset | null): void {
+    this.update({ pipInset: inset });
+  }
+
+  /** Active/désactive le filigrane « TwinLens » sur la composition. */
+  setWatermark(value: boolean): void {
+    this.update({ watermark: value });
   }
 
   /** Change la disposition de fusion photo (pip / sideBySide / topBottom). */
@@ -580,13 +597,24 @@ export class MultiCamController {
     // sauvegarde en interne, on ne pourrait pas y injecter l'EXIF GPS).
     const geotag = this.snapshot.geotag;
     const coords = geotag ? this.locationProvider?.() ?? null : null;
+    // Vignette libre (drag/pinch) et filigrane ne sont rendus que par le
+    // compositeur JS -> ils forcent le chemin JS (comme géotag / layouts).
+    const freeform = this.snapshot.pipInset != null;
+    const watermark = this.snapshot.watermark;
     this.enqueue(async () => {
       // Chemin NATIF (Foreground Service, survit au kill) — prioritaire, mais
-      // UNIQUEMENT pour la disposition PiP SANS géotag. Les dispositions
-      // côte-à-côte / haut-bas et le géotag passent par le compositeur JS view-shot
-      // (qui sait rendre n'importe quel layout + permet le stamp EXIF avant save ;
-      // le natif ne gère que le PiP pour l'instant).
-      if (wantPip && secondaryPath != null && this.photoComposer != null && layout === 'pip' && coords == null) {
+      // UNIQUEMENT pour un PiP « standard » : coin fixe, sans géotag, sans vignette
+      // libre, sans filigrane. Tout le reste passe par le compositeur JS view-shot
+      // (qui sait rendre n'importe quel layout + stamp EXIF + filigrane).
+      if (
+        wantPip &&
+        secondaryPath != null &&
+        this.photoComposer != null &&
+        layout === 'pip' &&
+        coords == null &&
+        !freeform &&
+        !watermark
+      ) {
         const saveOriginals = mode === 'pip_plus_originals';
         const savedUri = await this.photoComposer!(
           toFileUri(primaryPath),
