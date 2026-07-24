@@ -31,6 +31,8 @@ export type MediaKind = 'photo' | 'video';
 export type SaveMode = 'pip' | 'pip_plus_originals' | 'originals';
 /** Niveau de qualité (résolutions capture + bitrate ré-encodage). */
 export type CaptureQuality = 'standard' | 'high' | 'max';
+/** Compromis vitesse/qualité du pipeline photo (anti-latence / anti-flou). */
+export type CaptureSpeed = 'speed' | 'balanced' | 'quality';
 
 export interface CapturedMedia {
   kind: MediaKind;
@@ -71,6 +73,9 @@ export interface MultiCamSnapshot {
   /** Nombre de traitements (composition/sauvegarde) en cours en arrière-plan. */
   processingCount: number;
   captureQuality: CaptureQuality;
+  /** Compromis vitesse/qualité de la capture photo. `speed` = obturateur le
+   *  plus rapide + fusion multi-frames coupée (anti-flou de bougé). */
+  captureSpeed: CaptureSpeed;
   /** Aperçu LIVE de la 2e caméra (vignette). `false` = « mode surprise ».
    *  N'affecte NI la capture NI la fusion PiP — seulement l'affichage live. */
   showSecondaryPreview: boolean;
@@ -92,12 +97,14 @@ const QUALITY: Record<CaptureQuality, QualityConfig> = {
   max: { photoRes: { width: 3840, height: 2160 }, videoRes: { width: 1920, height: 1080 }, videoBitrate: 30_000_000, pipCanvas: 1920 },
 };
 
-function photoOptions(res: Size): PhotoOutputOptions {
+function photoOptions(res: Size, speed: CaptureSpeed): PhotoOutputOptions {
   return {
     targetResolution: res,
     containerFormat: 'jpeg',
     quality: 0.95,
-    qualityPrioritization: 'quality',
+    // `speed` réduit le temps d'exposition/traitement -> obturateur plus réactif
+    // et moins de flou de bougé ; `balanced` est le meilleur compromis par défaut.
+    qualityPrioritization: speed,
   };
 }
 
@@ -125,6 +132,8 @@ const INITIAL: MultiCamSnapshot = {
   sessionCaptures: [],
   processingCount: 0,
   captureQuality: 'high',
+  // Compromis par défaut : obturateur réactif sans sacrifier la qualité.
+  captureSpeed: 'balanced',
   // Aperçu de la 2e caméra activé par défaut ; désactivable pour la surprise.
   showSecondaryPreview: true,
 };
@@ -261,7 +270,7 @@ export class MultiCamController {
       this.session = await VisionCamera.createCameraSession(enableMultiCam);
 
       const backPreview = VisionCamera.createPreviewOutput();
-      this.backPhoto = VisionCamera.createPhotoOutput(photoOptions(q.photoRes));
+      this.backPhoto = VisionCamera.createPhotoOutput(photoOptions(q.photoRes, this.snapshot.captureSpeed));
       this.backVideo = VisionCamera.createVideoOutput({ targetResolution: q.videoRes, enableAudio: true });
 
       const connections: CameraSessionConnection[] = [
@@ -279,7 +288,7 @@ export class MultiCamController {
       let frontPreview: CameraPreviewOutput | null = null;
       if (enableMultiCam && frontDevice != null) {
         frontPreview = VisionCamera.createPreviewOutput();
-        this.frontPhoto = VisionCamera.createPhotoOutput(photoOptions(q.photoRes));
+        this.frontPhoto = VisionCamera.createPhotoOutput(photoOptions(q.photoRes, this.snapshot.captureSpeed));
         // audio désactivé sur la 2e caméra (une seule entrée micro à la fois).
         this.frontVideo = VisionCamera.createVideoOutput({ targetResolution: q.videoRes, enableAudio: false });
         connections.push({
@@ -378,6 +387,27 @@ export class MultiCamController {
     }
   }
 
+  /**
+   * Change le compromis vitesse/qualité de la capture photo. Comme
+   * `qualityPrioritization` est fixé à la création de l'output, on reconfigure
+   * la session (repli sur le réglage précédent si le device refuse — ex. certains
+   * capteurs ne supportent pas `'speed'`).
+   */
+  async setCaptureSpeed(speed: CaptureSpeed): Promise<void> {
+    const previous = this.snapshot.captureSpeed;
+    if (speed === previous) return;
+    this.update({ captureSpeed: speed });
+    if (this.disposed || this.session == null) return;
+    await this.teardownSession();
+    await this.buildSession();
+    if (this.snapshot.status === 'error' && !this.disposed) {
+      this.update({ captureSpeed: previous });
+      this.notify('error', i18n.t('notices.speedUnsupported'));
+      await this.teardownSession();
+      await this.buildSession();
+    }
+  }
+
   setPrimarySlot(slot: CameraSlot): void {
     this.primarySlot = slot;
   }
@@ -467,10 +497,13 @@ export class MultiCamController {
     try {
       const primaryOutput = this.primarySlot === 'back' ? this.backPhoto : this.frontPhoto ?? this.backPhoto;
       const secondaryOutput = this.primarySlot === 'back' ? this.frontPhoto : this.backPhoto;
+      // En mode « rapide », on coupe la fusion multi-frames : moins de latence et
+      // moins de « fantômes » sur un sujet qui bouge (levier anti-flou direct).
+      const fast = this.snapshot.captureSpeed === 'speed' ? { enableVirtualDeviceFusion: false } : {};
       const [primaryFile, secondaryFile] = await Promise.all([
-        primaryOutput.capturePhotoToFile({ flashMode: flash }, {}),
+        primaryOutput.capturePhotoToFile({ flashMode: flash, ...fast }, {}),
         secondaryOutput != null
-          ? secondaryOutput.capturePhotoToFile({ flashMode: 'off' }, {})
+          ? secondaryOutput.capturePhotoToFile({ flashMode: 'off', ...fast }, {})
           : Promise.resolve(null),
       ]);
       primaryPath = primaryFile.filePath;

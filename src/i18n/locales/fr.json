@@ -23,7 +23,10 @@
     "shutterPhotoA11y": "Prendre une photo",
     "recStartA11y": "Démarrer l’enregistrement",
     "recStopA11y": "Arrêter l’enregistrement",
-    "swapA11y": "Inverser les caméras"
+    "swapA11y": "Inverser les caméras",
+    "holdStill": "Ne bougez pas…",
+    "cancelTimer": "Toucher pour annuler",
+    "cancelTimerA11y": "Annuler le retardateur"
   },
   "mode": {
     "photo": "PHOTO",
@@ -74,7 +77,18 @@
     "volumeKeys": "Touches de volume",
     "volKeyVolume": "Volume",
     "volKeyShutter": "Obturateur",
-    "volKeyZoom": "Zoom"
+    "volKeyZoom": "Zoom",
+    "sectionCapture": "Capture",
+    "stabilization": "Anti-flou (ne bougez pas)",
+    "stabilizationDesc": "Assombrit l’écran pendant la capture pour garder le téléphone immobile jusqu’à la prise.",
+    "captureSpeed": "Vitesse de capture",
+    "speedFast": "Rapide",
+    "speedBalanced": "Équilibré",
+    "speedQuality": "Qualité",
+    "timer": "Retardateur",
+    "timerOff": "Off",
+    "timer3s": "3 s",
+    "timer10s": "10 s"
   },
   "gallery": {
     "title": "Médias de la session",
@@ -127,6 +141,7 @@
     "recError": "Enregistrement ({{slot}}) : {{error}}",
     "processingFailed": "Traitement échoué : {{error}}",
     "qualityUnsupported": "Qualité non supportée — retour au réglage précédent.",
+    "speedUnsupported": "Vitesse de capture non supportée — retour au réglage précédent.",
     "noCamera": "Aucune caméra disponible."
   },
   "update": {

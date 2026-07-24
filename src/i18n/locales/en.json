@@ -23,7 +23,10 @@
     "shutterPhotoA11y": "Take a photo",
     "recStartA11y": "Start recording",
     "recStopA11y": "Stop recording",
-    "swapA11y": "Switch cameras"
+    "swapA11y": "Switch cameras",
+    "holdStill": "Hold still…",
+    "cancelTimer": "Tap to cancel",
+    "cancelTimerA11y": "Cancel timer"
   },
   "mode": {
     "photo": "PHOTO",
@@ -74,7 +77,18 @@
     "volumeKeys": "Volume keys",
     "volKeyVolume": "Volume",
     "volKeyShutter": "Shutter",
-    "volKeyZoom": "Zoom"
+    "volKeyZoom": "Zoom",
+    "sectionCapture": "Capture",
+    "stabilization": "Anti-blur (hold still)",
+    "stabilizationDesc": "Dims the screen during capture so you keep the phone still until the photo is taken.",
+    "captureSpeed": "Capture speed",
+    "speedFast": "Fast",
+    "speedBalanced": "Balanced",
+    "speedQuality": "Quality",
+    "timer": "Self-timer",
+    "timerOff": "Off",
+    "timer3s": "3s",
+    "timer10s": "10s"
   },
   "gallery": {
     "title": "Session media",
@@ -127,6 +141,7 @@
     "recError": "Recording ({{slot}}): {{error}}",
     "processingFailed": "Processing failed: {{error}}",
     "qualityUnsupported": "Quality not supported — reverting to previous setting.",
+    "speedUnsupported": "Capture speed not supported — reverting to previous setting.",
     "noCamera": "No camera available."
   },
   "update": {

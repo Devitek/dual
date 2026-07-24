@@ -23,7 +23,10 @@
     "shutterPhotoA11y": "Tirar uma foto",
     "recStartA11y": "Iniciar gravação",
     "recStopA11y": "Parar gravação",
-    "swapA11y": "Trocar de câmera"
+    "swapA11y": "Trocar de câmera",
+    "holdStill": "Não se mexa…",
+    "cancelTimer": "Toque para cancelar",
+    "cancelTimerA11y": "Cancelar o temporizador"
   },
   "mode": {
     "photo": "FOTO",
@@ -74,7 +77,18 @@
     "volumeKeys": "Teclas de volume",
     "volKeyVolume": "Volume",
     "volKeyShutter": "Disparador",
-    "volKeyZoom": "Zoom"
+    "volKeyZoom": "Zoom",
+    "sectionCapture": "Captura",
+    "stabilization": "Antitremido (não se mexa)",
+    "stabilizationDesc": "Escurece a tela durante a captura para manter o telefone parado até a foto.",
+    "captureSpeed": "Velocidade de captura",
+    "speedFast": "Rápida",
+    "speedBalanced": "Equilibrada",
+    "speedQuality": "Qualidade",
+    "timer": "Temporizador",
+    "timerOff": "Off",
+    "timer3s": "3 s",
+    "timer10s": "10 s"
   },
   "gallery": {
     "title": "Mídias da sessão",
@@ -127,6 +141,7 @@
     "recError": "Gravação ({{slot}}): {{error}}",
     "processingFailed": "Falha no processamento: {{error}}",
     "qualityUnsupported": "Qualidade não suportada — voltando à configuração anterior.",
+    "speedUnsupported": "Velocidade de captura não suportada — voltando à configuração anterior.",
     "noCamera": "Nenhuma câmera disponível."
   },
   "update": {

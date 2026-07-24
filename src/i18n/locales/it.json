@@ -23,7 +23,10 @@
     "shutterPhotoA11y": "Scatta una foto",
     "recStartA11y": "Avvia registrazione",
     "recStopA11y": "Ferma registrazione",
-    "swapA11y": "Cambia fotocamera"
+    "swapA11y": "Cambia fotocamera",
+    "holdStill": "Non muoverti…",
+    "cancelTimer": "Tocca per annullare",
+    "cancelTimerA11y": "Annulla il timer"
   },
   "mode": {
     "photo": "FOTO",
@@ -74,7 +77,18 @@
     "volumeKeys": "Tasti volume",
     "volKeyVolume": "Volume",
     "volKeyShutter": "Scatto",
-    "volKeyZoom": "Zoom"
+    "volKeyZoom": "Zoom",
+    "sectionCapture": "Acquisizione",
+    "stabilization": "Anti-mosso (non muoverti)",
+    "stabilizationDesc": "Scurisce lo schermo durante lo scatto per tenere il telefono fermo fino alla foto.",
+    "captureSpeed": "Velocità di scatto",
+    "speedFast": "Rapida",
+    "speedBalanced": "Bilanciata",
+    "speedQuality": "Qualità",
+    "timer": "Autoscatto",
+    "timerOff": "Off",
+    "timer3s": "3 s",
+    "timer10s": "10 s"
   },
   "gallery": {
     "title": "Contenuti della sessione",
@@ -127,6 +141,7 @@
     "recError": "Registrazione ({{slot}}): {{error}}",
     "processingFailed": "Elaborazione non riuscita: {{error}}",
     "qualityUnsupported": "Qualità non supportata — ritorno all’impostazione precedente.",
+    "speedUnsupported": "Velocità di scatto non supportata — ritorno all’impostazione precedente.",
     "noCamera": "Nessuna fotocamera disponibile."
   },
   "update": {
