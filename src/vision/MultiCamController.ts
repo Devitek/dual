@@ -20,7 +20,7 @@ import { saveToLibraryAsync } from 'expo-media-library/legacy';
 import * as MediaLibrary from 'expo-media-library';
 
 import { getFileSize, toFileUri } from '../utils/fileSystem';
-import type { PipCorner } from '../services/pipComposer';
+import type { CompositionLayout, PipCorner } from '../services/pipComposer';
 import i18n from '../i18n';
 
 export type CameraSlot = 'back' | 'front';
@@ -68,6 +68,9 @@ export interface MultiCamSnapshot {
   videoSaveMode: SaveMode;
   /** Coin où placer la vignette (live + composition PiP). */
   pipCorner: PipCorner;
+  /** Disposition de la fusion PHOTO (pip / côte-à-côte / haut-bas). La vidéo
+   *  reste en PiP (composeur natif) pour l'instant. */
+  layout: CompositionLayout;
   /** Toutes les captures de la session courante (pour la galerie). */
   sessionCaptures: CapturedMedia[];
   /** Nombre de traitements (composition/sauvegarde) en cours en arrière-plan. */
@@ -132,6 +135,7 @@ const INITIAL: MultiCamSnapshot = {
   photoSaveMode: 'pip',
   videoSaveMode: 'pip',
   pipCorner: 'top-right',
+  layout: 'pip',
   sessionCaptures: [],
   processingCount: 0,
   captureQuality: 'high',
@@ -454,6 +458,11 @@ export class MultiCamController {
     this.update({ pipCorner: corner });
   }
 
+  /** Change la disposition de fusion photo (pip / sideBySide / topBottom). */
+  setLayout(layout: CompositionLayout): void {
+    this.update({ layout });
+  }
+
   /** Active/désactive l'aperçu live de la 2e caméra (« mode surprise »). */
   setShowSecondaryPreview(value: boolean): void {
     this.update({ showSecondaryPreview: value });
@@ -534,9 +543,13 @@ export class MultiCamController {
     const corner = this.snapshot.pipCorner;
     const canvasWidth = QUALITY[this.snapshot.captureQuality].pipCanvas;
     const wantPip = mode !== 'originals';
+    const layout = this.snapshot.layout;
     this.enqueue(async () => {
-      // Chemin NATIF (Foreground Service, survit au kill) — prioritaire.
-      if (wantPip && secondaryPath != null && this.photoComposer != null) {
+      // Chemin NATIF (Foreground Service, survit au kill) — prioritaire, mais
+      // UNIQUEMENT pour la disposition PiP. Les dispositions côte-à-côte / haut-bas
+      // passent par le compositeur JS view-shot (qui sait rendre n'importe quel
+      // layout ; le natif ne gère que le PiP pour l'instant).
+      if (wantPip && secondaryPath != null && this.photoComposer != null && layout === 'pip') {
         const saveOriginals = mode === 'pip_plus_originals';
         const savedUri = await this.photoComposer!(
           toFileUri(primaryPath),
