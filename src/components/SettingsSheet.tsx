@@ -224,6 +224,8 @@ interface SettingsSheetProps {
   onSetTimerSeconds: (seconds: 0 | 3 | 10) => void;
   shutterSound: boolean;
   onToggleShutterSound: () => void;
+  geotag: boolean;
+  onToggleGeotag: () => void;
 }
 
 /** Feuille inférieure Material 3 des paramètres caméra + enregistrement. */
@@ -261,6 +263,8 @@ export function SettingsSheet({
   onSetTimerSeconds,
   shutterSound,
   onToggleShutterSound,
+  geotag,
+  onToggleGeotag,
 }: SettingsSheetProps): React.ReactElement {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
@@ -450,6 +454,18 @@ export function SettingsSheet({
             />
           </View>
           <Text style={styles.optDesc}>{t('settings.shutterSoundDesc')}</Text>
+
+          <View style={styles.row}>
+            <MaterialIcons name="location-on" size={22} color={colors.onSurface} />
+            <Text style={styles.rowLabel}>{t('settings.geotag')}</Text>
+            <Switch
+              value={geotag}
+              onValueChange={onToggleGeotag}
+              trackColor={{ true: colors.primary, false: colors.outlineVariant }}
+              thumbColor={colors.onPrimary}
+            />
+          </View>
+          <Text style={styles.optDesc}>{t('settings.geotagDesc')}</Text>
 
           <Text style={styles.section}>{t('settings.sectionLayout')}</Text>
           <Segmented options={layoutOptions} value={layout} onChange={onSetLayout} />

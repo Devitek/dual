@@ -95,7 +95,9 @@
     "timer3s": "3 s",
     "timer10s": "10 s",
     "shutterSound": "Son d’obturateur",
-    "shutterSoundDesc": "Coupe le clic de capture. Certaines régions l’imposent au niveau système."
+    "shutterSoundDesc": "Coupe le clic de capture. Certaines régions l’imposent au niveau système.",
+    "geotag": "Localisation dans les photos",
+    "geotagDesc": "Inscrit les coordonnées GPS dans les métadonnées des photos, sur l’appareil — comme l’appareil photo natif. Désactivé par défaut ; demande la permission de localisation à l’activation."
   },
   "gallery": {
     "title": "Médias de la session",
@@ -149,6 +151,7 @@
     "processingFailed": "Traitement échoué : {{error}}",
     "qualityUnsupported": "Qualité non supportée — retour au réglage précédent.",
     "speedUnsupported": "Vitesse de capture non supportée — retour au réglage précédent.",
+    "locationDenied": "Permission de localisation refusée — le géotag reste désactivé.",
     "noCamera": "Aucune caméra disponible."
   },
   "update": {

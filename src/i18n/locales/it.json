@@ -95,7 +95,9 @@
     "timer3s": "3 s",
     "timer10s": "10 s",
     "shutterSound": "Suono dell’otturatore",
-    "shutterSoundDesc": "Disattiva il clic di scatto. Alcune regioni lo impongono a livello di sistema."
+    "shutterSoundDesc": "Disattiva il clic di scatto. Alcune regioni lo impongono a livello di sistema.",
+    "geotag": "Posizione nelle foto",
+    "geotagDesc": "Incorpora le coordinate GPS nei metadati delle foto, sul dispositivo — come la fotocamera nativa. Disattivato di default; chiede il permesso di localizzazione quando lo attivi."
   },
   "gallery": {
     "title": "Contenuti della sessione",
@@ -149,6 +151,7 @@
     "processingFailed": "Elaborazione non riuscita: {{error}}",
     "qualityUnsupported": "Qualità non supportata — ritorno all’impostazione precedente.",
     "speedUnsupported": "Velocità di scatto non supportata — ritorno all’impostazione precedente.",
+    "locationDenied": "Permesso di localizzazione negato — la geolocalizzazione resta disattivata.",
     "noCamera": "Nessuna fotocamera disponibile."
   },
   "update": {

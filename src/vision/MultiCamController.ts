@@ -21,6 +21,7 @@ import * as MediaLibrary from 'expo-media-library';
 
 import { getFileSize, toFileUri } from '../utils/fileSystem';
 import type { CompositionLayout, PipCorner } from '../services/pipComposer';
+import { writeGpsToJpeg, type GpsCoords } from '../services/exifGps';
 import i18n from '../i18n';
 
 export type CameraSlot = 'back' | 'front';
@@ -85,6 +86,8 @@ export interface MultiCamSnapshot {
   /** Aperçu LIVE de la 2e caméra (vignette). `false` = « mode surprise ».
    *  N'affecte NI la capture NI la fusion PiP — seulement l'affichage live. */
   showSecondaryPreview: boolean;
+  /** Inscrire la localisation (GPS EXIF) dans les photos. Opt-in, on-device. */
+  geotag: boolean;
 }
 
 interface QualityConfig {
@@ -145,6 +148,8 @@ const INITIAL: MultiCamSnapshot = {
   shutterSound: true,
   // Aperçu de la 2e caméra activé par défaut ; désactivable pour la surprise.
   showSecondaryPreview: true,
+  // Géotag désactivé par défaut (permission sensible, strictement opt-in).
+  geotag: false,
 };
 
 /**
@@ -182,6 +187,8 @@ export class MultiCamController {
     | null = null;
   /** File sérialisant les traitements de fond (composition/sauvegarde). */
   private queue: Promise<void> = Promise.resolve();
+  /** Fournisseur de position (cache) injecté depuis React (géotag opt-in). */
+  private locationProvider: (() => GpsCoords | null) | null = null;
 
   private readonly recorders: { back: Recorder | null; front: Recorder | null } = {
     back: null,
@@ -211,6 +218,11 @@ export class MultiCamController {
 
   private notify(kind: 'success' | 'error', text: string): void {
     this.update({ notice: { id: Date.now(), kind, text } });
+  }
+
+  /** Affiche un message transitoire (Snackbar) depuis React (ex. permission refusée). */
+  showNotice(kind: 'success' | 'error', text: string): void {
+    this.notify(kind, text);
   }
 
   private pushCapture(capture: CapturedMedia): void {
@@ -468,6 +480,26 @@ export class MultiCamController {
     this.update({ showSecondaryPreview: value });
   }
 
+  /** Active/désactive l'inscription de la localisation (GPS EXIF) dans les photos. */
+  setGeotag(value: boolean): void {
+    this.update({ geotag: value });
+  }
+
+  /** Injecte le fournisseur de position (cache) pour le géotag. */
+  setLocationProvider(fn: (() => GpsCoords | null) | null): void {
+    this.locationProvider = fn;
+  }
+
+  /** Inscrit la position dans l'EXIF d'un JPEG (best-effort, jamais bloquant). */
+  private async stampGps(fileUri: string, coords: GpsCoords | null): Promise<void> {
+    if (coords == null) return;
+    try {
+      await writeGpsToJpeg(fileUri, coords);
+    } catch {
+      /* géotag best-effort : ne jamais faire échouer la sauvegarde */
+    }
+  }
+
   /**
    * Retire une capture de la session ET tente sa suppression de la galerie
    * (best-effort : l'URI peut être un fichier temporaire non indexé).
@@ -544,12 +576,17 @@ export class MultiCamController {
     const canvasWidth = QUALITY[this.snapshot.captureQuality].pipCanvas;
     const wantPip = mode !== 'originals';
     const layout = this.snapshot.layout;
+    // Géotag : résolu MAINTENANT (position en cache). Force le chemin JS (le natif
+    // sauvegarde en interne, on ne pourrait pas y injecter l'EXIF GPS).
+    const geotag = this.snapshot.geotag;
+    const coords = geotag ? this.locationProvider?.() ?? null : null;
     this.enqueue(async () => {
       // Chemin NATIF (Foreground Service, survit au kill) — prioritaire, mais
-      // UNIQUEMENT pour la disposition PiP. Les dispositions côte-à-côte / haut-bas
-      // passent par le compositeur JS view-shot (qui sait rendre n'importe quel
-      // layout ; le natif ne gère que le PiP pour l'instant).
-      if (wantPip && secondaryPath != null && this.photoComposer != null && layout === 'pip') {
+      // UNIQUEMENT pour la disposition PiP SANS géotag. Les dispositions
+      // côte-à-côte / haut-bas et le géotag passent par le compositeur JS view-shot
+      // (qui sait rendre n'importe quel layout + permet le stamp EXIF avant save ;
+      // le natif ne gère que le PiP pour l'instant).
+      if (wantPip && secondaryPath != null && this.photoComposer != null && layout === 'pip' && coords == null) {
         const saveOriginals = mode === 'pip_plus_originals';
         const savedUri = await this.photoComposer!(
           toFileUri(primaryPath),
@@ -575,12 +612,17 @@ export class MultiCamController {
       let pipUri: string | null = null;
       if (wantPip && canPipJs) {
         const composedPath = await this.pipComposer!(toFileUri(primaryPath), toFileUri(secondaryPath!));
+        await this.stampGps(toFileUri(composedPath), coords);
         pipUri = await this.persist(composedPath);
       }
       let originalPrimaryUri: string | null = null;
       if (wantOriginals) {
+        await this.stampGps(toFileUri(primaryPath), coords);
         originalPrimaryUri = await this.persist(primaryPath);
-        if (secondaryPath != null) await this.persist(secondaryPath);
+        if (secondaryPath != null) {
+          await this.stampGps(toFileUri(secondaryPath), coords);
+          await this.persist(secondaryPath);
+        }
       }
       const displayUri = pipUri ?? originalPrimaryUri ?? toFileUri(primaryPath);
       const secondaryUri = secondaryPath != null ? toFileUri(secondaryPath) : null;
