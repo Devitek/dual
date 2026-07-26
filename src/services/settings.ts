@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { CaptureQuality, CaptureSpeed, SaveMode } from '../vision/MultiCamController';
-import type { CompositionLayout, PipCorner, PipInset } from './pipComposer';
+import type { CompositionLayout, OutputRatio, PipCorner, PipInset } from './pipComposer';
 import type { PhotoFlashMode } from '../components/CameraTopBar';
 import type { CaptureMode } from '../components/ModeSwitch';
 import type { VolumeKeyAction } from '../native/volumeKeys';
@@ -47,6 +47,7 @@ export const SETTINGS_KEYS = {
   grid: 'tl_grid',
   level: 'tl_level',
   burstCount: 'tl_burst',
+  outputRatio: 'tl_output_ratio',
 } as const;
 
 export interface PersistedSettings {
@@ -72,6 +73,8 @@ export interface PersistedSettings {
   level: boolean;
   /** Nombre de photos par rafale (1 = désactivée). */
   burstCount: BurstCount;
+  /** Ratio du cadre de sortie pour la disposition `pip`. */
+  outputRatio: OutputRatio;
 }
 
 export type SettingKey = keyof PersistedSettings;
@@ -150,6 +153,8 @@ export async function loadPersistedSettings(): Promise<Partial<PersistedSettings
   if (g('level') != null) out.level = g('level') === '1';
   const burst = Number(g('burstCount'));
   if (BURST_VALUES.includes(burst as BurstCount)) out.burstCount = burst as BurstCount;
+  const ratio = inSet(g('outputRatio'), ['full', 'square', 'tall'] as const);
+  if (ratio) out.outputRatio = ratio;
 
   return out;
 }

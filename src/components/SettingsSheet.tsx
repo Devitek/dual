@@ -27,7 +27,7 @@ const { height: SCREEN_H } = Dimensions.get('window');
 import { useColors, useThemedStyles, type Palette } from '../theme/theme';
 import { haptics } from '../utils/haptics';
 import type { CaptureQuality, CaptureSpeed, SaveMode } from '../vision/MultiCamController';
-import type { CompositionLayout, PipCorner } from '../services/pipComposer';
+import type { CompositionLayout, OutputRatio, PipCorner } from '../services/pipComposer';
 import type { PhotoFlashMode } from './CameraTopBar';
 import type { VolumeKeyAction } from '../native/volumeKeys';
 
@@ -171,6 +171,12 @@ const LAYOUT_OPTION_KEYS: { value: CompositionLayout; labelKey: string }[] = [
   { value: 'topBottom', labelKey: 'settings.layoutTopBottom' },
 ];
 
+const RATIO_OPTION_KEYS: { value: OutputRatio; labelKey: string }[] = [
+  { value: 'full', labelKey: 'settings.ratioFull' },
+  { value: 'square', labelKey: 'settings.ratioSquare' },
+  { value: 'tall', labelKey: 'settings.ratioTall' },
+];
+
 // Les légendes de résolution ne se traduisent pas (specs techniques universelles).
 const QUALITY_OPTION_KEYS: { value: CaptureQuality; labelKey: string; caption: string }[] = [
   { value: 'standard', labelKey: 'settings.qualityStandard', caption: '1080p·720p' },
@@ -219,6 +225,8 @@ interface SettingsSheetProps {
   onSetPipCorner: (corner: PipCorner) => void;
   layout: CompositionLayout;
   onSetLayout: (layout: CompositionLayout) => void;
+  outputRatio: OutputRatio;
+  onSetOutputRatio: (ratio: OutputRatio) => void;
   quality: CaptureQuality;
   onSetQuality: (quality: CaptureQuality) => void;
   volumeKeyAction: VolumeKeyAction;
@@ -266,6 +274,8 @@ export function SettingsSheet({
   onSetPipCorner,
   layout,
   onSetLayout,
+  outputRatio,
+  onSetOutputRatio,
   quality,
   onSetQuality,
   volumeKeyAction,
@@ -353,6 +363,7 @@ export function SettingsSheet({
   const timerOptions = TIMER_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
   const burstOptions = BURST_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
   const layoutOptions = LAYOUT_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
+  const ratioOptions = RATIO_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
 
   return (
     <Modal visible={visible} transparent animationType="none" statusBarTranslucent onRequestClose={dismiss}>
@@ -531,6 +542,12 @@ export function SettingsSheet({
           <Segmented options={layoutOptions} value={layout} onChange={onSetLayout} />
           {layout === 'pip' && (
             <View style={styles.rowCol}>
+              <View style={styles.rowHeader}>
+                <MaterialIcons name="aspect-ratio" size={22} color={colors.onSurface} />
+                <Text style={styles.rowLabel}>{t('settings.outputRatio')}</Text>
+              </View>
+              <Segmented options={ratioOptions} value={outputRatio} onChange={onSetOutputRatio} />
+              <Text style={styles.optDesc}>{t('settings.outputRatioDesc')}</Text>
               <Text style={styles.optDesc}>{t('settings.sectionPipCorner')}</Text>
               <CornerPicker value={pipCorner} onChange={onSetPipCorner} />
               <Text style={styles.optDesc}>{t('settings.pipDragHint')}</Text>

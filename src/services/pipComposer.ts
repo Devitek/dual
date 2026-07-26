@@ -22,6 +22,26 @@ export type PipCorner = 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left
 export type CompositionLayout = 'pip' | 'sideBySide' | 'topBottom';
 
 /**
+ * Ratio du cadre de sortie pour la disposition `pip` (caméra principale plein
+ * cadre) : `full` = capteur (~3:4), `square` = 1:1, `tall` = 9:16 (vertical).
+ * Sans effet sur `sideBySide`/`topBottom` (ratio intrinsèque à la disposition).
+ */
+export type OutputRatio = 'full' | 'square' | 'tall';
+
+/** Facteur hauteur/largeur du canvas `pip` selon le ratio de sortie. */
+export function pipRatioFactor(r: OutputRatio): number {
+  switch (r) {
+    case 'square':
+      return 1; // 1:1
+    case 'tall':
+      return 16 / 9; // 9:16 vertical
+    case 'full':
+    default:
+      return 4 / 3; // ~3:4 (capteur portrait)
+  }
+}
+
+/**
  * Position/taille LIBRE de la vignette PiP, en fractions du cadre (0..1) :
  * `x`/`y` = coin haut-gauche, `w` = largeur. `null` ⇒ on utilise le coin (`PipCorner`).
  * La hauteur est dérivée d'un ratio portrait fixe à l'affichage/composition.
@@ -41,6 +61,8 @@ export interface PhotoComposeOptions {
   watermark: boolean;
   /** Largeur du canvas de composition (px). */
   canvasWidth: number;
+  /** Ratio du cadre `pip` (ignoré pour les autres dispositions). */
+  outputRatio: OutputRatio;
   saveOriginals: boolean;
 }
 
@@ -53,6 +75,8 @@ export interface VideoComposeOptions {
   watermark: boolean;
   /** Bitrate de ré-encodage (bits/s). */
   bitRate: number;
+  /** Ratio du cadre `pip` (ignoré pour les autres dispositions). */
+  outputRatio: OutputRatio;
   saveOriginals: boolean;
 }
 

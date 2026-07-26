@@ -11,6 +11,7 @@ interface NativePhotoParams {
   insetW: number;
   watermark: boolean;
   canvasWidth: number;
+  outputRatio: string;
   saveOriginals: boolean;
 }
 
@@ -23,6 +24,7 @@ interface NativeVideoParams {
   insetW: number;
   watermark: boolean;
   bitRate: number;
+  outputRatio: string;
   saveOriginals: boolean;
 }
 
@@ -83,6 +85,7 @@ export async function composePipVideo(
     insetW: inset != null ? inset.w : -1,
     watermark: opts.watermark,
     bitRate: opts.bitRate,
+    outputRatio: opts.outputRatio,
     saveOriginals: opts.saveOriginals,
   });
 }
@@ -112,6 +115,7 @@ export async function composePipPhoto(
     insetW: inset != null ? inset.w : -1,
     watermark: opts.watermark,
     canvasWidth: opts.canvasWidth,
+    outputRatio: opts.outputRatio,
     saveOriginals: opts.saveOriginals,
   });
 }

@@ -70,6 +70,7 @@ class VideoPipComposerModule : Module(), PipComposerBus.Listener {
         insetW = params.insetW.toFloat(),
         watermark = params.watermark,
         bitRate = params.bitRate.toInt(),
+        outputRatio = params.outputRatio,
         saveOriginals = params.saveOriginals,
       )
     }
@@ -99,6 +100,7 @@ class VideoPipComposerModule : Module(), PipComposerBus.Listener {
         insetW = params.insetW.toFloat(),
         watermark = params.watermark,
         canvasWidth = params.canvasWidth.toInt(),
+        outputRatio = params.outputRatio,
         saveOriginals = params.saveOriginals,
       )
     }

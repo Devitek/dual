@@ -16,6 +16,7 @@ import { IntroSheet } from '../components/IntroSheet';
 import { useIntro } from '../hooks/useIntro';
 import { MultiCamPreview } from '../components/MultiCamPreview';
 import { CameraGuides } from '../components/CameraGuides';
+import { RatioMask } from '../components/RatioMask';
 import { CaptureControls } from '../components/CaptureControls';
 import type { CaptureMode } from '../components/ModeSwitch';
 import { CameraTopBar, type PhotoFlashMode } from '../components/CameraTopBar';
@@ -40,7 +41,7 @@ import { haptics } from '../utils/haptics';
 import type { FocusPoint } from '../components/FocusIndicator';
 import { pipCanvasForQuality } from '../vision/MultiCamController';
 import type { CameraSlot, CaptureQuality, CaptureSpeed, SaveMode } from '../vision/MultiCamController';
-import type { CompositionLayout, PipCorner, PipInset } from '../services/pipComposer';
+import type { CompositionLayout, OutputRatio, PipCorner, PipInset } from '../services/pipComposer';
 import type { VolumeKeyAction } from '../native/volumeKeys';
 import {
   loadPersistedSettings,
@@ -371,6 +372,13 @@ export function MultiCameraScreen(): React.ReactElement {
     },
     [cam.controller],
   );
+  const setOutputRatio = useCallback(
+    (r: OutputRatio) => {
+      cam.controller.setOutputRatio(r);
+      saveSetting('outputRatio', r);
+    },
+    [cam.controller],
+  );
   const setQuality = useCallback(
     (q: CaptureQuality) => {
       void cam.controller.setQuality(q);
@@ -403,6 +411,7 @@ export function MultiCameraScreen(): React.ReactElement {
       if (s.shutterSound != null) c.setShutterSound(s.shutterSound);
       if (s.layout != null) c.setLayout(s.layout);
       if (s.watermark != null) c.setWatermark(s.watermark);
+      if (s.outputRatio != null) c.setOutputRatio(s.outputRatio);
       if (s.volumeKeyAction != null) setVolumeKeyActionState(s.volumeKeyAction);
       if (s.photoSaveMode != null) c.setPhotoSaveMode(s.photoSaveMode);
       if (s.videoSaveMode != null) c.setVideoSaveMode(s.videoSaveMode);
@@ -583,6 +592,9 @@ export function MultiCameraScreen(): React.ReactElement {
               showSecondaryPreview={cam.showSecondaryPreview}
             />
 
+            {cam.status === 'running' && cam.layout === 'pip' && mode === 'photo' && (
+              <RatioMask ratio={cam.outputRatio} />
+            )}
             {cam.status === 'running' && <CameraGuides grid={grid} level={level} />}
 
             <ZoomIndicator zoom={zoomDisplay} nonce={zoomNonce} />
@@ -668,6 +680,8 @@ export function MultiCameraScreen(): React.ReactElement {
               onSetPipCorner={setPipCorner}
               layout={cam.layout}
               onSetLayout={setLayout}
+              outputRatio={cam.outputRatio}
+              onSetOutputRatio={setOutputRatio}
               quality={cam.captureQuality}
               onSetQuality={setQuality}
               volumeKeyAction={volumeKeyAction}
@@ -711,6 +725,7 @@ export function MultiCameraScreen(): React.ReactElement {
           layout={cam.layout}
           pipInset={cam.pipInset}
           watermark={cam.watermark}
+          outputRatio={cam.outputRatio}
         />
 
         <IntroSheet mode={introMode} onClose={dismissIntro} />
