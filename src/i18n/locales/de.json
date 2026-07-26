@@ -98,6 +98,9 @@
     "shutterSoundDesc": "Schaltet das Auslösergeräusch aus. In einigen Regionen ist es systemweit vorgeschrieben.",
     "geotag": "Standort in Fotos",
     "geotagDesc": "Bettet GPS-Koordinaten in die Metadaten deiner Fotos ein, auf dem Gerät — wie die native Kamera. Standardmäßig aus; fragt beim Aktivieren nach der Standortberechtigung.",
+    "grid": "Drittel-Raster",
+    "level": "Wasserwaage",
+    "levelDesc": "Zeigt eine Horizontlinie, die grün wird, wenn das Telefon gerade ist.",
     "pipDragHint": "Tipp: Miniatur lange gedrückt halten und ziehen zum Verschieben, Pinch zum Skalieren.",
     "watermark": "TwinLens-Wasserzeichen",
     "watermarkDesc": "Fügt ein kleines „TwinLens“ in die Ecke zusammengeführter Fotos ein. Standardmäßig aus."

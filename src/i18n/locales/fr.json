@@ -98,6 +98,9 @@
     "shutterSoundDesc": "Coupe le clic de capture. Certaines régions l’imposent au niveau système.",
     "geotag": "Localisation dans les photos",
     "geotagDesc": "Inscrit les coordonnées GPS dans les métadonnées des photos, sur l’appareil — comme l’appareil photo natif. Désactivé par défaut ; demande la permission de localisation à l’activation.",
+    "grid": "Grille des tiers",
+    "level": "Niveau",
+    "levelDesc": "Affiche une ligne d’horizon qui passe au vert quand le téléphone est à niveau.",
     "pipDragHint": "Astuce : appui long sur la vignette puis glissez pour la déplacer, pincez pour la redimensionner.",
     "watermark": "Filigrane TwinLens",
     "watermarkDesc": "Ajoute une petite mention « TwinLens » dans le coin des photos fusionnées. Désactivé par défaut."

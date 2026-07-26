@@ -13,6 +13,7 @@ import { useVolumeShutter } from '../hooks/useVolumeShutter';
 import { useGeotag } from '../hooks/useGeotag';
 import { PermissionGate } from '../components/PermissionGate';
 import { MultiCamPreview } from '../components/MultiCamPreview';
+import { CameraGuides } from '../components/CameraGuides';
 import { CaptureControls } from '../components/CaptureControls';
 import type { CaptureMode } from '../components/ModeSwitch';
 import { CameraTopBar, type PhotoFlashMode } from '../components/CameraTopBar';
@@ -90,6 +91,8 @@ export function MultiCameraScreen(): React.ReactElement {
   const [stabilization, setStabilizationState] = useState(true);
   const [timerSeconds, setTimerSecondsState] = useState<TimerSeconds>(0);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [grid, setGridState] = useState(false);
+  const [level, setLevelState] = useState(false);
   const focusNonce = useRef(0);
   const lastZoomUpdate = useRef(0);
   const pipHintChecked = useRef(false);
@@ -381,9 +384,20 @@ export function MultiCameraScreen(): React.ReactElement {
       if (s.showSecondaryPreview != null) c.setShowSecondaryPreview(s.showSecondaryPreview);
       if (s.photoFlash != null) setPhotoFlash(s.photoFlash);
       if (s.mode != null) setMode(s.mode);
+      if (s.grid != null) setGridState(s.grid);
+      if (s.level != null) setLevelState(s.level);
     },
     [cam.controller],
   );
+
+  const setGrid = useCallback((v: boolean) => {
+    setGridState(v);
+    saveSetting('grid', v);
+  }, []);
+  const setLevel = useCallback((v: boolean) => {
+    setLevelState(v);
+    saveSetting('level', v);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -536,6 +550,8 @@ export function MultiCameraScreen(): React.ReactElement {
               showSecondaryPreview={cam.showSecondaryPreview}
             />
 
+            {cam.status === 'running' && <CameraGuides grid={grid} level={level} />}
+
             <ZoomIndicator zoom={zoomDisplay} nonce={zoomNonce} />
 
             <CameraTopBar
@@ -635,6 +651,10 @@ export function MultiCameraScreen(): React.ReactElement {
               onToggleGeotag={onToggleGeotag}
               watermark={cam.watermark}
               onToggleWatermark={() => setWatermark(!cam.watermark)}
+              grid={grid}
+              onToggleGrid={() => setGrid(!grid)}
+              level={level}
+              onToggleLevel={() => setLevel(!level)}
             />
 
             <SessionGallery
