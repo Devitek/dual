@@ -166,6 +166,28 @@
     "locationDenied": "Permesso di localizzazione negato — la geolocalizzazione resta disattivata.",
     "noCamera": "Nessuna fotocamera disponibile."
   },
+  "intro": {
+    "onboardTitle": "Benvenuto in TwinLens",
+    "onboardSubtitle": "Fotocamere anteriore e posteriore, insieme.",
+    "start": "Inizia",
+    "whatsnewTitle": "Novità",
+    "whatsnewSubtitle": "Nuovo in questo aggiornamento",
+    "gotIt": "Ho capito",
+    "dualTitle": "Doppia fotocamera",
+    "dualDesc": "Cattura fronte e retro insieme — foto o video.",
+    "layoutsTitle": "Disposizioni",
+    "layoutsDesc": "Immagine nell’immagine, affiancate o sopra e sotto.",
+    "moveTitle": "Sposta la miniatura",
+    "moveDesc": "Tieni premuta la miniatura per trascinarla, pizzica per ridimensionare.",
+    "guidesTitle": "Aiuti di inquadratura",
+    "guidesDesc": "Griglia dei terzi, livella, autoscatto e raffica.",
+    "shareTitle": "Condividi e geotag",
+    "shareDesc": "Condivisione con un tocco, filigrana opzionale e posizione nelle foto.",
+    "newGuidesTitle": "Griglia e livella",
+    "newGuidesDesc": "Nuova griglia dei terzi e livella d’orizzonte nel mirino.",
+    "newBurstTitle": "Modalità raffica",
+    "newBurstDesc": "Scatta ×3, ×5 o ×10 foto doppie con un tocco."
+  },
   "update": {
     "available": "È disponibile una nuova versione.",
     "cta": "Aggiorna",

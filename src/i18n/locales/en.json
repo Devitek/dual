@@ -166,6 +166,28 @@
     "locationDenied": "Location permission denied — geotagging stays off.",
     "noCamera": "No camera available."
   },
+  "intro": {
+    "onboardTitle": "Welcome to TwinLens",
+    "onboardSubtitle": "Front and back cameras, at the same time.",
+    "start": "Get started",
+    "whatsnewTitle": "What's new",
+    "whatsnewSubtitle": "Fresh in this update",
+    "gotIt": "Got it",
+    "dualTitle": "Dual camera",
+    "dualDesc": "Capture front and back at once — photo or video.",
+    "layoutsTitle": "Layouts",
+    "layoutsDesc": "Picture-in-picture, side by side or top and bottom.",
+    "moveTitle": "Move the inset",
+    "moveDesc": "Long-press the thumbnail to drag it, pinch to resize.",
+    "guidesTitle": "Framing tools",
+    "guidesDesc": "Rule-of-thirds grid, level, self-timer and burst.",
+    "shareTitle": "Share & tag",
+    "shareDesc": "One-tap share, optional watermark and photo location.",
+    "newGuidesTitle": "Grid & level",
+    "newGuidesDesc": "New rule-of-thirds grid and horizon level in the viewfinder.",
+    "newBurstTitle": "Burst mode",
+    "newBurstDesc": "Fire ×3, ×5 or ×10 dual shots with one tap."
+  },
   "update": {
     "available": "A new version is available.",
     "cta": "Update",

@@ -166,6 +166,28 @@
     "locationDenied": "Permissão de localização negada — a geolocalização permanece desativada.",
     "noCamera": "Nenhuma câmera disponível."
   },
+  "intro": {
+    "onboardTitle": "Bem-vindo ao TwinLens",
+    "onboardSubtitle": "Câmeras frontal e traseira, ao mesmo tempo.",
+    "start": "Começar",
+    "whatsnewTitle": "Novidades",
+    "whatsnewSubtitle": "Novo nesta atualização",
+    "gotIt": "Entendi",
+    "dualTitle": "Câmera dupla",
+    "dualDesc": "Capture a frente e o verso ao mesmo tempo — foto ou vídeo.",
+    "layoutsTitle": "Disposições",
+    "layoutsDesc": "Imagem sobre imagem, lado a lado ou em cima e embaixo.",
+    "moveTitle": "Mover a miniatura",
+    "moveDesc": "Toque e segure a miniatura para arrastá-la, pince para redimensionar.",
+    "guidesTitle": "Ajudas de enquadramento",
+    "guidesDesc": "Grade de terços, nível, temporizador e rajada.",
+    "shareTitle": "Compartilhar e localizar",
+    "shareDesc": "Compartilhe com um toque, marca d’água opcional e local nas fotos.",
+    "newGuidesTitle": "Grade e nível",
+    "newGuidesDesc": "Nova grade de terços e nível de horizonte no visor.",
+    "newBurstTitle": "Modo rajada",
+    "newBurstDesc": "Dispare ×3, ×5 ou ×10 fotos duplas com um toque."
+  },
   "update": {
     "available": "Há uma nova versão disponível.",
     "cta": "Atualizar",
