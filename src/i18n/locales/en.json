@@ -16,6 +16,7 @@
     "flashStateOff": "off",
     "flashStateAuto": "automatic",
     "flashStateOn": "on",
+    "aeLockA11y": "Lock exposure & focus",
     "settingsA11y": "Open settings"
   },
   "capture": {
