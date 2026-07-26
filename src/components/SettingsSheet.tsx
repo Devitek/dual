@@ -228,6 +228,10 @@ interface SettingsSheetProps {
   onToggleGeotag: () => void;
   watermark: boolean;
   onToggleWatermark: () => void;
+  grid: boolean;
+  onToggleGrid: () => void;
+  level: boolean;
+  onToggleLevel: () => void;
 }
 
 /** Feuille inférieure Material 3 des paramètres caméra + enregistrement. */
@@ -269,6 +273,10 @@ export function SettingsSheet({
   onToggleGeotag,
   watermark,
   onToggleWatermark,
+  grid,
+  onToggleGrid,
+  level,
+  onToggleLevel,
 }: SettingsSheetProps): React.ReactElement {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
@@ -470,6 +478,29 @@ export function SettingsSheet({
             />
           </View>
           <Text style={styles.optDesc}>{t('settings.geotagDesc')}</Text>
+
+          <View style={styles.row}>
+            <MaterialIcons name="grid-on" size={22} color={colors.onSurface} />
+            <Text style={styles.rowLabel}>{t('settings.grid')}</Text>
+            <Switch
+              value={grid}
+              onValueChange={onToggleGrid}
+              trackColor={{ true: colors.primary, false: colors.outlineVariant }}
+              thumbColor={colors.onPrimary}
+            />
+          </View>
+
+          <View style={styles.row}>
+            <MaterialIcons name="straighten" size={22} color={colors.onSurface} />
+            <Text style={styles.rowLabel}>{t('settings.level')}</Text>
+            <Switch
+              value={level}
+              onValueChange={onToggleLevel}
+              trackColor={{ true: colors.primary, false: colors.outlineVariant }}
+              thumbColor={colors.onPrimary}
+            />
+          </View>
+          <Text style={styles.optDesc}>{t('settings.levelDesc')}</Text>
 
           <Text style={styles.section}>{t('settings.sectionLayout')}</Text>
           <Segmented options={layoutOptions} value={layout} onChange={onSetLayout} />

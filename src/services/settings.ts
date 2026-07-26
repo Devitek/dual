@@ -40,6 +40,8 @@ export const SETTINGS_KEYS = {
   showSecondaryPreview: 'tl_secondary_preview',
   photoFlash: 'tl_photo_flash',
   mode: 'tl_mode',
+  grid: 'tl_grid',
+  level: 'tl_level',
 } as const;
 
 export interface PersistedSettings {
@@ -59,6 +61,10 @@ export interface PersistedSettings {
   showSecondaryPreview: boolean;
   photoFlash: PhotoFlashMode;
   mode: CaptureMode;
+  /** Grille règle des tiers sur le viseur. */
+  grid: boolean;
+  /** Niveau (horizon) sur le viseur. */
+  level: boolean;
 }
 
 export type SettingKey = keyof PersistedSettings;
@@ -133,6 +139,8 @@ export async function loadPersistedSettings(): Promise<Partial<PersistedSettings
   if (flash) out.photoFlash = flash;
   const m = inSet(g('mode'), ['photo', 'video'] as const);
   if (m) out.mode = m;
+  if (g('grid') != null) out.grid = g('grid') === '1';
+  if (g('level') != null) out.level = g('level') === '1';
 
   return out;
 }

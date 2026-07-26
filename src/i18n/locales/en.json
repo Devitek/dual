@@ -98,6 +98,9 @@
     "shutterSoundDesc": "Turn off the capture click. Some regions force it on system-wide.",
     "geotag": "Location in photos",
     "geotagDesc": "Embed GPS coordinates in your photos' metadata, on-device — like your native camera. Off by default; asks for location permission when enabled.",
+    "grid": "Rule-of-thirds grid",
+    "level": "Level",
+    "levelDesc": "Show a horizon line that turns green when the phone is level.",
     "pipDragHint": "Tip: long-press the thumbnail then drag to move it, pinch to resize.",
     "watermark": "TwinLens watermark",
     "watermarkDesc": "Add a small “TwinLens” tag in the corner of merged photos. Off by default."
