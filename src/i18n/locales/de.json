@@ -166,6 +166,28 @@
     "locationDenied": "Standortberechtigung verweigert – Geotagging bleibt aus.",
     "noCamera": "Keine Kamera verfügbar."
   },
+  "intro": {
+    "onboardTitle": "Willkommen bei TwinLens",
+    "onboardSubtitle": "Front- und Rückkamera, gleichzeitig.",
+    "start": "Los geht’s",
+    "whatsnewTitle": "Neu",
+    "whatsnewSubtitle": "Frisch in diesem Update",
+    "gotIt": "Verstanden",
+    "dualTitle": "Doppelkamera",
+    "dualDesc": "Nimm Vorder- und Rückseite gleichzeitig auf — Foto oder Video.",
+    "layoutsTitle": "Layouts",
+    "layoutsDesc": "Bild-in-Bild, nebeneinander oder oben und unten.",
+    "moveTitle": "Miniatur verschieben",
+    "moveDesc": "Miniatur lange drücken zum Ziehen, zum Skalieren zwei Finger.",
+    "guidesTitle": "Bildhilfen",
+    "guidesDesc": "Drittel-Raster, Wasserwaage, Selbstauslöser und Serie.",
+    "shareTitle": "Teilen & Standort",
+    "shareDesc": "Teilen mit einem Tippen, optionales Wasserzeichen und Foto-Standort.",
+    "newGuidesTitle": "Raster & Wasserwaage",
+    "newGuidesDesc": "Neues Drittel-Raster und Horizont-Wasserwaage im Sucher.",
+    "newBurstTitle": "Serienmodus",
+    "newBurstDesc": "×3, ×5 oder ×10 Doppelaufnahmen mit einem Tippen."
+  },
   "update": {
     "available": "Eine neue Version ist verfügbar.",
     "cta": "Aktualisieren",

@@ -12,6 +12,8 @@ import { useInAppUpdate } from '../hooks/useInAppUpdate';
 import { useVolumeShutter } from '../hooks/useVolumeShutter';
 import { useGeotag } from '../hooks/useGeotag';
 import { PermissionGate } from '../components/PermissionGate';
+import { IntroSheet } from '../components/IntroSheet';
+import { useIntro } from '../hooks/useIntro';
 import { MultiCamPreview } from '../components/MultiCamPreview';
 import { CameraGuides } from '../components/CameraGuides';
 import { CaptureControls } from '../components/CaptureControls';
@@ -72,6 +74,7 @@ export function MultiCameraScreen(): React.ReactElement {
   const isForeground = useIsForeground();
 
   const cam = useMultiCam(isForeground, permissions.allGranted);
+  const { introMode, dismissIntro } = useIntro(permissions.allGranted);
   const { t } = useTranslation();
   const update = useInAppUpdate();
   const geo = useGeotag();
@@ -709,6 +712,8 @@ export function MultiCameraScreen(): React.ReactElement {
           pipInset={cam.pipInset}
           watermark={cam.watermark}
         />
+
+        <IntroSheet mode={introMode} onClose={dismissIntro} />
       </View>
     </PermissionGate>
   );

@@ -166,6 +166,28 @@
     "locationDenied": "Permission de localisation refusée — le géotag reste désactivé.",
     "noCamera": "Aucune caméra disponible."
   },
+  "intro": {
+    "onboardTitle": "Bienvenue sur TwinLens",
+    "onboardSubtitle": "Caméras avant et arrière, en même temps.",
+    "start": "Commencer",
+    "whatsnewTitle": "Nouveautés",
+    "whatsnewSubtitle": "À découvrir dans cette mise à jour",
+    "gotIt": "J’ai compris",
+    "dualTitle": "Double caméra",
+    "dualDesc": "Capture l’avant et l’arrière en même temps — photo ou vidéo.",
+    "layoutsTitle": "Dispositions",
+    "layoutsDesc": "Incrustation, côte à côte ou haut et bas.",
+    "moveTitle": "Déplacer la vignette",
+    "moveDesc": "Appui long sur la vignette pour la déplacer, pincez pour la redimensionner.",
+    "guidesTitle": "Aides au cadrage",
+    "guidesDesc": "Grille des tiers, niveau, retardateur et rafale.",
+    "shareTitle": "Partage & géotag",
+    "shareDesc": "Partage en un tap, filigrane optionnel et localisation des photos.",
+    "newGuidesTitle": "Grille & niveau",
+    "newGuidesDesc": "Nouvelle grille des tiers et niveau d’horizon dans le viseur.",
+    "newBurstTitle": "Mode rafale",
+    "newBurstDesc": "Enchaînez ×3, ×5 ou ×10 doubles clichés en un appui."
+  },
   "update": {
     "available": "Une nouvelle version est disponible.",
     "cta": "Mettre à jour",
