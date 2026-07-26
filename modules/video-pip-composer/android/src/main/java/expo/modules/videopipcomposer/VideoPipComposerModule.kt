@@ -68,6 +68,7 @@ class VideoPipComposerModule : Module(), PipComposerBus.Listener {
         insetX = params.insetX.toFloat(),
         insetY = params.insetY.toFloat(),
         insetW = params.insetW.toFloat(),
+        watermark = params.watermark,
         bitRate = params.bitRate.toInt(),
         saveOriginals = params.saveOriginals,
       )

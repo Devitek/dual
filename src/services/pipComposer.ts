@@ -50,6 +50,7 @@ export interface VideoComposeOptions {
   corner: PipCorner;
   /** Vignette libre, ou `null` pour utiliser le coin. */
   inset: PipInset | null;
+  watermark: boolean;
   /** Bitrate de ré-encodage (bits/s). */
   bitRate: number;
   saveOriginals: boolean;

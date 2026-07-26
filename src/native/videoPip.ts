@@ -21,6 +21,7 @@ interface NativeVideoParams {
   insetX: number;
   insetY: number;
   insetW: number;
+  watermark: boolean;
   bitRate: number;
   saveOriginals: boolean;
 }
@@ -80,6 +81,7 @@ export async function composePipVideo(
     insetX: inset != null ? inset.x : -1,
     insetY: inset != null ? inset.y : -1,
     insetW: inset != null ? inset.w : -1,
+    watermark: opts.watermark,
     bitRate: opts.bitRate,
     saveOriginals: opts.saveOriginals,
   });
