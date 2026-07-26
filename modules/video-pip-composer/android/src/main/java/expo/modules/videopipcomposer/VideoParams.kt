@@ -14,6 +14,7 @@ class VideoParams : Record {
   @Field var insetX: Double = -1.0
   @Field var insetY: Double = -1.0
   @Field var insetW: Double = -1.0
+  @Field var watermark: Boolean = false
   @Field var bitRate: Double = 0.0
   @Field var saveOriginals: Boolean = false
 }

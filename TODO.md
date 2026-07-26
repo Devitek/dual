@@ -101,8 +101,11 @@ capture réelle ~0,5–1 s, alors que le flash d'obturateur donne un faux signal
       Record Expo `VideoParams`. ⚠️ **Kotlin non compilable en local → À VALIDER SUR
       DEVICE** : orientation NDC (haut/bas, gauche/droite), rendu des 2 flux, audio,
       sauvegarde, pas de rejet encodeur (dimensions).
-- [ ] **Vague 4b-2 — Filigrane VIDÉO** : 2ᵉ programme GL (texture 2D « TwinLens » +
-      blending) ; fail-safe (échec du filigrane → vidéo produite sans filigrane).
+- [x] **Vague 4b-2 — Filigrane VIDÉO** (v1.14.0) : `WatermarkRenderer` (2ᵉ programme
+      GL, texture 2D « TwinLens » + blending prémultiplié) incrusté par frame en
+      bas-droite. **Fail-safe** : toute erreur GL du filigrane → vidéo produite sans
+      filigrane (jamais de crash). ⚠️ **À valider sur device** : présence + placement
+      + lisibilité du filigrane sur vidéo (toutes dispositions).
 
 ## Fusion PiP vidéo on-device — module natif (v1, À VALIDER SUR DEVICE)
 

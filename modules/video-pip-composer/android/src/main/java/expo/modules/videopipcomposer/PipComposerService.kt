@@ -53,6 +53,7 @@ class PipComposerService : Service() {
       insetX: Float,
       insetY: Float,
       insetW: Float,
+      watermark: Boolean,
       bitRate: Int,
       saveOriginals: Boolean,
     ) {
@@ -63,6 +64,7 @@ class PipComposerService : Service() {
         putExtra(EXTRA_INSET_X, insetX)
         putExtra(EXTRA_INSET_Y, insetY)
         putExtra(EXTRA_INSET_W, insetW)
+        putExtra(EXTRA_WATERMARK, watermark)
       }
       androidx.core.content.ContextCompat.startForegroundService(context, intent)
     }
@@ -174,6 +176,7 @@ class PipComposerService : Service() {
             insetXFrac = insetX,
             insetYFrac = insetY,
             insetWFrac = insetW,
+            watermark = watermark,
             insetWidthRatio = INSET_WIDTH_RATIO,
             marginRatio = MARGIN_RATIO,
             bitRate = bitRate,

@@ -678,6 +678,7 @@ export class MultiCamController {
     const corner = this.snapshot.pipCorner;
     const layout = this.snapshot.layout;
     const inset = this.snapshot.pipInset;
+    const watermark = this.snapshot.watermark;
     const bitRate = QUALITY[this.snapshot.captureQuality].videoBitrate;
     const wantPip = mode !== 'originals';
     const canPip = secondaryPath != null && this.videoComposer != null;
@@ -692,6 +693,7 @@ export class MultiCamController {
           layout,
           corner,
           inset,
+          watermark,
           bitRate,
           saveOriginals,
         });

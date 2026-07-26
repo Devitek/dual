@@ -1,5 +1,10 @@
 package expo.modules.videopipcomposer
 
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Typeface
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaExtractor
@@ -7,6 +12,7 @@ import android.media.MediaFormat
 import android.media.MediaMuxer
 import android.view.Surface
 import java.nio.ByteBuffer
+import kotlin.math.ceil
 
 /**
  * Composition PiP vidéo ON-DEVICE (patron canonique bigflake/Grafika) :
@@ -27,6 +33,7 @@ class PipVideoComposer(
   private val insetXFrac: Float,
   private val insetYFrac: Float,
   private val insetWFrac: Float,
+  private val watermark: Boolean,
   private val insetWidthRatio: Float,
   private val marginRatio: Float,
   private val bitRate: Int,
@@ -96,6 +103,26 @@ class PipVideoComposer(
 
     glSurface.makeCurrent()
     val renderer = PipGlRenderer()
+
+    // Filigrane optionnel — FAIL-SAFE : toute erreur GL laisse la vidéo se produire
+    // sans filigrane (jamais de crash de la composition).
+    var watermarkRenderer: WatermarkRenderer? = null
+    var watermarkRect: FloatArray? = null
+    if (watermark) {
+      try {
+        val bmp = buildWatermarkBitmap(outW)
+        watermarkRenderer = WatermarkRenderer(bmp)
+        val pad = outW * 0.028f
+        val x1 = 1f - 2f * (pad / outW)
+        val x0 = x1 - 2f * (bmp.width.toFloat() / outW)
+        val y0 = -1f + 2f * (pad / outH)
+        val y1 = y0 + 2f * (bmp.height.toFloat() / outH)
+        watermarkRect = floatArrayOf(x0, y0, x1, y1)
+        bmp.recycle()
+      } catch (e: Exception) {
+        watermarkRenderer = null
+      }
+    }
 
     val backDecoder = createDecoder(backFormat, glSurface.back.surface)
     val frontDecoder = createDecoder(frontFormat, glSurface.front.surface)
@@ -244,6 +271,7 @@ class PipVideoComposer(
               )
             }
           }
+          watermarkRenderer?.let { wr -> watermarkRect?.let { r -> wr.draw(r[0], r[1], r[2], r[3]) } }
           glSurface.setPresentationTime(ptsNs)
           glSurface.swapBuffers()
           drainEncoder(false)
@@ -278,11 +306,34 @@ class PipVideoComposer(
       runCatching { backDecoder.stop() }; runCatching { backDecoder.release() }
       runCatching { frontDecoder.stop() }; runCatching { frontDecoder.release() }
       runCatching { encoder.stop() }; runCatching { encoder.release() }
+      runCatching { watermarkRenderer?.release() }
       runCatching { glSurface.release() }
       runCatching { backEx.release() }
       runCatching { frontEx.release() }
       runCatching { audioEx.release() }
     }
+  }
+
+  /** Bitmap transparent du filigrane « TwinLens » (blanc gras + ombre), dimensionné
+   *  d'après la largeur de sortie (~3 % de la largeur pour la police). */
+  private fun buildWatermarkBitmap(outW: Int): Bitmap {
+    val fontSize = outW * 0.03f
+    val pad = fontSize * 0.35f
+    val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+      color = Color.WHITE
+      textSize = fontSize
+      typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+      setShadowLayer(fontSize * 0.12f, 0f, fontSize * 0.06f, Color.argb(150, 0, 0, 0))
+    }
+    val text = "TwinLens"
+    val textW = paint.measureText(text)
+    val fm = paint.fontMetrics
+    val textH = fm.bottom - fm.top
+    val w = ceil((textW + pad * 2).toDouble()).toInt().coerceAtLeast(1)
+    val h = ceil((textH + pad * 2).toDouble()).toInt().coerceAtLeast(1)
+    val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+    Canvas(bmp).drawText(text, pad, pad - fm.top, paint)
+    return bmp
   }
 
   private fun createDecoder(format: MediaFormat, surface: Surface): MediaCodec {
