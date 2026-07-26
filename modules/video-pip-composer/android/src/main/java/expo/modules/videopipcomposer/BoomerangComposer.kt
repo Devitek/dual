@@ -8,6 +8,8 @@ import android.media.MediaMetadataRetriever
 import android.media.MediaMuxer
 import android.opengl.GLES20
 import android.opengl.GLUtils
+import java.io.BufferedOutputStream
+import java.io.FileOutputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -26,6 +28,8 @@ import java.nio.FloatBuffer
 class BoomerangComposer(
   private val inputPath: String,
   private val outputPath: String,
+  /** true -> sortie GIF animé ; false -> MP4 (avant+arrière bouclé). */
+  private val asGif: Boolean = false,
   private val frameCount: Int = 24,
   private val loops: Int = 3,
   private val fps: Int = 24,
@@ -50,6 +54,15 @@ class BoomerangComposer(
       runCatching { retriever.release() }
     }
     require(frames.size >= 2) { "Frames insuffisantes pour le boomerang" }
+
+    if (asGif) {
+      try {
+        writeGif(frames)
+      } finally {
+        frames.forEach { runCatching { it.recycle() } }
+      }
+      return
+    }
 
     // Dimensions (paires) issues de la 1re frame décodée (déjà à l'endroit).
     val w = frames[0].width and 1.inv()
@@ -130,6 +143,40 @@ class BoomerangComposer(
       runCatching { renderer.release() }
       runCatching { glSurface.release() }
       frames.forEach { runCatching { it.recycle() } }
+    }
+  }
+
+  /**
+   * Variante GIF animé : sous-échantillonne + réduit la taille (poids raisonnable),
+   * puis écrit l'ordre boomerang (avant + arrière, 2 boucles) via {@link GifEncoder}.
+   */
+  private fun writeGif(frames: List<Bitmap>) {
+    val maxW = 440
+    val step = if (frames.size > 14) 2 else 1
+    val base = ArrayList<Bitmap>()
+    var i = 0
+    while (i < frames.size) {
+      base.add(frames[i]); i += step
+    }
+    val first = base[0]
+    val scale = minOf(1f, maxW.toFloat() / first.width)
+    val sw = (first.width * scale).toInt().coerceAtLeast(2)
+    val sh = (first.height * scale).toInt().coerceAtLeast(2)
+    val scaled = base.map { Bitmap.createScaledBitmap(it, sw, sh, true) }
+
+    val order = ArrayList<Int>()
+    repeat(2) {
+      for (j in scaled.indices) order.add(j)
+      for (j in scaled.size - 2 downTo 1) order.add(j)
+    }
+    try {
+      FileOutputStream(outputPath).use { fos ->
+        val enc = GifEncoder(BufferedOutputStream(fos))
+        order.forEach { enc.addFrame(scaled[it], 80) }
+        enc.finish()
+      }
+    } finally {
+      scaled.forEach { runCatching { it.recycle() } }
     }
   }
 }

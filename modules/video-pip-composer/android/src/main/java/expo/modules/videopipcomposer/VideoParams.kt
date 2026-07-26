@@ -20,5 +20,7 @@ class VideoParams : Record {
   @Field var outputRatio: String = "full"
   /** Post-traiter en boomerang (avant + arrière bouclé, muet). */
   @Field var boomerang: Boolean = false
+  /** Boomerang en GIF animé plutôt qu'en MP4. */
+  @Field var boomerangGif: Boolean = false
   @Field var saveOriginals: Boolean = false
 }

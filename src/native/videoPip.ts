@@ -26,6 +26,7 @@ interface NativeVideoParams {
   bitRate: number;
   outputRatio: string;
   boomerang: boolean;
+  boomerangGif: boolean;
   saveOriginals: boolean;
 }
 
@@ -88,6 +89,7 @@ export async function composePipVideo(
     bitRate: opts.bitRate,
     outputRatio: opts.outputRatio,
     boomerang: opts.boomerang,
+    boomerangGif: opts.boomerangGif,
     saveOriginals: opts.saveOriginals,
   });
 }

@@ -71,6 +71,8 @@
     "sectionQuality": "Qualité",
     "videoFps": "Cadence vidéo",
     "videoFpsDesc": "60 ips pour une vidéo plus fluide. Parfois indisponible quand les deux caméras filment ensemble.",
+    "boomerangGif": "Boomerang en GIF",
+    "boomerangGifDesc": "Exporte les boomerangs en GIF animé plutôt qu’en MP4 (plus léger, partout partageable).",
     "flashOff": "Off",
     "flashAuto": "Auto",
     "flashOn": "On",

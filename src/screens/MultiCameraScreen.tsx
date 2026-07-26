@@ -446,6 +446,13 @@ export function MultiCameraScreen(): React.ReactElement {
     },
     [cam.controller],
   );
+  const setBoomerangGif = useCallback(
+    (v: boolean) => {
+      cam.controller.setBoomerangGif(v);
+      saveSetting('boomerangGif', v);
+    },
+    [cam.controller],
+  );
 
   const toggleSecondaryPreview = useCallback(() => {
     haptics.selection();
@@ -479,6 +486,7 @@ export function MultiCameraScreen(): React.ReactElement {
       if (s.pipInset != null) c.setPipInset(s.pipInset); // -> restauré APRÈS le coin
       if (s.captureQuality != null) void c.setQuality(s.captureQuality);
       if (s.videoFps != null) void c.setVideoFps(s.videoFps);
+      if (s.boomerangGif != null) c.setBoomerangGif(s.boomerangGif);
       if (s.showSecondaryPreview != null) c.setShowSecondaryPreview(s.showSecondaryPreview);
       if (s.photoFlash != null) setPhotoFlash(s.photoFlash);
       if (s.mode != null) setMode(s.mode);
@@ -756,6 +764,8 @@ export function MultiCameraScreen(): React.ReactElement {
               onSetQuality={setQuality}
               videoFps={cam.videoFps}
               onSetVideoFps={setVideoFps}
+              boomerangGif={cam.boomerangGif}
+              onToggleBoomerangGif={() => setBoomerangGif(!cam.boomerangGif)}
               volumeKeyAction={volumeKeyAction}
               onSetVolumeKeyAction={setVolumeKeyAction}
               stabilization={stabilization}

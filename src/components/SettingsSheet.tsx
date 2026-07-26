@@ -237,6 +237,8 @@ interface SettingsSheetProps {
   onSetQuality: (quality: CaptureQuality) => void;
   videoFps: VideoFps;
   onSetVideoFps: (fps: VideoFps) => void;
+  boomerangGif: boolean;
+  onToggleBoomerangGif: () => void;
   volumeKeyAction: VolumeKeyAction;
   onSetVolumeKeyAction: (action: VolumeKeyAction) => void;
   stabilization: boolean;
@@ -288,6 +290,8 @@ export function SettingsSheet({
   onSetQuality,
   videoFps,
   onSetVideoFps,
+  boomerangGif,
+  onToggleBoomerangGif,
   volumeKeyAction,
   onSetVolumeKeyAction,
   stabilization,
@@ -599,6 +603,18 @@ export function SettingsSheet({
             />
             <Text style={styles.optDesc}>{t('settings.videoFpsDesc')}</Text>
           </View>
+
+          <View style={styles.row}>
+            <MaterialIcons name="gif" size={22} color={colors.onSurface} />
+            <Text style={styles.rowLabel}>{t('settings.boomerangGif')}</Text>
+            <Switch
+              value={boomerangGif}
+              onValueChange={onToggleBoomerangGif}
+              trackColor={{ true: colors.primary, false: colors.outlineVariant }}
+              thumbColor={colors.onPrimary}
+            />
+          </View>
+          <Text style={styles.optDesc}>{t('settings.boomerangGifDesc')}</Text>
 
           <Text style={styles.section}>{t('settings.sectionQuality')}</Text>
           <Segmented options={qualityOptions} value={quality} onChange={onSetQuality} />

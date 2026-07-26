@@ -71,6 +71,8 @@
     "sectionQuality": "Qualità",
     "videoFps": "Frequenza fotogrammi",
     "videoFpsDesc": "60 fps per un video più fluido. A volte non disponibile quando entrambe le fotocamere registrano insieme.",
+    "boomerangGif": "Boomerang come GIF",
+    "boomerangGifDesc": "Esporta i boomerang come GIF animata invece che MP4 (più leggera, condivisibile ovunque).",
     "flashOff": "Off",
     "flashAuto": "Auto",
     "flashOn": "On",
