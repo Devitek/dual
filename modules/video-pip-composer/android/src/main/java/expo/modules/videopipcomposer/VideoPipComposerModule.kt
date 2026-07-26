@@ -48,9 +48,7 @@ class VideoPipComposerModule : Module(), PipComposerBus.Listener {
     AsyncFunction("composePip") {
         primaryPath: String,
         secondaryPath: String,
-        corner: String,
-        bitRate: Double,
-        saveOriginals: Boolean,
+        params: VideoParams,
         promise: Promise ->
 
       val context = appContext.reactContext
@@ -65,9 +63,13 @@ class VideoPipComposerModule : Module(), PipComposerBus.Listener {
         jobId = jobId,
         primaryPath = primaryPath,
         secondaryPath = secondaryPath,
-        corner = corner,
-        bitRate = bitRate.toInt(),
-        saveOriginals = saveOriginals,
+        layout = params.layout,
+        corner = params.corner,
+        insetX = params.insetX.toFloat(),
+        insetY = params.insetY.toFloat(),
+        insetW = params.insetW.toFloat(),
+        bitRate = params.bitRate.toInt(),
+        saveOriginals = params.saveOriginals,
       )
     }
 

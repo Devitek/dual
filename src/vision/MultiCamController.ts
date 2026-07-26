@@ -20,7 +20,13 @@ import { saveToLibraryAsync } from 'expo-media-library/legacy';
 import * as MediaLibrary from 'expo-media-library';
 
 import { getFileSize, toFileUri } from '../utils/fileSystem';
-import type { CompositionLayout, PhotoComposeOptions, PipCorner, PipInset } from '../services/pipComposer';
+import type {
+  CompositionLayout,
+  PhotoComposeOptions,
+  PipCorner,
+  PipInset,
+  VideoComposeOptions,
+} from '../services/pipComposer';
 import { writeGpsToJpeg, type GpsCoords } from '../services/exifGps';
 import i18n from '../i18n';
 
@@ -185,7 +191,7 @@ export class MultiCamController {
   private pipComposer: ((primaryUri: string, secondaryUri: string) => Promise<string>) | null = null;
   /** Fonction de composition PiP VIDÉO injectée depuis React (Foreground Service). */
   private videoComposer:
-    | ((primaryUri: string, secondaryUri: string, corner: PipCorner, bitRate: number, saveOriginals: boolean) => Promise<string>)
+    | ((primaryUri: string, secondaryUri: string, opts: VideoComposeOptions) => Promise<string>)
     | null = null;
   /** Composeur PiP PHOTO natif (Foreground Service). Prioritaire sur pipComposer (view-shot). */
   private photoComposer:
@@ -450,7 +456,7 @@ export class MultiCamController {
 
   setVideoComposer(
     fn:
-      | ((primaryUri: string, secondaryUri: string, corner: PipCorner, bitRate: number, saveOriginals: boolean) => Promise<string>)
+      | ((primaryUri: string, secondaryUri: string, opts: VideoComposeOptions) => Promise<string>)
       | null,
   ): void {
     this.videoComposer = fn;
@@ -670,6 +676,8 @@ export class MultiCamController {
     // ... puis composition (si un composeur vidéo est branché) + sauvegarde EN TÂCHE DE FOND.
     const mode = this.snapshot.videoSaveMode;
     const corner = this.snapshot.pipCorner;
+    const layout = this.snapshot.layout;
+    const inset = this.snapshot.pipInset;
     const bitRate = QUALITY[this.snapshot.captureQuality].videoBitrate;
     const wantPip = mode !== 'originals';
     const canPip = secondaryPath != null && this.videoComposer != null;
@@ -679,13 +687,14 @@ export class MultiCamController {
       if (wantPip && canPip) {
         const saveOriginals = mode === 'pip_plus_originals';
         // Le composeur natif compose ET sauvegarde (Foreground Service) : URI galerie.
-        const savedPipUri = await this.videoComposer!(
-          toFileUri(primaryPath),
-          toFileUri(secondaryPath!),
+        // Le natif gère les dispositions (pip / côte-à-côte / haut-bas) + vignette libre.
+        const savedPipUri = await this.videoComposer!(toFileUri(primaryPath), toFileUri(secondaryPath!), {
+          layout,
           corner,
+          inset,
           bitRate,
           saveOriginals,
-        );
+        });
         this.pushCapture({
           kind: 'video',
           primaryUri: savedPipUri,

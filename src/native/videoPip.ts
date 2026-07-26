@@ -1,6 +1,6 @@
 import { requireOptionalNativeModule } from 'expo-modules-core';
 
-import type { PipCorner, PhotoComposeOptions } from '../services/pipComposer';
+import type { PhotoComposeOptions, VideoComposeOptions } from '../services/pipComposer';
 
 /** Params bruts (primitifs) attendus par le Record natif `PhotoParams`. */
 interface NativePhotoParams {
@@ -11,6 +11,17 @@ interface NativePhotoParams {
   insetW: number;
   watermark: boolean;
   canvasWidth: number;
+  saveOriginals: boolean;
+}
+
+/** Params bruts (primitifs) attendus par le Record natif `VideoParams`. */
+interface NativeVideoParams {
+  layout: string;
+  corner: string;
+  insetX: number;
+  insetY: number;
+  insetW: number;
+  bitRate: number;
   saveOriginals: boolean;
 }
 
@@ -25,13 +36,7 @@ interface VideoPipComposerNative {
    * sauvegarde en galerie ; la Promise se résout (à la fin du service) avec
    * l'URI galerie du fichier PiP.
    */
-  composePip: (
-    primaryPath: string,
-    secondaryPath: string,
-    corner: string,
-    bitRate: number,
-    saveOriginals: boolean,
-  ) => Promise<string>;
+  composePip: (primaryPath: string, secondaryPath: string, params: NativeVideoParams) => Promise<string>;
   composePipPhoto: (primaryPath: string, secondaryPath: string, params: NativePhotoParams) => Promise<string>;
   requestNotificationsPermission: () => Promise<void>;
   addListener: (event: string, listener: (payload: PipProgressEvent) => void) => { remove: () => void };
@@ -60,16 +65,24 @@ export function subscribeVideoPipProgress(cb: (progress: number) => void): { rem
 export async function composePipVideo(
   primaryUri: string,
   secondaryUri: string,
-  corner: PipCorner,
-  bitRate: number,
-  saveOriginals: boolean,
+  opts: VideoComposeOptions,
 ): Promise<string> {
   if (Native == null) {
     throw new Error('Module natif VideoPipComposer indisponible (rebuild requis).');
   }
   const primaryPath = primaryUri.replace(/^file:\/\//, '');
   const secondaryPath = secondaryUri.replace(/^file:\/\//, '');
-  return Native.composePip(primaryPath, secondaryPath, corner, bitRate, saveOriginals);
+  const inset = opts.inset;
+  return Native.composePip(primaryPath, secondaryPath, {
+    layout: opts.layout,
+    corner: opts.corner,
+    // insetW <= 0 -> le natif utilise le coin.
+    insetX: inset != null ? inset.x : -1,
+    insetY: inset != null ? inset.y : -1,
+    insetW: inset != null ? inset.w : -1,
+    bitRate: opts.bitRate,
+    saveOriginals: opts.saveOriginals,
+  });
 }
 
 /**

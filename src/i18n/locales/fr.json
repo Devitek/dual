@@ -56,7 +56,7 @@
     "layoutPip": "PiP",
     "layoutSideBySide": "Côte à côte",
     "layoutTopBottom": "Haut-bas",
-    "layoutHint": "Côte à côte et haut-bas s’appliquent aux photos ; la vidéo reste en PiP pour l’instant.",
+    "layoutHint": "Côte à côte et haut-bas s’appliquent aux photos et aux vidéos.",
     "sectionRecPhoto": "Enregistrement — Photo",
     "sectionRecVideo": "Enregistrement — Vidéo",
     "sectionQuality": "Qualité",

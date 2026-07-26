@@ -114,9 +114,7 @@ export function MultiCameraScreen(): React.ReactElement {
   // Branche le composeur vidéo natif (Foreground Service) s'il est dans le build.
   useEffect(() => {
     if (!isVideoPipComposerAvailable) return;
-    cam.controller.setVideoComposer((primary, secondary, corner, bitRate, saveOriginals) =>
-      composePipVideo(primary, secondary, corner, bitRate, saveOriginals),
-    );
+    cam.controller.setVideoComposer((primary, secondary, opts) => composePipVideo(primary, secondary, opts));
     cam.controller.setPhotoComposer((primary, secondary, opts) => composePipPhoto(primary, secondary, opts));
     const sub = subscribeVideoPipProgress((p) => setVideoProgress(p));
     return () => {

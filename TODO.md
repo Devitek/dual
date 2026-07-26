@@ -94,9 +94,15 @@ capture réelle ~0,5–1 s, alors que le flash d'obturateur donne un faux signal
       Foreground Service, survit au kill) ; seul le **géotag** reste sur le view-shot
       JS (EXIF GPS). ⚠️ **Kotlin non compilable en local → À VALIDER SUR DEVICE** :
       rendu identique au JS (cadrage moitiés, inset libre, filigrane), sauvegarde OK.
-- [ ] **Vague 4b — Layouts VIDÉO** (`PipGlRenderer` GL + `PipVideoComposer`) :
-      côte-à-côte / haut-bas + filigrane en vidéo (aujourd'hui PiP-only). Le morceau
-      lourd (géométrie GL + config encodeur MediaCodec par disposition).
+- [~] **Vague 4b — Layouts VIDÉO** (v1.13.0) : `PipVideoComposer` + `PipGlRenderer`
+      gèrent désormais **côte-à-côte / haut-bas** (dimensions de sortie doublées puis
+      bornées à 3840 + paires, bitrate mis à l'échelle de l'aire) **+ la vignette
+      libre**. Chaque flux dessiné plein dans sa moitié (pas de distorsion). Params via
+      Record Expo `VideoParams`. ⚠️ **Kotlin non compilable en local → À VALIDER SUR
+      DEVICE** : orientation NDC (haut/bas, gauche/droite), rendu des 2 flux, audio,
+      sauvegarde, pas de rejet encodeur (dimensions).
+- [ ] **Vague 4b-2 — Filigrane VIDÉO** : 2ᵉ programme GL (texture 2D « TwinLens » +
+      blending) ; fail-safe (échec du filigrane → vidéo produite sans filigrane).
 
 ## Fusion PiP vidéo on-device — module natif (v1, À VALIDER SUR DEVICE)
 

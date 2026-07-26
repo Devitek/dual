@@ -48,13 +48,21 @@ class PipComposerService : Service() {
       jobId: String,
       primaryPath: String,
       secondaryPath: String,
+      layout: String,
       corner: String,
+      insetX: Float,
+      insetY: Float,
+      insetW: Float,
       bitRate: Int,
       saveOriginals: Boolean,
     ) {
       val intent = baseIntent(context, jobId, primaryPath, secondaryPath, corner, saveOriginals).apply {
         putExtra(EXTRA_MEDIA_TYPE, TYPE_VIDEO)
         putExtra(EXTRA_BITRATE, bitRate)
+        putExtra(EXTRA_LAYOUT, layout)
+        putExtra(EXTRA_INSET_X, insetX)
+        putExtra(EXTRA_INSET_Y, insetY)
+        putExtra(EXTRA_INSET_W, insetW)
       }
       androidx.core.content.ContextCompat.startForegroundService(context, intent)
     }
@@ -161,7 +169,11 @@ class PipComposerService : Service() {
             primaryPath = primaryPath,
             secondaryPath = secondaryPath,
             outputPath = outFile.absolutePath,
+            layout = layout,
             corner = corner,
+            insetXFrac = insetX,
+            insetYFrac = insetY,
+            insetWFrac = insetW,
             insetWidthRatio = INSET_WIDTH_RATIO,
             marginRatio = MARGIN_RATIO,
             bitRate = bitRate,

@@ -22,12 +22,23 @@ class PipVideoComposer(
   private val primaryPath: String,
   private val secondaryPath: String,
   private val outputPath: String,
+  private val layout: String,
   private val corner: String,
+  private val insetXFrac: Float,
+  private val insetYFrac: Float,
+  private val insetWFrac: Float,
   private val insetWidthRatio: Float,
   private val marginRatio: Float,
   private val bitRate: Int,
 ) {
   private val timeoutUs = 10_000L
+
+  companion object {
+    /** Ratio hauteur/largeur de la vignette (portrait), aligné sur le JS. */
+    private val PIP_INSET_ASPECT = 172f / 120f
+    /** Dimension max de l'encodeur (H.264, borne de sécurité). */
+    private const val MAX_DIM = 3840
+  }
 
   fun compose(onProgress: (Float) -> Unit = {}) {
     val backEx = MediaExtractor().apply { setDataSource(primaryPath) }
@@ -47,10 +58,34 @@ class PipVideoComposer(
       if (backFormat.containsKey(MediaFormat.KEY_FRAME_RATE)) backFormat.getInteger(MediaFormat.KEY_FRAME_RATE) else 30
     val durationUs = if (backFormat.containsKey(MediaFormat.KEY_DURATION)) backFormat.getLong(MediaFormat.KEY_DURATION) else 0L
 
+    // Dimensions de sortie selon la disposition. Côte-à-côte / haut-bas doublent
+    // UNE dimension (les 2 flux pleins, sans distorsion). On borne à MAX_DIM puis
+    // on force des dimensions paires (requis par l'encodeur).
+    var outW = width
+    var outH = height
+    when (layout) {
+      "sideBySide" -> outW = width * 2
+      "topBottom" -> outH = height * 2
+    }
+    val maxDim = maxOf(outW, outH)
+    if (maxDim > MAX_DIM) {
+      val s = MAX_DIM.toFloat() / maxDim
+      outW = (outW * s).toInt()
+      outH = (outH * s).toInt()
+    }
+    outW = outW and 1.inv()
+    outH = outH and 1.inv()
+
+    // Bitrate mis à l'échelle de la surface de sortie (aire).
+    val srcArea = width.toLong() * height.toLong()
+    val outArea = outW.toLong() * outH.toLong()
+    val baseBitRate = if (bitRate > 0) bitRate.toLong() else srcArea * 6L
+    val effBitRate = (baseBitRate * outArea / srcArea).toInt().coerceAtLeast(1_000_000)
+
     // --- Encodeur H.264 (entrée Surface) ---
-    val encFormat = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, width, height).apply {
+    val encFormat = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, outW, outH).apply {
       setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface)
-      setInteger(MediaFormat.KEY_BIT_RATE, if (bitRate > 0) bitRate else (width.toLong() * height.toLong() * 6L).toInt())
+      setInteger(MediaFormat.KEY_BIT_RATE, effBitRate)
       setInteger(MediaFormat.KEY_FRAME_RATE, frameRate)
       setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 2)
     }
@@ -79,9 +114,23 @@ class PipVideoComposer(
     var muxerAudioIndex = -1
     var muxerStarted = false
 
-    val rect = insetNdcRect(corner, width, height)
-    val insetWpx = insetWidthRatio * width
-    val insetHpx = insetWidthRatio * height
+    // Vignette (disposition pip uniquement) : libre (drag/pinch) ou au coin.
+    val rect: FloatArray
+    val insetWpx: Float
+    val insetHpx: Float
+    if (insetWFrac > 0f) {
+      insetWpx = insetWFrac * outW
+      insetHpx = insetWpx * PIP_INSET_ASPECT
+      val x0 = -1f + 2f * insetXFrac
+      val x1 = x0 + 2f * insetWFrac
+      val y1 = 1f - 2f * insetYFrac // bord haut (NDC vers le haut)
+      val y0 = y1 - 2f * (insetHpx / outH)
+      rect = floatArrayOf(x0, y0, x1, y1)
+    } else {
+      rect = insetNdcRect(corner, outW, outH)
+      insetWpx = insetWidthRatio * outW
+      insetHpx = insetWidthRatio * outH
+    }
     val radiusPx = insetWpx * 0.09f
     val borderPx = maxOf(4f, insetWpx * 0.02f)
 
@@ -169,14 +218,32 @@ class PipVideoComposer(
 
           glSurface.makeCurrent()
           renderer.clear()
-          glSurface.back.getTransform(stMatrix)
-          renderer.drawFull(glSurface.back.textureId, stMatrix)
-          glSurface.front.getTransform(stMatrix)
-          renderer.drawInset(
-            glSurface.front.textureId, stMatrix,
-            rect[0], rect[1], rect[2], rect[3],
-            insetWpx, insetHpx, radiusPx, borderPx,
-          )
+          val backTex = glSurface.back.textureId
+          val frontTex = glSurface.front.textureId
+          when (layout) {
+            "sideBySide" -> {
+              glSurface.back.getTransform(stMatrix)
+              renderer.drawRegion(backTex, stMatrix, -1f, -1f, 0f, 1f) // principale à gauche
+              glSurface.front.getTransform(stMatrix)
+              renderer.drawRegion(frontTex, stMatrix, 0f, -1f, 1f, 1f) // secondaire à droite
+            }
+            "topBottom" -> {
+              glSurface.back.getTransform(stMatrix)
+              renderer.drawRegion(backTex, stMatrix, -1f, 0f, 1f, 1f) // principale en haut
+              glSurface.front.getTransform(stMatrix)
+              renderer.drawRegion(frontTex, stMatrix, -1f, -1f, 1f, 0f) // secondaire en bas
+            }
+            else -> {
+              glSurface.back.getTransform(stMatrix)
+              renderer.drawFull(backTex, stMatrix)
+              glSurface.front.getTransform(stMatrix)
+              renderer.drawInset(
+                frontTex, stMatrix,
+                rect[0], rect[1], rect[2], rect[3],
+                insetWpx, insetHpx, radiusPx, borderPx,
+              )
+            }
+          }
           glSurface.setPresentationTime(ptsNs)
           glSurface.swapBuffers()
           drainEncoder(false)

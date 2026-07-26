@@ -56,7 +56,7 @@
     "layoutPip": "PiP",
     "layoutSideBySide": "Affiancato",
     "layoutTopBottom": "Impilato",
-    "layoutHint": "Affiancato e impilato valgono per le foto; il video resta in PiP per ora.",
+    "layoutHint": "Affiancato e impilato valgono per foto e video.",
     "sectionRecPhoto": "Registrazione — Foto",
     "sectionRecVideo": "Registrazione — Video",
     "sectionQuality": "Qualità",

@@ -56,7 +56,7 @@
     "layoutPip": "PiP",
     "layoutSideBySide": "Lado a lado",
     "layoutTopBottom": "Empilhado",
-    "layoutHint": "Lado a lado e empilhado se aplicam às fotos; o vídeo continua em PiP por enquanto.",
+    "layoutHint": "Lado a lado e empilhado se aplicam a fotos e vídeos.",
     "sectionRecPhoto": "Gravação — Foto",
     "sectionRecVideo": "Gravação — Vídeo",
     "sectionQuality": "Qualidade",
