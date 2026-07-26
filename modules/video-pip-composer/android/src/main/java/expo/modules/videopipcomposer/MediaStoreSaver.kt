@@ -49,12 +49,12 @@ object MediaStoreSaver {
     return Uri.fromFile(dest).toString()
   }
 
-  fun saveImage(context: Context, file: File, displayName: String): String {
+  fun saveImage(context: Context, file: File, displayName: String, mimeType: String = "image/jpeg"): String {
     val resolver = context.contentResolver
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
       val values = ContentValues().apply {
         put(MediaStore.Images.Media.DISPLAY_NAME, displayName)
-        put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+        put(MediaStore.Images.Media.MIME_TYPE, mimeType)
         put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_DCIM)
         put(MediaStore.Images.Media.IS_PENDING, 1)
       }
@@ -74,7 +74,7 @@ object MediaStoreSaver {
     val dcimDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).apply { mkdirs() }
     val dest = File(dcimDir, displayName)
     FileInputStream(file).use { input -> FileOutputStream(dest).use { input.copyTo(it) } }
-    MediaScannerConnection.scanFile(context, arrayOf(dest.absolutePath), arrayOf("image/jpeg"), null)
+    MediaScannerConnection.scanFile(context, arrayOf(dest.absolutePath), arrayOf(mimeType), null)
     return Uri.fromFile(dest).toString()
   }
 }

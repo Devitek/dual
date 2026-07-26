@@ -49,6 +49,7 @@ export const SETTINGS_KEYS = {
   burstCount: 'tl_burst',
   outputRatio: 'tl_output_ratio',
   videoFps: 'tl_video_fps',
+  boomerangGif: 'tl_boomerang_gif',
 } as const;
 
 export interface PersistedSettings {
@@ -78,6 +79,8 @@ export interface PersistedSettings {
   outputRatio: OutputRatio;
   /** Cadence vidéo cible (30 / 60 ips). */
   videoFps: VideoFps;
+  /** Boomerang exporté en GIF animé plutôt qu'en MP4. */
+  boomerangGif: boolean;
 }
 
 export type SettingKey = keyof PersistedSettings;
@@ -160,6 +163,7 @@ export async function loadPersistedSettings(): Promise<Partial<PersistedSettings
   if (ratio) out.outputRatio = ratio;
   const fps = Number(g('videoFps'));
   if (fps === 30 || fps === 60) out.videoFps = fps;
+  if (g('boomerangGif') != null) out.boomerangGif = g('boomerangGif') === '1';
 
   return out;
 }

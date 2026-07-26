@@ -87,6 +87,8 @@ export interface MultiCamSnapshot {
   watermark: boolean;
   /** Ratio du cadre de sortie pour la disposition `pip` (full / 1:1 / 9:16). */
   outputRatio: OutputRatio;
+  /** Boomerang exporté en GIF animé plutôt qu'en MP4. */
+  boomerangGif: boolean;
   /** Cadence vidéo cible (30 / 60 ips). */
   videoFps: VideoFps;
   /** Compensation d'exposition (EV) courante. Transitoire (non persisté). */
@@ -163,6 +165,7 @@ const INITIAL: MultiCamSnapshot = {
   pipInset: null,
   watermark: false,
   outputRatio: 'full',
+  boomerangGif: false,
   videoFps: 30,
   exposureBias: 0,
   aeLocked: false,
@@ -547,6 +550,11 @@ export class MultiCamController {
     this.boomerangMode = value;
   }
 
+  /** Choix du format du boomerang : GIF animé (true) ou MP4 (false). */
+  setBoomerangGif(value: boolean): void {
+    this.update({ boomerangGif: value });
+  }
+
   /** Change la disposition de fusion photo (pip / sideBySide / topBottom). */
   setLayout(layout: CompositionLayout): void {
     this.update({ layout });
@@ -737,6 +745,7 @@ export class MultiCamController {
     const watermark = this.snapshot.watermark;
     const outputRatio = this.snapshot.outputRatio;
     const boomerang = this.boomerangMode;
+    const boomerangGif = this.snapshot.boomerangGif;
     const bitRate = QUALITY[this.snapshot.captureQuality].videoBitrate;
     const wantPip = mode !== 'originals';
     const canPip = secondaryPath != null && this.videoComposer != null;
@@ -755,6 +764,7 @@ export class MultiCamController {
           bitRate,
           outputRatio,
           boomerang,
+          boomerangGif,
           saveOriginals,
         });
         this.pushCapture({

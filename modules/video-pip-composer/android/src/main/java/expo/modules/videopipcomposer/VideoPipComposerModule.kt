@@ -72,6 +72,7 @@ class VideoPipComposerModule : Module(), PipComposerBus.Listener {
         bitRate = params.bitRate.toInt(),
         outputRatio = params.outputRatio,
         boomerang = params.boomerang,
+        boomerangGif = params.boomerangGif,
         saveOriginals = params.saveOriginals,
       )
     }

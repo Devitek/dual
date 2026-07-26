@@ -37,6 +37,7 @@ class PipComposerService : Service() {
     private const val EXTRA_WATERMARK = "watermark"
     private const val EXTRA_OUTPUT_RATIO = "outputRatio"
     private const val EXTRA_BOOMERANG = "boomerang"
+    private const val EXTRA_BOOMERANG_GIF = "boomerangGif"
 
     private const val TYPE_VIDEO = "video"
     private const val TYPE_PHOTO = "photo"
@@ -59,6 +60,7 @@ class PipComposerService : Service() {
       bitRate: Int,
       outputRatio: String,
       boomerang: Boolean,
+      boomerangGif: Boolean,
       saveOriginals: Boolean,
     ) {
       val intent = baseIntent(context, jobId, primaryPath, secondaryPath, corner, saveOriginals).apply {
@@ -71,6 +73,7 @@ class PipComposerService : Service() {
         putExtra(EXTRA_WATERMARK, watermark)
         putExtra(EXTRA_OUTPUT_RATIO, outputRatio)
         putExtra(EXTRA_BOOMERANG, boomerang)
+        putExtra(EXTRA_BOOMERANG_GIF, boomerangGif)
       }
       androidx.core.content.ContextCompat.startForegroundService(context, intent)
     }
@@ -141,6 +144,7 @@ class PipComposerService : Service() {
     val watermark = intent.getBooleanExtra(EXTRA_WATERMARK, false)
     val outputRatio = intent.getStringExtra(EXTRA_OUTPUT_RATIO) ?: "full"
     val boomerang = intent.getBooleanExtra(EXTRA_BOOMERANG, false)
+    val boomerangGif = intent.getBooleanExtra(EXTRA_BOOMERANG_GIF, false)
     val isPhoto = mediaType == TYPE_PHOTO
     val title = if (isPhoto) "Composition de la photo PiP" else "Composition de la vidéo PiP"
 
@@ -201,23 +205,31 @@ class PipComposerService : Service() {
             }
           }
           // Boomerang (optionnel) : post-traite la vidéo PiP en avant+arrière
-          // bouclé. FAIL-SAFE : toute erreur laisse la vidéo PiP normale être
-          // sauvegardée telle quelle.
+          // bouclé (MP4) ou en GIF animé. FAIL-SAFE : toute erreur laisse la
+          // vidéo PiP normale être sauvegardée telle quelle.
           var finalFile = outFile
           var boomFile: File? = null
-          val namePrefix = if (boomerang) "Dual_Boomerang" else "Dual_PiP"
+          var savedAsGif = false
           if (boomerang) {
             try {
-              val bf = File.createTempFile("boom_", ".mp4", cacheDir)
-              BoomerangComposer(outFile.absolutePath, bf.absolutePath).compose()
+              val ext = if (boomerangGif) ".gif" else ".mp4"
+              val bf = File.createTempFile("boom_", ext, cacheDir)
+              BoomerangComposer(outFile.absolutePath, bf.absolutePath, asGif = boomerangGif).compose()
               boomFile = bf
               finalFile = bf
+              savedAsGif = boomerangGif
             } catch (e: Exception) {
               boomFile?.delete()
+              boomFile = null
               finalFile = outFile // repli : vidéo normale
             }
           }
-          val uri = MediaStoreSaver.saveVideo(ctx, finalFile, "${namePrefix}_$ts.mp4")
+          val uri = if (savedAsGif) {
+            MediaStoreSaver.saveImage(ctx, finalFile, "Dual_Boomerang_$ts.gif", "image/gif")
+          } else {
+            val namePrefix = if (boomerang) "Dual_Boomerang" else "Dual_PiP"
+            MediaStoreSaver.saveVideo(ctx, finalFile, "${namePrefix}_$ts.mp4")
+          }
           if (saveOriginals) {
             MediaStoreSaver.saveVideo(ctx, File(primaryPath), "Dual_${ts}_1.mp4")
             MediaStoreSaver.saveVideo(ctx, File(secondaryPath), "Dual_${ts}_2.mp4")

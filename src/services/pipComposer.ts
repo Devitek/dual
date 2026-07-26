@@ -79,6 +79,8 @@ export interface VideoComposeOptions {
   outputRatio: OutputRatio;
   /** Post-traiter en boomerang (avant + arrière bouclé, muet). */
   boomerang: boolean;
+  /** Boomerang en GIF animé plutôt qu'en MP4. */
+  boomerangGif: boolean;
   saveOriginals: boolean;
 }
 
