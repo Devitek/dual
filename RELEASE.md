@@ -72,15 +72,21 @@ Garde une **sauvegarde** de `upload.keystore` hors du dépôt.
     on-device, jamais partagé).
 - **Content rating** (IARC), audience cible, déclaration pub = non.
 - ⚠️ **Erreur `You must let us know whether your app includes any health features`
-  à l'upload Fastlane** — même quand la déclaration « Applis de santé » EST déjà faite
-  dans la console (*Contenu de l'application* → *Traitée*). L'AAB est bien construit +
-  attaché à la release GitHub ; seul l'`upload_to_play_store` échoue **au commit de
-  l'edit**. **Cause réelle** : par défaut Fastlane « envoie pour examen » au commit,
-  ce qui déclenche une revalidation de TOUTES les déclarations d'app-content et ce
-  faux rejet. **Fix (appliqué)** : `changes_not_sent_for_review: true` dans le lane
-  `internal` du `Fastfile` — l'interne se déploie quand même (aucun examen requis pour
-  l'interne). NB : garde bien la déclaration « Applis de santé » à **« Non »** par
-  ailleurs (TwinLens = appareil photo, pas de Health Connect).
+  à l'upload Fastlane** — même quand « Applis de santé » apparaît **« Traitée »** dans
+  *Contenu de l'application*. L'AAB se construit bien + est attaché à la release GitHub ;
+  seul l'`upload_to_play_store` échoue **au commit de l'edit**.
+  - ❌ `changes_not_sent_for_review: true` (dans le `Fastfile`) **ne suffit PAS** (testé :
+    fastlane retente même via `rescue_changes_not_sent_for_review`, l'erreur persiste).
+  - **Cause probable** : Google a **étendu** le formulaire « Applis de santé » (Health
+    Connect / types de données) ; une réponse ancienne s'affiche « Traitée » mais l'API
+    la considère **incomplète**.
+  - **Contournement (dans l'ordre)** :
+    1. Onglet **« Attention requise »** de *Contenu de l'application* → traiter tout item
+       santé en attente ; sinon *Applis de santé* → **Gérer** → **re-répondre + Enregistrer**.
+    2. Si toujours bloqué : **1 upload MANUEL via la console** (Test interne → Créer une
+       release → déposer `TwinLens-vX.Y.Z.aab` depuis la release GitHub). Ça débloque en
+       général les uploads API suivants.
+    3. Puis relancer `gh workflow run release-android.yml -f upload_to_play=true`.
 - **1er dépôt manuel** : Google exige que le **premier AAB** soit déposé à la main.
   Lance `gh workflow run release-android.yml -f upload_to_play=false` → l'**AAB
   signé est attaché à la release GitHub** (`TwinLens-vX.Y.Z.aab`, aussi en artefact
