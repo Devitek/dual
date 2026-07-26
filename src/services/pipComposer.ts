@@ -32,6 +32,18 @@ export interface PipInset {
   w: number;
 }
 
+/** Options de composition PiP PHOTO (passées au compositeur natif). */
+export interface PhotoComposeOptions {
+  layout: CompositionLayout;
+  corner: PipCorner;
+  /** Vignette libre, ou `null` pour utiliser le coin. */
+  inset: PipInset | null;
+  watermark: boolean;
+  /** Largeur du canvas de composition (px). */
+  canvasWidth: number;
+  saveOriginals: boolean;
+}
+
 /** Ratio hauteur/largeur de la vignette (portrait), partagé preview ↔ composition. */
 export const PIP_INSET_ASPECT = 172 / 120;
 /** Bornes de largeur de la vignette (fraction du cadre) pour le redimensionnement. */

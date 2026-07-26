@@ -74,9 +74,7 @@ class VideoPipComposerModule : Module(), PipComposerBus.Listener {
     AsyncFunction("composePipPhoto") {
         primaryPath: String,
         secondaryPath: String,
-        corner: String,
-        canvasWidth: Double,
-        saveOriginals: Boolean,
+        params: PhotoParams,
         promise: Promise ->
 
       val context = appContext.reactContext
@@ -91,9 +89,14 @@ class VideoPipComposerModule : Module(), PipComposerBus.Listener {
         jobId = jobId,
         primaryPath = primaryPath,
         secondaryPath = secondaryPath,
-        corner = corner,
-        canvasWidth = canvasWidth.toInt(),
-        saveOriginals = saveOriginals,
+        layout = params.layout,
+        corner = params.corner,
+        insetX = params.insetX.toFloat(),
+        insetY = params.insetY.toFloat(),
+        insetW = params.insetW.toFloat(),
+        watermark = params.watermark,
+        canvasWidth = params.canvasWidth.toInt(),
+        saveOriginals = params.saveOriginals,
       )
     }
 

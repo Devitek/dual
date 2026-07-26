@@ -87,8 +87,16 @@ capture réelle ~0,5–1 s, alors que le flash d'obturateur donne un faux signal
       One UI qui tue le process souvent) : les 6 réglages jamais persistés (sauvegarde
       photo/vidéo, coin PiP, qualité, mode surprise, flash photo) + le mode photo/vidéo
       le sont désormais. Chargement en un seul passage (anti-régression). Voir AGENTS.md §8.
-- [ ] **Vague 4 — Layouts natifs** (photo `PhotoPipComposer` Canvas + vidéo
-      `PipGlRenderer` GL) : robustesse Foreground Service + layouts vidéo.
+- [~] **Vague 4a — Layouts natifs PHOTO** (v1.11.0) : `PhotoPipComposer` (Canvas)
+      gère désormais les dispositions (pip / côte-à-côte / haut-bas) + la vignette
+      libre + le filigrane ; params passés via un Record Expo `PhotoParams` (évite la
+      limite d'args des AsyncFunction). Le natif reprend TOUTE la photo (robustesse
+      Foreground Service, survit au kill) ; seul le **géotag** reste sur le view-shot
+      JS (EXIF GPS). ⚠️ **Kotlin non compilable en local → À VALIDER SUR DEVICE** :
+      rendu identique au JS (cadrage moitiés, inset libre, filigrane), sauvegarde OK.
+- [ ] **Vague 4b — Layouts VIDÉO** (`PipGlRenderer` GL + `PipVideoComposer`) :
+      côte-à-côte / haut-bas + filigrane en vidéo (aujourd'hui PiP-only). Le morceau
+      lourd (géométrie GL + config encodeur MediaCodec par disposition).
 
 ## Fusion PiP vidéo on-device — module natif (v1, À VALIDER SUR DEVICE)
 
