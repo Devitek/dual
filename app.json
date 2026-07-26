@@ -45,7 +45,8 @@
           "isAndroidBackgroundLocationEnabled": false,
           "isAndroidForegroundServiceEnabled": false
         }
-      ]
+      ],
+      "./plugins/withRemoveActivityRecognition"
     ]
   }
 }
