@@ -10,6 +10,10 @@ import type { VolumeKeyAction } from '../native/volumeKeys';
 export const TIMER_VALUES = [0, 3, 10] as const;
 export type TimerSeconds = (typeof TIMER_VALUES)[number];
 
+/** Nombre de photos par rafale (1 = rafale désactivée). */
+export const BURST_VALUES = [1, 3, 5, 10] as const;
+export type BurstCount = (typeof BURST_VALUES)[number];
+
 /**
  * SOURCE DE VÉRITÉ UNIQUE des réglages utilisateur persistés (AsyncStorage).
  *
@@ -42,6 +46,7 @@ export const SETTINGS_KEYS = {
   mode: 'tl_mode',
   grid: 'tl_grid',
   level: 'tl_level',
+  burstCount: 'tl_burst',
 } as const;
 
 export interface PersistedSettings {
@@ -65,6 +70,8 @@ export interface PersistedSettings {
   grid: boolean;
   /** Niveau (horizon) sur le viseur. */
   level: boolean;
+  /** Nombre de photos par rafale (1 = désactivée). */
+  burstCount: BurstCount;
 }
 
 export type SettingKey = keyof PersistedSettings;
@@ -141,6 +148,8 @@ export async function loadPersistedSettings(): Promise<Partial<PersistedSettings
   if (m) out.mode = m;
   if (g('grid') != null) out.grid = g('grid') === '1';
   if (g('level') != null) out.level = g('level') === '1';
+  const burst = Number(g('burstCount'));
+  if (BURST_VALUES.includes(burst as BurstCount)) out.burstCount = burst as BurstCount;
 
   return out;
 }

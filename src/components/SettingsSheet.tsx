@@ -158,6 +158,13 @@ const TIMER_OPTION_KEYS: { value: '0' | '3' | '10'; labelKey: string }[] = [
   { value: '10', labelKey: 'settings.timer10s' },
 ];
 
+const BURST_OPTION_KEYS: { value: '1' | '3' | '5' | '10'; labelKey: string }[] = [
+  { value: '1', labelKey: 'settings.burstOff' },
+  { value: '3', labelKey: 'settings.burst3' },
+  { value: '5', labelKey: 'settings.burst5' },
+  { value: '10', labelKey: 'settings.burst10' },
+];
+
 const LAYOUT_OPTION_KEYS: { value: CompositionLayout; labelKey: string }[] = [
   { value: 'pip', labelKey: 'settings.layoutPip' },
   { value: 'sideBySide', labelKey: 'settings.layoutSideBySide' },
@@ -222,6 +229,8 @@ interface SettingsSheetProps {
   onSetCaptureSpeed: (speed: CaptureSpeed) => void;
   timerSeconds: number;
   onSetTimerSeconds: (seconds: 0 | 3 | 10) => void;
+  burstCount: number;
+  onSetBurstCount: (count: 1 | 3 | 5 | 10) => void;
   shutterSound: boolean;
   onToggleShutterSound: () => void;
   geotag: boolean;
@@ -267,6 +276,8 @@ export function SettingsSheet({
   onSetCaptureSpeed,
   timerSeconds,
   onSetTimerSeconds,
+  burstCount,
+  onSetBurstCount,
   shutterSound,
   onToggleShutterSound,
   geotag,
@@ -340,6 +351,7 @@ export function SettingsSheet({
   ];
   const speedOptions = SPEED_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
   const timerOptions = TIMER_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
+  const burstOptions = BURST_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
   const layoutOptions = LAYOUT_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
 
   return (
@@ -453,6 +465,19 @@ export function SettingsSheet({
               value={String(timerSeconds) as '0' | '3' | '10'}
               onChange={(v) => onSetTimerSeconds(Number(v) as 0 | 3 | 10)}
             />
+          </View>
+
+          <View style={styles.rowCol}>
+            <View style={styles.rowHeader}>
+              <MaterialIcons name="burst-mode" size={22} color={colors.onSurface} />
+              <Text style={styles.rowLabel}>{t('settings.burst')}</Text>
+            </View>
+            <Segmented
+              options={burstOptions}
+              value={String(burstCount) as '1' | '3' | '5' | '10'}
+              onChange={(v) => onSetBurstCount(Number(v) as 1 | 3 | 5 | 10)}
+            />
+            <Text style={styles.optDesc}>{t('settings.burstDesc')}</Text>
           </View>
 
           <View style={styles.row}>
