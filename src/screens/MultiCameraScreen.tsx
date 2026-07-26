@@ -649,9 +649,7 @@ export function MultiCameraScreen(): React.ReactElement {
               showSecondaryPreview={cam.showSecondaryPreview}
             />
 
-            {cam.status === 'running' && cam.layout === 'pip' && mode === 'photo' && (
-              <RatioMask ratio={cam.outputRatio} />
-            )}
+            {cam.status === 'running' && cam.layout === 'pip' && <RatioMask ratio={cam.outputRatio} />}
             {cam.status === 'running' && <CameraGuides grid={grid} level={level} />}
 
             {cam.status === 'running' && exposureBounds.supported && !settingsOpen && !galleryOpen && (
