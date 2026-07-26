@@ -188,6 +188,7 @@ class PipComposerService : Service() {
             insetYFrac = insetY,
             insetWFrac = insetW,
             watermark = watermark,
+            outputRatio = outputRatio,
             insetWidthRatio = INSET_WIDTH_RATIO,
             marginRatio = MARGIN_RATIO,
             bitRate = bitRate,

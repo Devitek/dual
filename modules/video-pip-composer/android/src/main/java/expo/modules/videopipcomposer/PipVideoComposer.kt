@@ -34,6 +34,8 @@ class PipVideoComposer(
   private val insetYFrac: Float,
   private val insetWFrac: Float,
   private val watermark: Boolean,
+  /** Ratio du cadre `pip` : "full" (~3:4) | "square" (1:1) | "tall" (9:16). */
+  private val outputRatio: String,
   private val insetWidthRatio: Float,
   private val marginRatio: Float,
   private val bitRate: Int,
@@ -45,6 +47,13 @@ class PipVideoComposer(
     private val PIP_INSET_ASPECT = 172f / 120f
     /** Dimension max de l'encodeur (H.264, borne de sécurité). */
     private const val MAX_DIM = 3840
+
+    /** Facteur hauteur/largeur du canvas `pip` selon le ratio de sortie (aligné JS/photo). */
+    fun pipRatioFactor(ratio: String): Float = when (ratio) {
+      "square" -> 1f // 1:1
+      "tall" -> 16f / 9f // 9:16 vertical
+      else -> 4f / 3f // full (~3:4)
+    }
   }
 
   fun compose(onProgress: (Float) -> Unit = {}) {
@@ -73,6 +82,8 @@ class PipVideoComposer(
     when (layout) {
       "sideBySide" -> outW = width * 2
       "topBottom" -> outH = height * 2
+      // pip : le cadre suit le ratio de sortie (full/1:1/9:16), aligné sur la photo.
+      else -> outH = (width * pipRatioFactor(outputRatio)).toInt()
     }
     val maxDim = maxOf(outW, outH)
     if (maxDim > MAX_DIM) {
@@ -82,6 +93,17 @@ class PipVideoComposer(
     }
     outW = outW and 1.inv()
     outH = outH and 1.inv()
+
+    // Facteurs de « cover » pour la disposition pip : on dessine la principale
+    // dans un quad NDC volontairement débordant (l'excédent hors [-1,1] est
+    // rogné par GL) -> recadrage centré SANS déformation, quel que soit le ratio.
+    var coverKx = 1f
+    var coverKy = 1f
+    run {
+      val aS = width.toFloat() / height // aspect source
+      val aO = outW.toFloat() / outH // aspect sortie
+      if (aS > aO) coverKx = aS / aO else coverKy = aO / aS
+    }
 
     // Bitrate mis à l'échelle de la surface de sortie (aire).
     val srcArea = width.toLong() * height.toLong()
@@ -262,7 +284,8 @@ class PipVideoComposer(
             }
             else -> {
               glSurface.back.getTransform(stMatrix)
-              renderer.drawFull(backTex, stMatrix)
+              // Cover-crop centré (le quad déborde, GL rogne au bord du cadre).
+              renderer.drawRegion(backTex, stMatrix, -coverKx, -coverKy, coverKx, coverKy)
               glSurface.front.getTransform(stMatrix)
               renderer.drawInset(
                 frontTex, stMatrix,
