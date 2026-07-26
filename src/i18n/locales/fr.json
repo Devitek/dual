@@ -65,6 +65,8 @@
     "sectionRecPhoto": "Enregistrement — Photo",
     "sectionRecVideo": "Enregistrement — Vidéo",
     "sectionQuality": "Qualité",
+    "videoFps": "Cadence vidéo",
+    "videoFpsDesc": "60 ips pour une vidéo plus fluide. Parfois indisponible quand les deux caméras filment ensemble.",
     "flashOff": "Off",
     "flashAuto": "Auto",
     "flashOn": "On",
@@ -167,6 +169,7 @@
     "recError": "Enregistrement ({{slot}}) : {{error}}",
     "processingFailed": "Traitement échoué : {{error}}",
     "qualityUnsupported": "Qualité non supportée — retour au réglage précédent.",
+    "fpsUnsupported": "60 ips non supporté ici — retour à 30.",
     "speedUnsupported": "Vitesse de capture non supportée — retour au réglage précédent.",
     "locationDenied": "Permission de localisation refusée — le géotag reste désactivé.",
     "noCamera": "Aucune caméra disponible."

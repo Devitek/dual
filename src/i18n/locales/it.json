@@ -65,6 +65,8 @@
     "sectionRecPhoto": "Registrazione — Foto",
     "sectionRecVideo": "Registrazione — Video",
     "sectionQuality": "Qualità",
+    "videoFps": "Frequenza fotogrammi",
+    "videoFpsDesc": "60 fps per un video più fluido. A volte non disponibile quando entrambe le fotocamere registrano insieme.",
     "flashOff": "Off",
     "flashAuto": "Auto",
     "flashOn": "On",
@@ -167,6 +169,7 @@
     "recError": "Registrazione ({{slot}}): {{error}}",
     "processingFailed": "Elaborazione non riuscita: {{error}}",
     "qualityUnsupported": "Qualità non supportata — ritorno all’impostazione precedente.",
+    "fpsUnsupported": "60 fps non supportato qui — ritorno a 30.",
     "speedUnsupported": "Velocità di scatto non supportata — ritorno all’impostazione precedente.",
     "locationDenied": "Permesso di localizzazione negato — la geolocalizzazione resta disattivata.",
     "noCamera": "Nessuna fotocamera disponibile."

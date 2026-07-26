@@ -41,6 +41,8 @@ export type SaveMode = 'pip' | 'pip_plus_originals' | 'originals';
 export type CaptureQuality = 'standard' | 'high' | 'max';
 /** Compromis vitesse/qualité du pipeline photo (anti-latence / anti-flou). */
 export type CaptureSpeed = 'speed' | 'balanced' | 'quality';
+/** Cadence vidéo cible (ips). 60 non garanti en multi-cam -> repli sur 30. */
+export type VideoFps = 30 | 60;
 
 export interface CapturedMedia {
   kind: MediaKind;
@@ -85,6 +87,8 @@ export interface MultiCamSnapshot {
   watermark: boolean;
   /** Ratio du cadre de sortie pour la disposition `pip` (full / 1:1 / 9:16). */
   outputRatio: OutputRatio;
+  /** Cadence vidéo cible (30 / 60 ips). */
+  videoFps: VideoFps;
   /** Toutes les captures de la session courante (pour la galerie). */
   sessionCaptures: CapturedMedia[];
   /** Nombre de traitements (composition/sauvegarde) en cours en arrière-plan. */
@@ -155,6 +159,7 @@ const INITIAL: MultiCamSnapshot = {
   pipInset: null,
   watermark: false,
   outputRatio: 'full',
+  videoFps: 30,
   sessionCaptures: [],
   processingCount: 0,
   captureQuality: 'high',
@@ -310,6 +315,11 @@ export class MultiCamController {
       this.backPhoto = VisionCamera.createPhotoOutput(photoOptions(q.photoRes, this.snapshot.captureSpeed));
       this.backVideo = VisionCamera.createVideoOutput({ targetResolution: q.videoRes, enableAudio: true });
 
+      // Cadence vidéo : 60 ips demandé via une contrainte FPS (négociée par la
+      // session ; si le device/la combinaison multi-cam ne la supporte pas, le
+      // repli est géré par setVideoFps).
+      const fpsConstraints = this.snapshot.videoFps !== 30 ? [{ fps: this.snapshot.videoFps }] : [];
+
       const connections: CameraSessionConnection[] = [
         {
           input: backDevice,
@@ -318,7 +328,7 @@ export class MultiCamController {
             { output: this.backPhoto, mirrorMode: 'off' },
             { output: this.backVideo, mirrorMode: 'off' },
           ],
-          constraints: [],
+          constraints: [...fpsConstraints],
         },
       ];
 
@@ -335,7 +345,7 @@ export class MultiCamController {
             { output: this.frontPhoto, mirrorMode: 'off' },
             { output: this.frontVideo, mirrorMode: 'on' },
           ],
-          constraints: [],
+          constraints: [...fpsConstraints],
         });
       }
 
@@ -440,6 +450,26 @@ export class MultiCamController {
     if (this.snapshot.status === 'error' && !this.disposed) {
       this.update({ captureSpeed: previous });
       this.notify('error', i18n.t('notices.speedUnsupported'));
+      await this.teardownSession();
+      await this.buildSession();
+    }
+  }
+
+  /**
+   * Change la cadence vidéo (30/60 ips). Reconfigure la session ; si la
+   * combinaison (souvent 60 ips en multi-cam) n'est pas supportée, repli
+   * automatique sur la valeur précédente.
+   */
+  async setVideoFps(fps: VideoFps): Promise<void> {
+    const previous = this.snapshot.videoFps;
+    if (fps === previous) return;
+    this.update({ videoFps: fps });
+    if (this.disposed || this.session == null) return;
+    await this.teardownSession();
+    await this.buildSession();
+    if (this.snapshot.status === 'error' && !this.disposed) {
+      this.update({ videoFps: previous });
+      this.notify('error', i18n.t('notices.fpsUnsupported'));
       await this.teardownSession();
       await this.buildSession();
     }
