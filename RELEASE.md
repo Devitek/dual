@@ -71,6 +71,14 @@ Garde une **sauvegarde** de `upload.keystore` hors du dépôt.
   - Politique de confidentialité (`docs/privacy.html`) : déjà à jour (géotag optionnel,
     on-device, jamais partagé).
 - **Content rating** (IARC), audience cible, déclaration pub = non.
+- ⚠️ **Déclaration « Applications de santé » (OBLIGATOIRE, une seule fois)** : Google
+  bloque désormais TOUT upload tant qu'elle n'est pas remplie. Symptôme côté CI :
+  `Google Api Error: You must let us know whether your app includes any health features.`
+  (l'AAB est bien construit + attaché à la release GitHub, seul l'`upload_to_play_store`
+  Fastlane échoue). **Fix** : Play Console → *Politiques* → **Contenu de l'application**
+  → **Applications de santé** → déclarer **« Non »** (TwinLens = appareil photo, aucune
+  fonctionnalité de santé / Health Connect) → *Enregistrer*. Ensuite, relancer l'upload :
+  `gh workflow run release-android.yml` (ou il partira avec la prochaine release).
 - **1er dépôt manuel** : Google exige que le **premier AAB** soit déposé à la main.
   Lance `gh workflow run release-android.yml -f upload_to_play=false` → l'**AAB
   signé est attaché à la release GitHub** (`TwinLens-vX.Y.Z.aab`, aussi en artefact
