@@ -71,14 +71,16 @@ Garde une **sauvegarde** de `upload.keystore` hors du dépôt.
   - Politique de confidentialité (`docs/privacy.html`) : déjà à jour (géotag optionnel,
     on-device, jamais partagé).
 - **Content rating** (IARC), audience cible, déclaration pub = non.
-- ⚠️ **Déclaration « Applications de santé » (OBLIGATOIRE, une seule fois)** : Google
-  bloque désormais TOUT upload tant qu'elle n'est pas remplie. Symptôme côté CI :
-  `Google Api Error: You must let us know whether your app includes any health features.`
-  (l'AAB est bien construit + attaché à la release GitHub, seul l'`upload_to_play_store`
-  Fastlane échoue). **Fix** : Play Console → *Politiques* → **Contenu de l'application**
-  → **Applications de santé** → déclarer **« Non »** (TwinLens = appareil photo, aucune
-  fonctionnalité de santé / Health Connect) → *Enregistrer*. Ensuite, relancer l'upload :
-  `gh workflow run release-android.yml` (ou il partira avec la prochaine release).
+- ⚠️ **Erreur `You must let us know whether your app includes any health features`
+  à l'upload Fastlane** — même quand la déclaration « Applis de santé » EST déjà faite
+  dans la console (*Contenu de l'application* → *Traitée*). L'AAB est bien construit +
+  attaché à la release GitHub ; seul l'`upload_to_play_store` échoue **au commit de
+  l'edit**. **Cause réelle** : par défaut Fastlane « envoie pour examen » au commit,
+  ce qui déclenche une revalidation de TOUTES les déclarations d'app-content et ce
+  faux rejet. **Fix (appliqué)** : `changes_not_sent_for_review: true` dans le lane
+  `internal` du `Fastfile` — l'interne se déploie quand même (aucun examen requis pour
+  l'interne). NB : garde bien la déclaration « Applis de santé » à **« Non »** par
+  ailleurs (TwinLens = appareil photo, pas de Health Connect).
 - **1er dépôt manuel** : Google exige que le **premier AAB** soit déposé à la main.
   Lance `gh workflow run release-android.yml -f upload_to_play=false` → l'**AAB
   signé est attaché à la release GitHub** (`TwinLens-vX.Y.Z.aab`, aussi en artefact
