@@ -45,6 +45,7 @@ import {
   saveSetting,
   type PersistedSettings,
   type TimerSeconds,
+  type BurstCount,
 } from '../services/settings';
 
 /** Clé du hint « touchez la vignette » (1er lancement — one-shot, hors réglages). */
@@ -93,6 +94,7 @@ export function MultiCameraScreen(): React.ReactElement {
   const [countdown, setCountdown] = useState<number | null>(null);
   const [grid, setGridState] = useState(false);
   const [level, setLevelState] = useState(false);
+  const [burstCount, setBurstCountState] = useState<BurstCount>(1);
   const focusNonce = useRef(0);
   const lastZoomUpdate = useRef(0);
   const pipHintChecked = useRef(false);
@@ -221,12 +223,35 @@ export function MultiCameraScreen(): React.ReactElement {
 
   // Capture réelle : flash blanc instantané puis capture async (l'overlay
   // « Ne bougez pas » est piloté séparément par l'état isBusy du contrôleur).
+  // En rafale (burstCount > 1), N captures séquentielles : chaque capturePhoto
+  // libère l'obturateur juste après la capture brute (la composition part en
+  // tâche de fond), la suivante peut donc s'enchaîner naturellement.
+  const burstingRef = useRef(false);
   const doCapture = useCallback(() => {
-    haptics.medium();
-    flashOpacity.setValue(0.9);
-    Animated.timing(flashOpacity, { toValue: 0, duration: 200, useNativeDriver: true }).start();
-    void cam.controller.capturePhoto(photoFlash);
-  }, [cam.controller, photoFlash, flashOpacity]);
+    const flash = (dur: number) => {
+      haptics.medium();
+      flashOpacity.setValue(0.9);
+      Animated.timing(flashOpacity, { toValue: 0, duration: dur, useNativeDriver: true }).start();
+    };
+    if (burstCount <= 1) {
+      flash(200);
+      void cam.controller.capturePhoto(photoFlash);
+      return;
+    }
+    if (burstingRef.current) return; // évite deux rafales qui se chevauchent
+    burstingRef.current = true;
+    void (async () => {
+      try {
+        for (let i = 0; i < burstCount; i++) {
+          flash(150);
+          await cam.controller.capturePhoto(photoFlash);
+          if (i < burstCount - 1) await new Promise((r) => setTimeout(r, 140));
+        }
+      } finally {
+        burstingRef.current = false;
+      }
+    })();
+  }, [cam.controller, photoFlash, flashOpacity, burstCount]);
 
   const cancelCountdown = useCallback(() => {
     if (countdownTimer.current != null) {
@@ -386,6 +411,7 @@ export function MultiCameraScreen(): React.ReactElement {
       if (s.mode != null) setMode(s.mode);
       if (s.grid != null) setGridState(s.grid);
       if (s.level != null) setLevelState(s.level);
+      if (s.burstCount != null) setBurstCountState(s.burstCount);
     },
     [cam.controller],
   );
@@ -397,6 +423,10 @@ export function MultiCameraScreen(): React.ReactElement {
   const setLevel = useCallback((v: boolean) => {
     setLevelState(v);
     saveSetting('level', v);
+  }, []);
+  const setBurstCount = useCallback((v: BurstCount) => {
+    setBurstCountState(v);
+    saveSetting('burstCount', v);
   }, []);
 
   useEffect(() => {
@@ -655,6 +685,8 @@ export function MultiCameraScreen(): React.ReactElement {
               onToggleGrid={() => setGrid(!grid)}
               level={level}
               onToggleLevel={() => setLevel(!level)}
+              burstCount={burstCount}
+              onSetBurstCount={setBurstCount}
             />
 
             <SessionGallery
