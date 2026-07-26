@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.12.0](https://github.com/Devitek/dual/compare/v1.11.0...v1.12.0) (2026-07-26)
+
+
+### Features
+
+* **capture:** long-press to drag the PiP thumbnail ([435ff7d](https://github.com/Devitek/dual/commit/435ff7da917176acd58ef2e4e4bf3b7a662ea86a))
+* **capture:** require long-press to drag the PiP thumbnail ([ecb3441](https://github.com/Devitek/dual/commit/ecb3441cfcf1ed4a1e20d504916a8a4956f5f30b))
+
 ## [1.11.0](https://github.com/Devitek/dual/compare/v1.10.1...v1.11.0) (2026-07-26)
 
 
