@@ -150,7 +150,7 @@ export async function loadPersistedSettings(): Promise<Partial<PersistedSettings
   if (g('showSecondaryPreview') != null) out.showSecondaryPreview = g('showSecondaryPreview') === '1';
   const flash = inSet(g('photoFlash'), ['off', 'auto', 'on'] as const);
   if (flash) out.photoFlash = flash;
-  const m = inSet(g('mode'), ['photo', 'video'] as const);
+  const m = inSet(g('mode'), ['photo', 'video', 'boomerang'] as const);
   if (m) out.mode = m;
   if (g('grid') != null) out.grid = g('grid') === '1';
   if (g('level') != null) out.level = g('level') === '1';

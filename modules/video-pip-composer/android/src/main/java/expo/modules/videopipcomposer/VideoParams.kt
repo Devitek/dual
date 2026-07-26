@@ -18,5 +18,7 @@ class VideoParams : Record {
   @Field var bitRate: Double = 0.0
   /** Ratio du cadre `pip` : "full" (~3:4) | "square" (1:1) | "tall" (9:16). */
   @Field var outputRatio: String = "full"
+  /** Post-traiter en boomerang (avant + arrière bouclé, muet). */
+  @Field var boomerang: Boolean = false
   @Field var saveOriginals: Boolean = false
 }

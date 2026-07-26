@@ -36,6 +36,7 @@ class PipComposerService : Service() {
     private const val EXTRA_INSET_W = "insetW"
     private const val EXTRA_WATERMARK = "watermark"
     private const val EXTRA_OUTPUT_RATIO = "outputRatio"
+    private const val EXTRA_BOOMERANG = "boomerang"
 
     private const val TYPE_VIDEO = "video"
     private const val TYPE_PHOTO = "photo"
@@ -57,6 +58,7 @@ class PipComposerService : Service() {
       watermark: Boolean,
       bitRate: Int,
       outputRatio: String,
+      boomerang: Boolean,
       saveOriginals: Boolean,
     ) {
       val intent = baseIntent(context, jobId, primaryPath, secondaryPath, corner, saveOriginals).apply {
@@ -68,6 +70,7 @@ class PipComposerService : Service() {
         putExtra(EXTRA_INSET_W, insetW)
         putExtra(EXTRA_WATERMARK, watermark)
         putExtra(EXTRA_OUTPUT_RATIO, outputRatio)
+        putExtra(EXTRA_BOOMERANG, boomerang)
       }
       androidx.core.content.ContextCompat.startForegroundService(context, intent)
     }
@@ -137,6 +140,7 @@ class PipComposerService : Service() {
     val insetW = intent.getFloatExtra(EXTRA_INSET_W, -1f)
     val watermark = intent.getBooleanExtra(EXTRA_WATERMARK, false)
     val outputRatio = intent.getStringExtra(EXTRA_OUTPUT_RATIO) ?: "full"
+    val boomerang = intent.getBooleanExtra(EXTRA_BOOMERANG, false)
     val isPhoto = mediaType == TYPE_PHOTO
     val title = if (isPhoto) "Composition de la photo PiP" else "Composition de la vidéo PiP"
 
@@ -195,12 +199,30 @@ class PipComposerService : Service() {
               PipComposerBus.progress(jobId, fraction.toDouble())
             }
           }
-          val uri = MediaStoreSaver.saveVideo(ctx, outFile, "Dual_PiP_$ts.mp4")
+          // Boomerang (optionnel) : post-traite la vidéo PiP en avant+arrière
+          // bouclé. FAIL-SAFE : toute erreur laisse la vidéo PiP normale être
+          // sauvegardée telle quelle.
+          var finalFile = outFile
+          var boomFile: File? = null
+          val namePrefix = if (boomerang) "Dual_Boomerang" else "Dual_PiP"
+          if (boomerang) {
+            try {
+              val bf = File.createTempFile("boom_", ".mp4", cacheDir)
+              BoomerangComposer(outFile.absolutePath, bf.absolutePath).compose()
+              boomFile = bf
+              finalFile = bf
+            } catch (e: Exception) {
+              boomFile?.delete()
+              finalFile = outFile // repli : vidéo normale
+            }
+          }
+          val uri = MediaStoreSaver.saveVideo(ctx, finalFile, "${namePrefix}_$ts.mp4")
           if (saveOriginals) {
             MediaStoreSaver.saveVideo(ctx, File(primaryPath), "Dual_${ts}_1.mp4")
             MediaStoreSaver.saveVideo(ctx, File(secondaryPath), "Dual_${ts}_2.mp4")
           }
           outFile.delete()
+          boomFile?.let { if (it != outFile) it.delete() }
           PipComposerBus.complete(jobId, uri)
         }
       } catch (e: Exception) {

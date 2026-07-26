@@ -198,6 +198,8 @@ export class MultiCamController {
 
   private primarySlot: CameraSlot = 'back';
   private disposed = false;
+  /** Mode boomerang : le prochain enregistrement sera post-traité en boomerang. */
+  private boomerangMode = false;
 
   /** Fonction de composition PiP (photo) injectée depuis React (view-shot). */
   private pipComposer: ((primaryUri: string, secondaryUri: string) => Promise<string>) | null = null;
@@ -535,6 +537,11 @@ export class MultiCamController {
     this.update({ outputRatio: value });
   }
 
+  /** Active le mode boomerang (le prochain enregistrement sera bouclé avant/arrière). */
+  setBoomerangMode(value: boolean): void {
+    this.boomerangMode = value;
+  }
+
   /** Change la disposition de fusion photo (pip / sideBySide / topBottom). */
   setLayout(layout: CompositionLayout): void {
     this.update({ layout });
@@ -724,6 +731,7 @@ export class MultiCamController {
     const inset = this.snapshot.pipInset;
     const watermark = this.snapshot.watermark;
     const outputRatio = this.snapshot.outputRatio;
+    const boomerang = this.boomerangMode;
     const bitRate = QUALITY[this.snapshot.captureQuality].videoBitrate;
     const wantPip = mode !== 'originals';
     const canPip = secondaryPath != null && this.videoComposer != null;
@@ -741,6 +749,7 @@ export class MultiCamController {
           watermark,
           bitRate,
           outputRatio,
+          boomerang,
           saveOriginals,
         });
         this.pushCapture({

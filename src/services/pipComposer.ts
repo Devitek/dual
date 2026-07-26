@@ -77,6 +77,8 @@ export interface VideoComposeOptions {
   bitRate: number;
   /** Ratio du cadre `pip` (ignoré pour les autres dispositions). */
   outputRatio: OutputRatio;
+  /** Post-traiter en boomerang (avant + arrière bouclé, muet). */
+  boomerang: boolean;
   saveOriginals: boolean;
 }
 

@@ -34,6 +34,8 @@
     "video": "VIDEO",
     "photoA11y": "Modalità foto",
     "videoA11y": "Modalità video",
+    "boomerang": "Boom",
+    "boomerangA11y": "Modalità boomerang",
     "dual": "Dual",
     "single": "Singola"
   },
