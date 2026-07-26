@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.11.0](https://github.com/Devitek/dual/compare/v1.10.1...v1.11.0) (2026-07-26)
+
+
+### Features
+
+* **capture:** native photo layouts, freeform inset & watermark (Lot 4a) ([4bc3050](https://github.com/Devitek/dual/commit/4bc3050cef93b85bd49d897a4ebf771f0cba76c3))
+* **capture:** native photo layouts, freeform inset & watermark (Lot 4a) ([6c5a315](https://github.com/Devitek/dual/commit/6c5a315f0cb0b48e6f54a62db51522944d9439a4))
+
 ## [1.10.1](https://github.com/Devitek/dual/compare/v1.10.0...v1.10.1) (2026-07-24)
 
 
