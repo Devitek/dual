@@ -56,7 +56,7 @@
     "layoutPip": "PiP",
     "layoutSideBySide": "Side by side",
     "layoutTopBottom": "Stacked",
-    "layoutHint": "Side-by-side and stacked apply to photos; video stays PiP for now.",
+    "layoutHint": "Side-by-side and stacked apply to both photos and videos.",
     "sectionRecPhoto": "Recording — Photo",
     "sectionRecVideo": "Recording — Video",
     "sectionQuality": "Quality",

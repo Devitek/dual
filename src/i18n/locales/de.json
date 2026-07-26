@@ -56,7 +56,7 @@
     "layoutPip": "PiP",
     "layoutSideBySide": "Nebeneinander",
     "layoutTopBottom": "Gestapelt",
-    "layoutHint": "Nebeneinander und gestapelt gelten für Fotos; Video bleibt vorerst PiP.",
+    "layoutHint": "Nebeneinander und gestapelt gelten für Fotos und Videos.",
     "sectionRecPhoto": "Aufnahme — Foto",
     "sectionRecVideo": "Aufnahme — Video",
     "sectionQuality": "Qualität",

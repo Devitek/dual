@@ -89,6 +89,12 @@ class PipGlRenderer {
     draw(textureId, stMatrix, -1f, -1f, 1f, 1f, false, 0f, 0f, 0f, 0f)
   }
 
+  /** Dessine la texture pleine dans un rectangle NDC arbitraire (pas d'arrondi).
+   *  Utilisé pour les demi-écrans côte-à-côte / haut-bas. */
+  fun drawRegion(textureId: Int, stMatrix: FloatArray, x0: Float, y0: Float, x1: Float, y1: Float) {
+    draw(textureId, stMatrix, x0, y0, x1, y1, false, 0f, 0f, 0f, 0f)
+  }
+
   /** Dessine la vignette dans le rectangle NDC avec coins arrondis + bordure. */
   fun drawInset(
     textureId: Int,
