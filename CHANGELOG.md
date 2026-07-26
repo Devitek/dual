@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.14.0](https://github.com/Devitek/dual/compare/v1.13.0...v1.14.0) (2026-07-26)
+
+
+### Features
+
+* **capture:** video watermark (GL text overlay) — Lot 4b-2 ([987163c](https://github.com/Devitek/dual/commit/987163c379b9d19d3097b1677fe4fb43a9693573))
+* **capture:** video watermark via GL text overlay (Lot 4b-2) ([6161d1e](https://github.com/Devitek/dual/commit/6161d1ebd0006d89670c548f5b5d85a020174b37))
+
 ## [1.13.0](https://github.com/Devitek/dual/compare/v1.12.0...v1.13.0) (2026-07-26)
 
 
