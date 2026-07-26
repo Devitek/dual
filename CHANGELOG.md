@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.15.0](https://github.com/Devitek/dual/compare/v1.14.0...v1.15.0) (2026-07-26)
+
+
+### Features
+
+* **capture:** AE/AF lock ([#74](https://github.com/Devitek/dual/issues/74)) ([f07dd32](https://github.com/Devitek/dual/commit/f07dd32d7581f26236dc0b0d0d2f0841796d0004))
+* **capture:** burst mode (×3 / ×5 / ×10) ([#66](https://github.com/Devitek/dual/issues/66)) ([f52a403](https://github.com/Devitek/dual/commit/f52a4031f04903f021f66b1fee2fa563dd8868b0))
+* **capture:** dual boomerang mode ([#72](https://github.com/Devitek/dual/issues/72)) ([f690e6c](https://github.com/Devitek/dual/commit/f690e6cbd689566d9c6c5c3a274d75966d10d416))
+* **capture:** export boomerang as animated GIF ([#75](https://github.com/Devitek/dual/issues/75)) ([633cb86](https://github.com/Devitek/dual/commit/633cb8673dc7f412e74073d700ec22b57423a257))
+* **capture:** manual exposure compensation (EV) ([#70](https://github.com/Devitek/dual/issues/70)) ([05e92c7](https://github.com/Devitek/dual/commit/05e92c76b0c0ac4201133501bf0557120a9f1098))
+* **capture:** output photo ratio for the pip layout (1:1 / 9:16) ([#68](https://github.com/Devitek/dual/issues/68)) ([183c195](https://github.com/Devitek/dual/commit/183c195cdd93f3464fbff6d7403b1a6aaed08b17))
+* **capture:** per-lens zoom presets (ultra-wide + tele) ([#71](https://github.com/Devitek/dual/issues/71)) ([92a0436](https://github.com/Devitek/dual/commit/92a043614f58fa6d95d55cbb66bcd56031441436))
+* **capture:** rule-of-thirds grid and horizon level guides ([#64](https://github.com/Devitek/dual/issues/64)) ([1d6567e](https://github.com/Devitek/dual/commit/1d6567efe59a768db244cb0d62226f06b7987b6e))
+* **ui:** onboarding & what's-new sheet ([#67](https://github.com/Devitek/dual/issues/67)) ([0b8b400](https://github.com/Devitek/dual/commit/0b8b4000f0833d1250f4ad5dc225b5cb7d0307cf))
+* **video:** 30/60 fps control ([#69](https://github.com/Devitek/dual/issues/69)) ([1990f6c](https://github.com/Devitek/dual/commit/1990f6c72a2f921a8b5a3932ddb8aaf3e2d9d657))
+* **video:** output ratio for pip videos (1:1 / 9:16) ([#73](https://github.com/Devitek/dual/issues/73)) ([246509e](https://github.com/Devitek/dual/commit/246509ed88f70bcd9466aaf6139e87a5ad035010))
+
 ## [1.14.0](https://github.com/Devitek/dual/compare/v1.13.0...v1.14.0) (2026-07-26)
 
 
