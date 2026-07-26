@@ -16,5 +16,7 @@ class VideoParams : Record {
   @Field var insetW: Double = -1.0
   @Field var watermark: Boolean = false
   @Field var bitRate: Double = 0.0
+  /** Ratio du cadre `pip` : "full" (~3:4) | "square" (1:1) | "tall" (9:16). */
+  @Field var outputRatio: String = "full"
   @Field var saveOriginals: Boolean = false
 }

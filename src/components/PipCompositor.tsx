@@ -6,7 +6,9 @@ import { useThemedStyles, type Palette } from '../theme/theme';
 import {
   DEFAULT_PIP_LAYOUT,
   PIP_INSET_ASPECT,
+  pipRatioFactor,
   type CompositionLayout,
+  type OutputRatio,
   type PipCorner,
   type PipInset,
 } from '../services/pipComposer';
@@ -44,7 +46,7 @@ function insetPositionStyle(corner: PipCorner, insetW: number, insetH: number, m
  * vue sous un parent semi-transparent délave les couleurs du rendu.
  */
 /** Dimensions du canvas de composition selon la disposition (base = canvasWidth). */
-function canvasSize(layout: CompositionLayout, cw: number): { w: number; h: number } {
+function canvasSize(layout: CompositionLayout, cw: number, outputRatio: OutputRatio): { w: number; h: number } {
   switch (layout) {
     case 'sideBySide':
       return { w: cw, h: Math.round((cw * 2) / 3) }; // 2 moitiés portrait -> paysage 3:2
@@ -52,7 +54,7 @@ function canvasSize(layout: CompositionLayout, cw: number): { w: number; h: numb
       return { w: cw, h: Math.round((cw * 3) / 2) }; // 2 moitiés paysage -> portrait 2:3
     case 'pip':
     default:
-      return { w: cw, h: Math.round((cw * 4) / 3) }; // portrait 3:4
+      return { w: cw, h: Math.round(cw * pipRatioFactor(outputRatio)) }; // ratio de sortie (full/1:1/9:16)
   }
 }
 
@@ -64,8 +66,9 @@ export const PipCompositor = forwardRef<
     layout: CompositionLayout;
     pipInset: PipInset | null;
     watermark: boolean;
+    outputRatio: OutputRatio;
   }
->(function PipCompositor({ corner, canvasWidth, layout, pipInset, watermark }, ref) {
+>(function PipCompositor({ corner, canvasWidth, layout, pipInset, watermark, outputRatio }, ref) {
     const shotRef = useRef<ViewShotRef>(null);
     const [job, setJob] = useState<{ primary: string; secondary: string; id: number } | null>(null);
     const pending = useRef<Pending | null>(null);
@@ -119,7 +122,7 @@ export const PipCompositor = forwardRef<
       });
     };
 
-    const { w: canvasW, h: canvasH } = canvasSize(layout, canvasWidth);
+    const { w: canvasW, h: canvasH } = canvasSize(layout, canvasWidth, outputRatio);
     const insetW = canvasW * DEFAULT_PIP_LAYOUT.insetWidthRatio;
     const insetH = insetW * (canvasH / canvasW);
     const margin = canvasW * DEFAULT_PIP_LAYOUT.marginRatio;

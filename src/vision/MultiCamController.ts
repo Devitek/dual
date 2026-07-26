@@ -22,6 +22,7 @@ import * as MediaLibrary from 'expo-media-library';
 import { getFileSize, toFileUri } from '../utils/fileSystem';
 import type {
   CompositionLayout,
+  OutputRatio,
   PhotoComposeOptions,
   PipCorner,
   PipInset,
@@ -82,6 +83,8 @@ export interface MultiCamSnapshot {
   pipInset: PipInset | null;
   /** Ajouter un discret filigrane « TwinLens » à la composition. Opt-in (OFF). */
   watermark: boolean;
+  /** Ratio du cadre de sortie pour la disposition `pip` (full / 1:1 / 9:16). */
+  outputRatio: OutputRatio;
   /** Toutes les captures de la session courante (pour la galerie). */
   sessionCaptures: CapturedMedia[];
   /** Nombre de traitements (composition/sauvegarde) en cours en arrière-plan. */
@@ -151,6 +154,7 @@ const INITIAL: MultiCamSnapshot = {
   layout: 'pip',
   pipInset: null,
   watermark: false,
+  outputRatio: 'full',
   sessionCaptures: [],
   processingCount: 0,
   captureQuality: 'high',
@@ -493,6 +497,11 @@ export class MultiCamController {
     this.update({ watermark: value });
   }
 
+  /** Change le ratio du cadre de sortie pour la disposition `pip`. */
+  setOutputRatio(value: OutputRatio): void {
+    this.update({ outputRatio: value });
+  }
+
   /** Change la disposition de fusion photo (pip / sideBySide / topBottom). */
   setLayout(layout: CompositionLayout): void {
     this.update({ layout });
@@ -605,6 +614,7 @@ export class MultiCamController {
     const coords = geotag ? this.locationProvider?.() ?? null : null;
     const pipInset = this.snapshot.pipInset;
     const watermark = this.snapshot.watermark;
+    const outputRatio = this.snapshot.outputRatio;
     this.enqueue(async () => {
       // Chemin NATIF (Foreground Service, survit au kill) — prioritaire. Il gère
       // désormais TOUTES les dispositions + vignette libre + filigrane (Lot 4a).
@@ -618,6 +628,7 @@ export class MultiCamController {
           inset: pipInset,
           watermark,
           canvasWidth,
+          outputRatio,
           saveOriginals,
         });
         this.pushCapture({
@@ -679,6 +690,7 @@ export class MultiCamController {
     const layout = this.snapshot.layout;
     const inset = this.snapshot.pipInset;
     const watermark = this.snapshot.watermark;
+    const outputRatio = this.snapshot.outputRatio;
     const bitRate = QUALITY[this.snapshot.captureQuality].videoBitrate;
     const wantPip = mode !== 'originals';
     const canPip = secondaryPath != null && this.videoComposer != null;
@@ -695,6 +707,7 @@ export class MultiCamController {
           inset,
           watermark,
           bitRate,
+          outputRatio,
           saveOriginals,
         });
         this.pushCapture({

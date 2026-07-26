@@ -32,12 +32,21 @@ class PhotoPipComposer(
   private val insetWFrac: Float,
   private val watermark: Boolean,
   private val canvasWidth: Int,
+  /** Ratio du cadre `pip` : "full" (~3:4) | "square" (1:1) | "tall" (9:16). */
+  private val outputRatio: String,
   private val insetWidthRatio: Float,
   private val marginRatio: Float,
 ) {
   companion object {
     /** Ratio hauteur/largeur de la vignette (portrait), aligné sur PIP_INSET_ASPECT JS. */
     private val PIP_INSET_ASPECT = 172f / 120f
+
+    /** Facteur hauteur/largeur du canvas `pip` selon le ratio de sortie (aligné JS). */
+    fun pipRatioFactor(ratio: String): Float = when (ratio) {
+      "square" -> 1f // 1:1
+      "tall" -> 16f / 9f // 9:16 vertical
+      else -> 4f / 3f // full (~3:4)
+    }
   }
 
   fun compose() {
@@ -46,7 +55,7 @@ class PhotoPipComposer(
     val ch = when (layout) {
       "sideBySide" -> (cw * 2f / 3f).toInt() // 2 moitiés portrait -> paysage 3:2
       "topBottom" -> (cw * 3f / 2f).toInt() // 2 moitiés paysage -> portrait 2:3
-      else -> (cw * 4f / 3f).toInt() // pip : portrait 3:4
+      else -> (cw * pipRatioFactor(outputRatio)).toInt() // pip : ratio de sortie (full/1:1/9:16)
     }
     val output = Bitmap.createBitmap(cw, ch, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(output)
