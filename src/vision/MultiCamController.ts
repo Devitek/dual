@@ -89,6 +89,8 @@ export interface MultiCamSnapshot {
   outputRatio: OutputRatio;
   /** Cadence vidéo cible (30 / 60 ips). */
   videoFps: VideoFps;
+  /** Compensation d'exposition (EV) courante. Transitoire (non persisté). */
+  exposureBias: number;
   /** Toutes les captures de la session courante (pour la galerie). */
   sessionCaptures: CapturedMedia[];
   /** Nombre de traitements (composition/sauvegarde) en cours en arrière-plan. */
@@ -160,6 +162,7 @@ const INITIAL: MultiCamSnapshot = {
   watermark: false,
   outputRatio: 'full',
   videoFps: 30,
+  exposureBias: 0,
   sessionCaptures: [],
   processingCount: 0,
   captureQuality: 'high',
@@ -831,6 +834,29 @@ export class MultiCamController {
   getZoomBounds(slot: CameraSlot): { min: number; max: number; current: number } {
     const c = this.controllerFor(slot);
     return { min: c?.minZoom ?? 1, max: c?.maxZoom ?? 1, current: c?.zoom ?? 1 };
+  }
+
+  /** Bornes de compensation d'exposition (EV) de la caméra principale. */
+  getExposureBounds(): { min: number; max: number; supported: boolean } {
+    const dev = this.backController?.device;
+    if (dev == null || !dev.supportsExposureBias) return { min: 0, max: 0, supported: false };
+    return { min: dev.minExposureBias, max: dev.maxExposureBias, supported: dev.maxExposureBias > dev.minExposureBias };
+  }
+
+  /**
+   * Règle la compensation d'exposition (EV) sur LES DEUX caméras (rendu composé
+   * homogène). Transitoire : jamais persisté (réinitialisé à 0 au lancement, comme
+   * la torche). Ignore silencieusement les caméras qui ne supportent pas.
+   */
+  async setExposureBias(value: number): Promise<void> {
+    const { min, max, supported } = this.getExposureBounds();
+    if (!supported) return;
+    const v = Math.min(max, Math.max(min, value));
+    this.update({ exposureBias: v });
+    await Promise.all([
+      this.backController?.setExposureBias(v).catch(() => {}),
+      this.frontController?.setExposureBias(v).catch(() => {}),
+    ]);
   }
 
   async focusAt(slot: CameraSlot, normalizedX: number, normalizedY: number): Promise<void> {
