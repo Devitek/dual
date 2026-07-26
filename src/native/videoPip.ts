@@ -25,6 +25,7 @@ interface NativeVideoParams {
   watermark: boolean;
   bitRate: number;
   outputRatio: string;
+  boomerang: boolean;
   saveOriginals: boolean;
 }
 
@@ -86,6 +87,7 @@ export async function composePipVideo(
     watermark: opts.watermark,
     bitRate: opts.bitRate,
     outputRatio: opts.outputRatio,
+    boomerang: opts.boomerang,
     saveOriginals: opts.saveOriginals,
   });
 }

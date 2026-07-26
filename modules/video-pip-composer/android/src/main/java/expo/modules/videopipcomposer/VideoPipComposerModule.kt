@@ -71,6 +71,7 @@ class VideoPipComposerModule : Module(), PipComposerBus.Listener {
         watermark = params.watermark,
         bitRate = params.bitRate.toInt(),
         outputRatio = params.outputRatio,
+        boomerang = params.boomerang,
         saveOriginals = params.saveOriginals,
       )
     }

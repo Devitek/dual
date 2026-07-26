@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useThemedStyles, type Palette } from '../theme/theme';
 import { haptics } from '../utils/haptics';
 
-export type CaptureMode = 'photo' | 'video';
+export type CaptureMode = 'photo' | 'video' | 'boomerang';
 
 interface ModeSwitchProps {
   mode: CaptureMode;
@@ -17,6 +17,7 @@ interface ModeSwitchProps {
 const MODES: { value: CaptureMode; labelKey: string; a11yKey: string }[] = [
   { value: 'photo', labelKey: 'mode.photo', a11yKey: 'mode.photoA11y' },
   { value: 'video', labelKey: 'mode.video', a11yKey: 'mode.videoA11y' },
+  { value: 'boomerang', labelKey: 'mode.boomerang', a11yKey: 'mode.boomerangA11y' },
 ];
 
 /**

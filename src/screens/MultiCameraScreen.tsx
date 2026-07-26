@@ -55,6 +55,9 @@ import {
 /** Clé du hint « touchez la vignette » (1er lancement — one-shot, hors réglages). */
 const PIP_HINT_KEY = 'tl_seen_pip_hint';
 
+/** Durée du clip source d'un boomerang (ms) avant auto-stop. */
+const BOOMERANG_MS = 1600;
+
 // Réexport pour compat (le type vit désormais dans services/settings).
 export type { TimerSeconds };
 
@@ -234,6 +237,11 @@ export function MultiCameraScreen(): React.ReactElement {
     saveSetting('mode', m);
   }, []);
 
+  // Synchronise le mode boomerang côté contrôleur (lu à la fin de l'enregistrement).
+  useEffect(() => {
+    cam.controller.setBoomerangMode(mode === 'boomerang');
+  }, [mode, cam.controller]);
+
   // Capture réelle : flash blanc instantané puis capture async (l'overlay
   // « Ne bougez pas » est piloté séparément par l'état isBusy du contrôleur).
   // En rafale (burstCount > 1), N captures séquentielles : chaque capturePhoto
@@ -341,15 +349,34 @@ export function MultiCameraScreen(): React.ReactElement {
     [cam.controller],
   );
 
+  const boomerangTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onToggleRecording = useCallback(() => {
     if (cam.isRecording) {
+      if (boomerangTimer.current != null) {
+        clearTimeout(boomerangTimer.current);
+        boomerangTimer.current = null;
+      }
       haptics.medium();
       void cam.controller.stopRecording();
     } else {
       haptics.heavy();
       void cam.controller.startRecording();
+      // Boomerang : clip court auto-stoppé (le natif le boucle avant/arrière).
+      if (mode === 'boomerang') {
+        boomerangTimer.current = setTimeout(() => {
+          boomerangTimer.current = null;
+          void cam.controller.stopRecording();
+        }, BOOMERANG_MS);
+      }
     }
-  }, [cam.controller, cam.isRecording]);
+  }, [cam.controller, cam.isRecording, mode]);
+
+  useEffect(
+    () => () => {
+      if (boomerangTimer.current != null) clearTimeout(boomerangTimer.current);
+    },
+    [],
+  );
 
   const setPhotoSaveMode = useCallback(
     (m: SaveMode) => {

@@ -85,7 +85,7 @@ export function CaptureControls({
     ]).start();
   }, [lastCapture, thumbScale]);
 
-  const isVideo = mode === 'video';
+  const isVideo = mode === 'video' || mode === 'boomerang';
   const shutterDisabled = isVideo ? isBusy && !isRecording : isBusy;
   const onShutter = isVideo ? onToggleRecording : onPhoto;
   const swapDisabled = !canSwap || isRecording;
