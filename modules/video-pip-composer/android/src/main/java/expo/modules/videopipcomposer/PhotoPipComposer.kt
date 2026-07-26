@@ -9,45 +9,107 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.Rect
 import android.graphics.RectF
+import android.graphics.Typeface
 import android.media.ExifInterface
 import java.io.FileOutputStream
 import java.io.IOException
 
 /**
- * Composition PiP PHOTO on-device (Android Canvas) : décodage des 2 JPEG (avec
- * orientation EXIF), dessin arrière plein cadre + vignette (coins arrondis +
- * bordure blanche) au coin choisi, ré-encodage JPEG.
+ * Composition PiP PHOTO on-device (Android Canvas). Gère les dispositions
+ * (`pip` / `sideBySide` / `topBottom`), la vignette libre (drag/pinch) OU au coin,
+ * et un filigrane optionnel. Décode les 2 JPEG avec orientation EXIF, dessine, et
+ * ré-encode en JPEG. Géométrie alignée sur le compositeur JS (`PipCompositor`).
  */
 class PhotoPipComposer(
   private val primaryPath: String,
   private val secondaryPath: String,
   private val outputPath: String,
+  private val layout: String,
   private val corner: String,
+  /** Vignette libre (fractions du cadre) ; `insetWFrac <= 0` ⇒ utiliser le coin. */
+  private val insetXFrac: Float,
+  private val insetYFrac: Float,
+  private val insetWFrac: Float,
+  private val watermark: Boolean,
   private val canvasWidth: Int,
   private val insetWidthRatio: Float,
   private val marginRatio: Float,
 ) {
+  companion object {
+    /** Ratio hauteur/largeur de la vignette (portrait), aligné sur PIP_INSET_ASPECT JS. */
+    private val PIP_INSET_ASPECT = 172f / 120f
+  }
+
   fun compose() {
-    val canvasW = canvasWidth
-    val canvasH = (canvasWidth * 4f / 3f).toInt() // portrait 3:4
-    val output = Bitmap.createBitmap(canvasW, canvasH, Bitmap.Config.ARGB_8888)
+    val cw = canvasWidth
+    // Dimensions du canvas selon la disposition (identiques au JS `canvasSize`).
+    val ch = when (layout) {
+      "sideBySide" -> (cw * 2f / 3f).toInt() // 2 moitiés portrait -> paysage 3:2
+      "topBottom" -> (cw * 3f / 2f).toInt() // 2 moitiés paysage -> portrait 2:3
+      else -> (cw * 4f / 3f).toInt() // pip : portrait 3:4
+    }
+    val output = Bitmap.createBitmap(cw, ch, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(output)
     canvas.drawColor(Color.BLACK)
     val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
 
-    // 1) Arrière plein cadre (cover / center-crop)
-    val primary = decodeOriented(primaryPath, canvasW, canvasH)
-    drawCover(canvas, primary, RectF(0f, 0f, canvasW.toFloat(), canvasH.toFloat()), paint)
-    primary.recycle()
+    when (layout) {
+      "sideBySide" -> {
+        val half = cw / 2f
+        val primary = decodeOriented(primaryPath, half.toInt(), ch)
+        drawCover(canvas, primary, RectF(0f, 0f, half, ch.toFloat()), paint)
+        primary.recycle()
+        val secondary = decodeOriented(secondaryPath, half.toInt(), ch)
+        drawCover(canvas, secondary, RectF(half, 0f, cw.toFloat(), ch.toFloat()), paint)
+        secondary.recycle()
+      }
+      "topBottom" -> {
+        val half = ch / 2f
+        val primary = decodeOriented(primaryPath, cw, half.toInt())
+        drawCover(canvas, primary, RectF(0f, 0f, cw.toFloat(), half), paint)
+        primary.recycle()
+        val secondary = decodeOriented(secondaryPath, cw, half.toInt())
+        drawCover(canvas, secondary, RectF(0f, half, cw.toFloat(), ch.toFloat()), paint)
+        secondary.recycle()
+      }
+      else -> {
+        // pip : principale plein cadre + vignette (libre ou au coin)
+        val primary = decodeOriented(primaryPath, cw, ch)
+        drawCover(canvas, primary, RectF(0f, 0f, cw.toFloat(), ch.toFloat()), paint)
+        primary.recycle()
+        drawInset(canvas, ch, paint)
+      }
+    }
 
-    // 2) Vignette (avant) : rectangle du coin choisi + coins arrondis + bordure
-    val insetW = canvasW * insetWidthRatio
-    val insetH = insetW * (canvasH.toFloat() / canvasW.toFloat())
-    val margin = canvasW * marginRatio
-    val isTop = corner.startsWith("top")
-    val isLeft = corner.endsWith("left")
-    val left = if (isLeft) margin else canvasW - margin - insetW
-    val top = if (isTop) margin else canvasH - margin - insetH
+    if (watermark) drawWatermark(canvas, cw, ch)
+
+    FileOutputStream(outputPath).use { output.compress(Bitmap.CompressFormat.JPEG, 95, it) }
+    output.recycle()
+  }
+
+  private fun drawInset(canvas: Canvas, canvasH: Int, paint: Paint) {
+    val cw = canvasWidth.toFloat()
+    val ch = canvasH.toFloat()
+    val insetW: Float
+    val insetH: Float
+    val left: Float
+    val top: Float
+    if (insetWFrac > 0f) {
+      // Vignette libre (drag/pinch)
+      insetW = insetWFrac * cw
+      insetH = insetW * PIP_INSET_ASPECT
+      left = insetXFrac * cw
+      top = insetYFrac * ch
+    } else {
+      // Vignette au coin
+      insetW = cw * insetWidthRatio
+      insetH = insetW * (ch / cw)
+      val margin = cw * marginRatio
+      val isTop = corner.startsWith("top")
+      val isLeft = corner.endsWith("left")
+      left = if (isLeft) margin else cw - margin - insetW
+      top = if (isTop) margin else ch - margin - insetH
+    }
     val insetRect = RectF(left, top, left + insetW, top + insetH)
     val radius = insetW * 0.09f
 
@@ -67,10 +129,18 @@ class PhotoPipComposer(
     }
     val strokeRect = RectF(insetRect).apply { inset(border / 2f, border / 2f) }
     canvas.drawRoundRect(strokeRect, radius, radius, borderPaint)
+  }
 
-    // 3) Encode JPEG
-    FileOutputStream(outputPath).use { output.compress(Bitmap.CompressFormat.JPEG, 95, it) }
-    output.recycle()
+  private fun drawWatermark(canvas: Canvas, cw: Int, ch: Int) {
+    val pad = cw * 0.028f
+    val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+      color = Color.argb(230, 255, 255, 255)
+      textSize = cw * 0.03f
+      typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+      textAlign = Paint.Align.RIGHT
+      setShadowLayer(3f, 0f, 1f, Color.argb(140, 0, 0, 0))
+    }
+    canvas.drawText("TwinLens", cw - pad, ch - pad, textPaint)
   }
 
   private fun drawCover(canvas: Canvas, bmp: Bitmap, dst: RectF, paint: Paint) {

@@ -117,9 +117,7 @@ export function MultiCameraScreen(): React.ReactElement {
     cam.controller.setVideoComposer((primary, secondary, corner, bitRate, saveOriginals) =>
       composePipVideo(primary, secondary, corner, bitRate, saveOriginals),
     );
-    cam.controller.setPhotoComposer((primary, secondary, corner, canvasWidth, saveOriginals) =>
-      composePipPhoto(primary, secondary, corner, canvasWidth, saveOriginals),
-    );
+    cam.controller.setPhotoComposer((primary, secondary, opts) => composePipPhoto(primary, secondary, opts));
     const sub = subscribeVideoPipProgress((p) => setVideoProgress(p));
     return () => {
       cam.controller.setVideoComposer(null);

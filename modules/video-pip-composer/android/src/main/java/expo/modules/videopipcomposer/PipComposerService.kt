@@ -30,6 +30,11 @@ class PipComposerService : Service() {
     private const val EXTRA_SAVE_ORIGINALS = "saveOriginals"
     private const val EXTRA_BITRATE = "bitRate"
     private const val EXTRA_CANVAS = "canvasWidth"
+    private const val EXTRA_LAYOUT = "layout"
+    private const val EXTRA_INSET_X = "insetX"
+    private const val EXTRA_INSET_Y = "insetY"
+    private const val EXTRA_INSET_W = "insetW"
+    private const val EXTRA_WATERMARK = "watermark"
 
     private const val TYPE_VIDEO = "video"
     private const val TYPE_PHOTO = "photo"
@@ -59,13 +64,23 @@ class PipComposerService : Service() {
       jobId: String,
       primaryPath: String,
       secondaryPath: String,
+      layout: String,
       corner: String,
+      insetX: Float,
+      insetY: Float,
+      insetW: Float,
+      watermark: Boolean,
       canvasWidth: Int,
       saveOriginals: Boolean,
     ) {
       val intent = baseIntent(context, jobId, primaryPath, secondaryPath, corner, saveOriginals).apply {
         putExtra(EXTRA_MEDIA_TYPE, TYPE_PHOTO)
         putExtra(EXTRA_CANVAS, canvasWidth)
+        putExtra(EXTRA_LAYOUT, layout)
+        putExtra(EXTRA_INSET_X, insetX)
+        putExtra(EXTRA_INSET_Y, insetY)
+        putExtra(EXTRA_INSET_W, insetW)
+        putExtra(EXTRA_WATERMARK, watermark)
       }
       androidx.core.content.ContextCompat.startForegroundService(context, intent)
     }
@@ -101,6 +116,11 @@ class PipComposerService : Service() {
     val saveOriginals = intent.getBooleanExtra(EXTRA_SAVE_ORIGINALS, false)
     val bitRate = intent.getIntExtra(EXTRA_BITRATE, 0)
     val canvasWidth = intent.getIntExtra(EXTRA_CANVAS, 1080)
+    val layout = intent.getStringExtra(EXTRA_LAYOUT) ?: "pip"
+    val insetX = intent.getFloatExtra(EXTRA_INSET_X, -1f)
+    val insetY = intent.getFloatExtra(EXTRA_INSET_Y, -1f)
+    val insetW = intent.getFloatExtra(EXTRA_INSET_W, -1f)
+    val watermark = intent.getBooleanExtra(EXTRA_WATERMARK, false)
     val isPhoto = mediaType == TYPE_PHOTO
     val title = if (isPhoto) "Composition de la photo PiP" else "Composition de la vidéo PiP"
 
@@ -117,7 +137,12 @@ class PipComposerService : Service() {
             primaryPath = primaryPath,
             secondaryPath = secondaryPath,
             outputPath = outFile.absolutePath,
+            layout = layout,
             corner = corner,
+            insetXFrac = insetX,
+            insetYFrac = insetY,
+            insetWFrac = insetW,
+            watermark = watermark,
             canvasWidth = canvasWidth,
             insetWidthRatio = INSET_WIDTH_RATIO,
             marginRatio = MARGIN_RATIO,

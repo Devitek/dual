@@ -1,6 +1,18 @@
 import { requireOptionalNativeModule } from 'expo-modules-core';
 
-import type { PipCorner } from '../services/pipComposer';
+import type { PipCorner, PhotoComposeOptions } from '../services/pipComposer';
+
+/** Params bruts (primitifs) attendus par le Record natif `PhotoParams`. */
+interface NativePhotoParams {
+  layout: string;
+  corner: string;
+  insetX: number;
+  insetY: number;
+  insetW: number;
+  watermark: boolean;
+  canvasWidth: number;
+  saveOriginals: boolean;
+}
 
 interface PipProgressEvent {
   jobId: string;
@@ -20,13 +32,7 @@ interface VideoPipComposerNative {
     bitRate: number,
     saveOriginals: boolean,
   ) => Promise<string>;
-  composePipPhoto: (
-    primaryPath: string,
-    secondaryPath: string,
-    corner: string,
-    canvasWidth: number,
-    saveOriginals: boolean,
-  ) => Promise<string>;
+  composePipPhoto: (primaryPath: string, secondaryPath: string, params: NativePhotoParams) => Promise<string>;
   requestNotificationsPermission: () => Promise<void>;
   addListener: (event: string, listener: (payload: PipProgressEvent) => void) => { remove: () => void };
 }
@@ -68,19 +74,29 @@ export async function composePipVideo(
 
 /**
  * Compose la PHOTO PiP on-device (Canvas natif) via le même Foreground Service.
- * Sauvegarde native (galerie DCIM) -> survit au kill de l'app. Renvoie l'URI galerie.
+ * Gère les dispositions (pip / côte-à-côte / haut-bas), la vignette libre et le
+ * filigrane. Sauvegarde native (galerie DCIM) -> survit au kill. Renvoie l'URI galerie.
  */
 export async function composePipPhoto(
   primaryUri: string,
   secondaryUri: string,
-  corner: PipCorner,
-  canvasWidth: number,
-  saveOriginals: boolean,
+  opts: PhotoComposeOptions,
 ): Promise<string> {
   if (Native == null) {
     throw new Error('Module natif VideoPipComposer indisponible (rebuild requis).');
   }
   const primaryPath = primaryUri.replace(/^file:\/\//, '');
   const secondaryPath = secondaryUri.replace(/^file:\/\//, '');
-  return Native.composePipPhoto(primaryPath, secondaryPath, corner, canvasWidth, saveOriginals);
+  const inset = opts.inset;
+  return Native.composePipPhoto(primaryPath, secondaryPath, {
+    layout: opts.layout,
+    corner: opts.corner,
+    // insetW <= 0 -> le natif utilise le coin.
+    insetX: inset != null ? inset.x : -1,
+    insetY: inset != null ? inset.y : -1,
+    insetW: inset != null ? inset.w : -1,
+    watermark: opts.watermark,
+    canvasWidth: opts.canvasWidth,
+    saveOriginals: opts.saveOriginals,
+  });
 }

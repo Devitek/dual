@@ -20,7 +20,7 @@ import { saveToLibraryAsync } from 'expo-media-library/legacy';
 import * as MediaLibrary from 'expo-media-library';
 
 import { getFileSize, toFileUri } from '../utils/fileSystem';
-import type { CompositionLayout, PipCorner, PipInset } from '../services/pipComposer';
+import type { CompositionLayout, PhotoComposeOptions, PipCorner, PipInset } from '../services/pipComposer';
 import { writeGpsToJpeg, type GpsCoords } from '../services/exifGps';
 import i18n from '../i18n';
 
@@ -189,7 +189,7 @@ export class MultiCamController {
     | null = null;
   /** Composeur PiP PHOTO natif (Foreground Service). Prioritaire sur pipComposer (view-shot). */
   private photoComposer:
-    | ((primaryUri: string, secondaryUri: string, corner: PipCorner, canvasWidth: number, saveOriginals: boolean) => Promise<string>)
+    | ((primaryUri: string, secondaryUri: string, opts: PhotoComposeOptions) => Promise<string>)
     | null = null;
   /** File sérialisant les traitements de fond (composition/sauvegarde). */
   private queue: Promise<void> = Promise.resolve();
@@ -458,7 +458,7 @@ export class MultiCamController {
 
   setPhotoComposer(
     fn:
-      | ((primaryUri: string, secondaryUri: string, corner: PipCorner, canvasWidth: number, saveOriginals: boolean) => Promise<string>)
+      | ((primaryUri: string, secondaryUri: string, opts: PhotoComposeOptions) => Promise<string>)
       | null,
   ): void {
     this.photoComposer = fn;
@@ -597,32 +597,23 @@ export class MultiCamController {
     // sauvegarde en interne, on ne pourrait pas y injecter l'EXIF GPS).
     const geotag = this.snapshot.geotag;
     const coords = geotag ? this.locationProvider?.() ?? null : null;
-    // Vignette libre (drag/pinch) et filigrane ne sont rendus que par le
-    // compositeur JS -> ils forcent le chemin JS (comme géotag / layouts).
-    const freeform = this.snapshot.pipInset != null;
+    const pipInset = this.snapshot.pipInset;
     const watermark = this.snapshot.watermark;
     this.enqueue(async () => {
-      // Chemin NATIF (Foreground Service, survit au kill) — prioritaire, mais
-      // UNIQUEMENT pour un PiP « standard » : coin fixe, sans géotag, sans vignette
-      // libre, sans filigrane. Tout le reste passe par le compositeur JS view-shot
-      // (qui sait rendre n'importe quel layout + stamp EXIF + filigrane).
-      if (
-        wantPip &&
-        secondaryPath != null &&
-        this.photoComposer != null &&
-        layout === 'pip' &&
-        coords == null &&
-        !freeform &&
-        !watermark
-      ) {
+      // Chemin NATIF (Foreground Service, survit au kill) — prioritaire. Il gère
+      // désormais TOUTES les dispositions + vignette libre + filigrane (Lot 4a).
+      // Seul le géotag force le chemin JS (le natif sauvegarde en interne, on ne
+      // peut pas y injecter l'EXIF GPS).
+      if (wantPip && secondaryPath != null && this.photoComposer != null && coords == null) {
         const saveOriginals = mode === 'pip_plus_originals';
-        const savedUri = await this.photoComposer!(
-          toFileUri(primaryPath),
-          toFileUri(secondaryPath),
+        const savedUri = await this.photoComposer!(toFileUri(primaryPath), toFileUri(secondaryPath), {
+          layout,
           corner,
+          inset: pipInset,
+          watermark,
           canvasWidth,
           saveOriginals,
-        );
+        });
         this.pushCapture({
           kind: 'photo',
           primaryUri: savedUri,
