@@ -20,6 +20,12 @@ platform :android do
       skip_upload_metadata: true,
       skip_upload_images: true,
       skip_upload_screenshots: true,
+      # IMPÉRATIF : ne PAS « envoyer pour examen » au commit de l'edit. Sinon
+      # l'API Play revalide toutes les déclarations « Contenu de l'application »
+      # et rejette avec « You must let us know whether your app includes any
+      # health features » — MÊME quand la déclaration Applis de santé est déjà
+      # faite dans la console. L'interne se déploie quand même (pas d'examen).
+      changes_not_sent_for_review: true,
     )
   end
 
