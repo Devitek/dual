@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import type { CaptureQuality, CaptureSpeed, SaveMode } from '../vision/MultiCamController';
+import type { CaptureQuality, CaptureSpeed, SaveMode, VideoFps } from '../vision/MultiCamController';
 import type { CompositionLayout, OutputRatio, PipCorner, PipInset } from './pipComposer';
 import type { PhotoFlashMode } from '../components/CameraTopBar';
 import type { CaptureMode } from '../components/ModeSwitch';
@@ -48,6 +48,7 @@ export const SETTINGS_KEYS = {
   level: 'tl_level',
   burstCount: 'tl_burst',
   outputRatio: 'tl_output_ratio',
+  videoFps: 'tl_video_fps',
 } as const;
 
 export interface PersistedSettings {
@@ -75,6 +76,8 @@ export interface PersistedSettings {
   burstCount: BurstCount;
   /** Ratio du cadre de sortie pour la disposition `pip`. */
   outputRatio: OutputRatio;
+  /** Cadence vidéo cible (30 / 60 ips). */
+  videoFps: VideoFps;
 }
 
 export type SettingKey = keyof PersistedSettings;
@@ -155,6 +158,8 @@ export async function loadPersistedSettings(): Promise<Partial<PersistedSettings
   if (BURST_VALUES.includes(burst as BurstCount)) out.burstCount = burst as BurstCount;
   const ratio = inSet(g('outputRatio'), ['full', 'square', 'tall'] as const);
   if (ratio) out.outputRatio = ratio;
+  const fps = Number(g('videoFps'));
+  if (fps === 30 || fps === 60) out.videoFps = fps;
 
   return out;
 }

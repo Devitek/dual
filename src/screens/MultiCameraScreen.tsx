@@ -40,7 +40,7 @@ import {
 import { haptics } from '../utils/haptics';
 import type { FocusPoint } from '../components/FocusIndicator';
 import { pipCanvasForQuality } from '../vision/MultiCamController';
-import type { CameraSlot, CaptureQuality, CaptureSpeed, SaveMode } from '../vision/MultiCamController';
+import type { CameraSlot, CaptureQuality, CaptureSpeed, SaveMode, VideoFps } from '../vision/MultiCamController';
 import type { CompositionLayout, OutputRatio, PipCorner, PipInset } from '../services/pipComposer';
 import type { VolumeKeyAction } from '../native/volumeKeys';
 import {
@@ -386,6 +386,13 @@ export function MultiCameraScreen(): React.ReactElement {
     },
     [cam.controller],
   );
+  const setVideoFps = useCallback(
+    (fps: VideoFps) => {
+      void cam.controller.setVideoFps(fps);
+      saveSetting('videoFps', fps);
+    },
+    [cam.controller],
+  );
 
   const toggleSecondaryPreview = useCallback(() => {
     haptics.selection();
@@ -418,6 +425,7 @@ export function MultiCameraScreen(): React.ReactElement {
       if (s.pipCorner != null) c.setPipCorner(s.pipCorner); // remet aussi pipInset à null
       if (s.pipInset != null) c.setPipInset(s.pipInset); // -> restauré APRÈS le coin
       if (s.captureQuality != null) void c.setQuality(s.captureQuality);
+      if (s.videoFps != null) void c.setVideoFps(s.videoFps);
       if (s.showSecondaryPreview != null) c.setShowSecondaryPreview(s.showSecondaryPreview);
       if (s.photoFlash != null) setPhotoFlash(s.photoFlash);
       if (s.mode != null) setMode(s.mode);
@@ -684,6 +692,8 @@ export function MultiCameraScreen(): React.ReactElement {
               onSetOutputRatio={setOutputRatio}
               quality={cam.captureQuality}
               onSetQuality={setQuality}
+              videoFps={cam.videoFps}
+              onSetVideoFps={setVideoFps}
               volumeKeyAction={volumeKeyAction}
               onSetVolumeKeyAction={setVolumeKeyAction}
               stabilization={stabilization}

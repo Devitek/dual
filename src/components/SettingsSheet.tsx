@@ -26,7 +26,7 @@ const { height: SCREEN_H } = Dimensions.get('window');
 
 import { useColors, useThemedStyles, type Palette } from '../theme/theme';
 import { haptics } from '../utils/haptics';
-import type { CaptureQuality, CaptureSpeed, SaveMode } from '../vision/MultiCamController';
+import type { CaptureQuality, CaptureSpeed, SaveMode, VideoFps } from '../vision/MultiCamController';
 import type { CompositionLayout, OutputRatio, PipCorner } from '../services/pipComposer';
 import type { PhotoFlashMode } from './CameraTopBar';
 import type { VolumeKeyAction } from '../native/volumeKeys';
@@ -165,6 +165,12 @@ const BURST_OPTION_KEYS: { value: '1' | '3' | '5' | '10'; labelKey: string }[] =
   { value: '10', labelKey: 'settings.burst10' },
 ];
 
+// Libellés ips universels (non traduits).
+const FPS_OPTION_KEYS: { value: '30' | '60'; label: string }[] = [
+  { value: '30', label: '30' },
+  { value: '60', label: '60' },
+];
+
 const LAYOUT_OPTION_KEYS: { value: CompositionLayout; labelKey: string }[] = [
   { value: 'pip', labelKey: 'settings.layoutPip' },
   { value: 'sideBySide', labelKey: 'settings.layoutSideBySide' },
@@ -229,6 +235,8 @@ interface SettingsSheetProps {
   onSetOutputRatio: (ratio: OutputRatio) => void;
   quality: CaptureQuality;
   onSetQuality: (quality: CaptureQuality) => void;
+  videoFps: VideoFps;
+  onSetVideoFps: (fps: VideoFps) => void;
   volumeKeyAction: VolumeKeyAction;
   onSetVolumeKeyAction: (action: VolumeKeyAction) => void;
   stabilization: boolean;
@@ -278,6 +286,8 @@ export function SettingsSheet({
   onSetOutputRatio,
   quality,
   onSetQuality,
+  videoFps,
+  onSetVideoFps,
   volumeKeyAction,
   onSetVolumeKeyAction,
   stabilization,
@@ -362,6 +372,7 @@ export function SettingsSheet({
   const speedOptions = SPEED_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
   const timerOptions = TIMER_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
   const burstOptions = BURST_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
+  const fpsOptions = FPS_OPTION_KEYS.map((o) => ({ value: o.value, label: o.label }));
   const layoutOptions = LAYOUT_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
   const ratioOptions = RATIO_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
 
@@ -575,6 +586,19 @@ export function SettingsSheet({
           <Text style={styles.section}>{t('settings.sectionRecVideo')}</Text>
           <Segmented options={saveOptions} value={videoSaveMode} onChange={onSetVideoSaveMode} />
           <Text style={styles.optDesc}>{t(saveModeDescKey(videoSaveMode, 'video'))}</Text>
+
+          <View style={styles.rowCol}>
+            <View style={styles.rowHeader}>
+              <MaterialIcons name="60fps-select" size={22} color={colors.onSurface} />
+              <Text style={styles.rowLabel}>{t('settings.videoFps')}</Text>
+            </View>
+            <Segmented
+              options={fpsOptions}
+              value={String(videoFps) as '30' | '60'}
+              onChange={(v) => onSetVideoFps(Number(v) as VideoFps)}
+            />
+            <Text style={styles.optDesc}>{t('settings.videoFpsDesc')}</Text>
+          </View>
 
           <Text style={styles.section}>{t('settings.sectionQuality')}</Text>
           <Segmented options={qualityOptions} value={quality} onChange={onSetQuality} />

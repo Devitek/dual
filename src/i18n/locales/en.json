@@ -65,6 +65,8 @@
     "sectionRecPhoto": "Recording — Photo",
     "sectionRecVideo": "Recording — Video",
     "sectionQuality": "Quality",
+    "videoFps": "Video frame rate",
+    "videoFpsDesc": "60 fps gives smoother video. May be unavailable when both cameras record at once.",
     "flashOff": "Off",
     "flashAuto": "Auto",
     "flashOn": "On",
@@ -167,6 +169,7 @@
     "recError": "Recording ({{slot}}): {{error}}",
     "processingFailed": "Processing failed: {{error}}",
     "qualityUnsupported": "Quality not supported — reverting to previous setting.",
+    "fpsUnsupported": "60 fps not supported here — reverting to 30.",
     "speedUnsupported": "Capture speed not supported — reverting to previous setting.",
     "locationDenied": "Location permission denied — geotagging stays off.",
     "noCamera": "No camera available."
