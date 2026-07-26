@@ -20,11 +20,12 @@ platform :android do
       skip_upload_metadata: true,
       skip_upload_images: true,
       skip_upload_screenshots: true,
-      # IMPÉRATIF : ne PAS « envoyer pour examen » au commit de l'edit. Sinon
-      # l'API Play revalide toutes les déclarations « Contenu de l'application »
-      # et rejette avec « You must let us know whether your app includes any
-      # health features » — MÊME quand la déclaration Applis de santé est déjà
-      # faite dans la console. L'interne se déploie quand même (pas d'examen).
+      # Ne pas « envoyer pour examen » au commit (l'interne ne passe pas par
+      # l'examen Google de toute façon). NB : ça ne suffit PAS à contourner le
+      # rejet « You must let us know whether your app includes any health
+      # features » — ce blocage vient d'une déclaration « Applis de santé »
+      # considérée incomplète côté API (Google a étendu le formulaire). Voir
+      # RELEASE.md : re-remplir la déclaration OU faire 1 upload manuel console.
       changes_not_sent_for_review: true,
     )
   end
