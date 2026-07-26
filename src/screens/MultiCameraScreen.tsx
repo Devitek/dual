@@ -58,12 +58,20 @@ const PIP_HINT_KEY = 'tl_seen_pip_hint';
 // Réexport pour compat (le type vit désormais dans services/settings).
 export type { TimerSeconds };
 
-/** Paliers de zoom rapides dérivés des bornes de la caméra principale. */
+/**
+ * Paliers de zoom rapides « par objectif » dérivés des bornes de la caméra
+ * principale : ultra grand-angle (0.5×) si dispo, principal (1×), puis les
+ * téléobjectifs usuels (2× / 5× / 10×) tant que l'appareil les atteint. Sur un
+ * device logique multi-objectifs, franchir ces paliers bascule physiquement de
+ * capteur (grand-angle → télé).
+ */
 function buildZoomLevels(min: number, max: number): number[] {
   const levels: number[] = [];
   if (min <= 0.6) levels.push(0.5); // ultra grand-angle si dispo
-  levels.push(1);
-  if (max >= 1.9) levels.push(2);
+  levels.push(1); // principal
+  for (const z of [2, 5, 10]) {
+    if (max + 0.05 >= z) levels.push(z); // téléobjectifs disponibles
+  }
   return levels;
 }
 
