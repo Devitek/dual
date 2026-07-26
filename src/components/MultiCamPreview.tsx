@@ -20,6 +20,7 @@ import { useTranslation } from 'react-i18next';
 import { MaterialIcons } from '@expo/vector-icons';
 
 import { useColors, useThemedStyles, type Palette } from '../theme/theme';
+import { haptics } from '../utils/haptics';
 import { FocusIndicator, type FocusPoint } from './FocusIndicator';
 import {
   PIP_INSET_ASPECT,
@@ -141,8 +142,12 @@ export function MultiCamPreview({
     };
 
     const start = { left: 0, top: 0, width: PIP_DEFAULT_W };
+    // Déplacement : nécessite un APPUI LONG (évite de bouger la vignette par erreur).
+    // Haptique à la « prise en main » (activation) et au relâché.
     const pan = Gesture.Pan()
+      .activateAfterLongPress(300)
       .onStart(() => {
+        haptics.medium();
         start.left = cur.current.left;
         start.top = cur.current.top;
       })
@@ -154,7 +159,10 @@ export function MultiCamPreview({
         posX.setValue(left);
         posY.setValue(top);
       })
-      .onEnd(commit);
+      .onEnd(() => {
+        haptics.light();
+        commit();
+      });
 
     const pinch = Gesture.Pinch()
       .onStart(() => {
