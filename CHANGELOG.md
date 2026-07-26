@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.15.1](https://github.com/Devitek/dual/compare/v1.15.0...v1.15.1) (2026-07-26)
+
+
+### Bug Fixes
+
+* **android:** remove ACTIVITY_RECOGNITION permission (Play health block) ([#80](https://github.com/Devitek/dual/issues/80)) ([8ed33b3](https://github.com/Devitek/dual/commit/8ed33b30b62a0914d8c010cadb705be330a327db))
+* **release:** don't send Play edit for review on internal upload ([#77](https://github.com/Devitek/dual/issues/77)) ([6611773](https://github.com/Devitek/dual/commit/6611773e98d2db6e86baaaedff96f6d1332c517e))
+
 ## [1.15.0](https://github.com/Devitek/dual/compare/v1.14.0...v1.15.0) (2026-07-26)
 
 
