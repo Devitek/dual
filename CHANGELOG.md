@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.13.0](https://github.com/Devitek/dual/compare/v1.12.0...v1.13.0) (2026-07-26)
+
+
+### Features
+
+* **capture:** native video layouts (side-by-side / stacked) + freeform inset (4b) ([792ce52](https://github.com/Devitek/dual/commit/792ce52fd9f268d89018a1a3eaca08228729c6cc))
+* **capture:** native video layouts (side-by-side / stacked) + freeform inset (Lot 4b) ([fc10c86](https://github.com/Devitek/dual/commit/fc10c8669dad2154fa1d4955e51f9a052404c9f1))
+
 ## [1.12.0](https://github.com/Devitek/dual/compare/v1.11.0...v1.12.0) (2026-07-26)
 
 
