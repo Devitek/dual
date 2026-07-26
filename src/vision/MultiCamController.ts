@@ -91,6 +91,8 @@ export interface MultiCamSnapshot {
   videoFps: VideoFps;
   /** Compensation d'exposition (EV) courante. Transitoire (non persisté). */
   exposureBias: number;
+  /** Verrou AE/AF actif (exposition + mise au point figées). Transitoire. */
+  aeLocked: boolean;
   /** Toutes les captures de la session courante (pour la galerie). */
   sessionCaptures: CapturedMedia[];
   /** Nombre de traitements (composition/sauvegarde) en cours en arrière-plan. */
@@ -163,6 +165,7 @@ const INITIAL: MultiCamSnapshot = {
   outputRatio: 'full',
   videoFps: 30,
   exposureBias: 0,
+  aeLocked: false,
   sessionCaptures: [],
   processingCount: 0,
   captureQuality: 'high',
@@ -200,6 +203,8 @@ export class MultiCamController {
   private disposed = false;
   /** Mode boomerang : le prochain enregistrement sera post-traité en boomerang. */
   private boomerangMode = false;
+  /** Dernier point de mise au point (normalisé) — sert d'ancrage au verrou AE/AF. */
+  private lastFocus = { x: 0.5, y: 0.5 };
 
   /** Fonction de composition PiP (photo) injectée depuis React (view-shot). */
   private pipComposer: ((primaryUri: string, secondaryUri: string) => Promise<string>) | null = null;
@@ -870,10 +875,35 @@ export class MultiCamController {
 
   async focusAt(slot: CameraSlot, normalizedX: number, normalizedY: number): Promise<void> {
     try {
+      this.lastFocus = { x: normalizedX, y: normalizedY };
       const point = VisionCamera.createNormalizedMeteringPoint(normalizedX, normalizedY);
       await this.controllerFor(slot)?.focusTo(point, {});
+      // Un nouveau point de mise au point (continu) rompt un éventuel verrou AE/AF.
+      if (this.snapshot.aeLocked) this.update({ aeLocked: false });
     } catch {
       /* zone non focusable */
+    }
+  }
+
+  /**
+   * Verrou / déverrouillage AE/AF (exposition + mise au point figées) sur la
+   * caméra principale, au dernier point de mise au point (centre par défaut).
+   * Transitoire (non persisté).
+   */
+  async setAeLock(locked: boolean): Promise<void> {
+    const c = this.controllerFor(this.primarySlot);
+    if (c == null) return;
+    try {
+      if (locked) {
+        const { x, y } = this.lastFocus;
+        const point = VisionCamera.createNormalizedMeteringPoint(x, y);
+        await c.focusTo(point, { adaptiveness: 'locked', autoResetAfter: null });
+      } else {
+        await c.resetFocus();
+      }
+      this.update({ aeLocked: locked });
+    } catch {
+      /* non supporté */
     }
   }
 }

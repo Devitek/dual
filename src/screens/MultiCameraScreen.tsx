@@ -348,6 +348,10 @@ export function MultiCameraScreen(): React.ReactElement {
     },
     [cam.controller],
   );
+  const toggleAeLock = useCallback(() => {
+    haptics.selection();
+    void cam.controller.setAeLock(!cam.aeLocked);
+  }, [cam.controller, cam.aeLocked]);
 
   const boomerangTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onToggleRecording = useCallback(() => {
@@ -670,6 +674,8 @@ export function MultiCameraScreen(): React.ReactElement {
               flashSupported={cam.hasTorch}
               onCyclePhotoFlash={cyclePhotoFlash}
               onOpenSettings={() => setSettingsOpen(true)}
+              aeLocked={cam.aeLocked}
+              onToggleAeLock={toggleAeLock}
             />
 
             {update.updateAvailable && (

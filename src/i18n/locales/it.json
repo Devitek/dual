@@ -16,6 +16,7 @@
     "flashStateOff": "disattivato",
     "flashStateAuto": "automatico",
     "flashStateOn": "attivato",
+    "aeLockA11y": "Blocca esposizione e messa a fuoco",
     "settingsA11y": "Apri impostazioni"
   },
   "capture": {

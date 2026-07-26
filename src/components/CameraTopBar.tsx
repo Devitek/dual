@@ -24,6 +24,8 @@ interface CameraTopBarProps {
   flashSupported: boolean;
   onCyclePhotoFlash: () => void;
   onOpenSettings: () => void;
+  aeLocked: boolean;
+  onToggleAeLock: () => void;
 }
 
 /**
@@ -37,6 +39,8 @@ export function CameraTopBar({
   flashSupported,
   onCyclePhotoFlash,
   onOpenSettings,
+  aeLocked,
+  onToggleAeLock,
 }: CameraTopBarProps): React.ReactElement {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
@@ -58,6 +62,21 @@ export function CameraTopBar({
       </View>
 
       <View style={styles.actions}>
+        <Pressable
+          onPress={onToggleAeLock}
+          android_ripple={{ color: colors.onSurfaceVariant, borderless: true, radius: 22 }}
+          style={({ pressed }) => [styles.iconBtn, aeLocked && styles.iconBtnActive, pressed && styles.pressed]}
+          accessibilityRole="button"
+          accessibilityState={{ selected: aeLocked }}
+          accessibilityLabel={t('topBar.aeLockA11y')}
+        >
+          <MaterialIcons
+            name={aeLocked ? 'lock' : 'lock-open'}
+            size={20}
+            color={aeLocked ? colors.warning : colors.onSurface}
+          />
+        </Pressable>
+
         <Pressable
           onPress={onCyclePhotoFlash}
           disabled={!flashSupported}
@@ -120,6 +139,7 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  iconBtnActive: { borderWidth: 1.5, borderColor: colors.warning },
   settingsBtn: {
     width: 46,
     height: 46,
