@@ -1,4 +1,6 @@
-🙈 NUEVO: modo sorpresa — oculta la vista previa del selfie y descúbrelo al reproducir.
-✨ Nuevo diseño de cámara, disparador de un toque, zoom rápido.
-🎨 Colores Material You + 6 idiomas.
-¡Diviértete con tus dos cámaras! 🤳🎥
+Nuevo: disposiciones lado a lado y apilada — para fotos Y vídeos, no solo Picture-in-Picture.
+Mueve y redimensiona la miniatura PiP (mantén pulsado para arrastrar, pellizca para escalar).
+Fotos nítidas: antivibración «no te muevas», captura rápida y temporizador de 3 s/10 s.
+Geolocalización opcional y captura silenciosa. Compartir con 1 toque.
+Composición en el dispositivo más rápida y robusta.
+Sigue siendo 100% gratis — sin anuncios, sin marca de agua, sin registro.

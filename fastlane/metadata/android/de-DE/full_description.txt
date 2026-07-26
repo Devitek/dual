@@ -1,26 +1,30 @@
 Zwei Kameras. Eine Aufnahme. Und wirklich KOSTENLOS.
 
-TwinLens ist eine Dual-Kamera-App (dual camera), die dein Gesicht und die Szene gleichzeitig filmt und zu einem einzigen Picture-in-Picture-Clip zusammenfügt: die Rückkamera im Vollbild, deine Reaktion in der Ecke. Vorne und hinten, mit einem Tipp, auf deinem Handy.
+TwinLens ist eine Dual-Camera-App, die dein Gesicht und die Szene GLEICHZEITIG filmt und beides zu einem Foto oder Video zusammenführt — Bild-in-Bild, nebeneinander oder gestapelt. Vorder- und Rückkamera, mit einem Tipp, komplett auf deinem Handy.
 
-★ 100% KOSTENLOS – keine Werbung, kein Wasserzeichen, keine Anmeldung, kein Abo. Wirklich.
+★ 100% KOSTENLOS — keine Werbung, kein Wasserzeichen, keine Anmeldung, kein Abo. Wirklich.
 
-Die meisten anderen Dual-Kamera-Apps verstecken das Beste hinter Werbung, Wasserzeichen oder einer Paywall. TwinLens nicht. Alle Funktionen, für immer kostenlos.
+Die meisten anderen Dual-Camera-Apps verstecken das Beste hinter Werbung, Wasserzeichen oder einer Paywall. TwinLens nicht. Alle Funktionen, für immer kostenlos.
 
 DAS BEKOMMST DU
-• 🎬 Dual-Kamera: Front + Rückkamera gleichzeitig (Foto & Video)
-• 🖼️ Picture-in-Picture-Fusion, direkt auf dem Gerät – eine fertige Datei zum Posten
-• 🚫 Keine Werbung, kein Wasserzeichen auf deinen Videos, nie
+• 🎬 Dual-Camera-Aufnahme — vorne + hinten gleichzeitig (Foto & Video)
+• 🖼️ Anordnungen: Bild-in-Bild, nebeneinander oder gestapelt — auf dem Gerät zusammengesetzt, eine Datei zum Teilen (Fotos UND Videos)
+• ✋ PiP-Miniatur verschieben & skalieren — lange drücken zum Ziehen, Pinch zum Skalieren
+• 🎯 Scharfe Aufnahmen: Anti-Unschärfe „still halten", Schnellaufnahme und 3-s-/10-s-Selbstauslöser
+• 🚫 Keine Werbung, nie ein Wasserzeichen auf deinen Videos
 • 🙈 Überraschungsmodus: Selfie-Vorschau ausblenden und deine Reaktion später entdecken
-• 💾 Behalte den Merge, beide Originaldateien oder alles
-• 🔍 Schneller Zoom, Tippen zum Fokussieren, Pinch-Zoom, Blitz & Taschenlampe
-• 🔊 Auslöser über Lautstärketasten (oder Zoom) — auch mit Bluetooth-Fernauslösern
-• 🗂️ Sitzungsgalerie mit Wiedergabe, Teilen & Löschen
+• 🔇 Lautlose Aufnahme — Auslöserton ausschalten
+• 📍 Optionaler Standort — deine Position in den Foto-Metadaten speichern, auf dem Gerät (standardmäßig aus)
+• 💾 Zusammengeführte Datei, beide Rohdateien oder alles behalten
+• 🔍 Schneller Zoom, Tippen zum Fokussieren, Pinch-Zoom, Blitz & Taschenlampe, bis 4K
+• 🔊 Auslöser oder Zoom über Lautstärketasten — auch mit Bluetooth-Selfie-Fernbedienungen
+• 📤 Teilen mit einem Tipp · 🗂️ Sitzungsgalerie mit Wiedergabe & Löschen
 • 🎨 Material-You-Farben (Android 12+) · 🌍 6 Sprachen
-• 🔒 100% auf dem Gerät – kein Konto, keine Anmeldung, keine Server, kein Tracking
+• 🔒 100% auf dem Gerät — kein Konto, keine Server, kein Tracking
 
 PERFEKT FÜR
-Reaction-Videos, Vlogs, Reisen, Konzerte, Tutorials, Überraschungsmomente, "Get ready with me" und mehr.
+Reaktionsvideos, Vlogs, Reisen, Konzerte, Tutorials, Überraschungen, „Get ready with me", erste Verkostungen — alles, wo dein Gesicht die halbe Geschichte erzählt.
 
-Dual-Kamera. Vorne und hinten. Picture-in-Picture. Ein Tipp. Keine Cloud. Keine Kosten.
+Dual Camera. Vorne und hinten. Bild-in-Bild, nebeneinander oder gestapelt. Ein Tipp. Keine Cloud. Keine Kosten.
 
-Hinweis: Die gleichzeitige Dual-Aufnahme hängt von der Hardware deines Geräts ab; wird sie nicht unterstützt, wechselt TwinLens automatisch zu einer einzelnen Kamera.
+Hinweis: Die gleichzeitige Doppelaufnahme hängt von der Hardware deines Handys ab; wird sie nicht unterstützt, wechselt TwinLens sanft zu einer einzelnen Kamera.

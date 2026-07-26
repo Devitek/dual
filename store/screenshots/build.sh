@@ -16,7 +16,7 @@ QUALITY="${QUALITY:-88}"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 
 # Ordre des captures (noms de base des .html).
-ORDER=( photo free screen1 screen3 screen2 screen4 )
+ORDER=( photo layouts free screen1 screen3 screen2 screen4 )
 # "lang:suffixe_fichier:dossier_fastlane"
 LOCALES=( "fr::fr-FR" "en:_en:en-US" "es:_es:es-ES" "de:_de:de-DE" "pt:_pt:pt-BR" "it:_it:it-IT" )
 # "sous-dossier_fastlane:LARGEURxHAUTEUR"

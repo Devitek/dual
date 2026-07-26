@@ -1,6 +1,6 @@
 Two cameras. One shot. And it's actually FREE.
 
-TwinLens is a dual camera app that films your face and the scene at the SAME time, then merges them into one Picture-in-Picture clip — the back camera full-screen, your reaction in the corner. Front and back, in a single tap, all on your phone.
+TwinLens is a dual camera app that films your face and the scene at the SAME time, then merges them into one clip or photo — Picture-in-Picture, side-by-side or stacked. Front and back, in a single tap, all on your phone.
 
 ★ 100% FREE — no ads, no watermark, no sign-up, no subscription. Really.
 
@@ -8,19 +8,23 @@ Most other dual camera apps hide the good parts behind ads, watermarks or a payw
 
 WHAT YOU GET
 • 🎬 Dual camera capture — front + back cameras at the same time (photo & video)
-• 🖼️ Picture-in-Picture merge, composed on-device — one file ready to post
+• 🖼️ Layouts: Picture-in-Picture, side-by-side or stacked — composed on-device, one file ready to post (works for photos AND videos)
+• ✋ Move & resize the PiP thumbnail — long-press to drag, pinch to scale
+• 🎯 Sharp shots: "hold still" anti-blur, fast-capture mode and a 3s / 10s self-timer
 • 🚫 No ads, no watermark on your videos, ever
 • 🙈 Surprise mode: hide the selfie preview and discover your reaction later
-• 💾 Keep the merged clip, both raw files, or all of them
-• 🔍 Quick zoom, tap-to-focus, pinch-to-zoom, flash & torch
+• 🔇 Silent capture — turn off the shutter sound
+• 📍 Optional geotagging — save your location in the photo's metadata, on-device (off by default)
+• 💾 Keep the merged file, both raw files, or all of them
+• 🔍 Quick zoom, tap-to-focus, pinch-to-zoom, flash & torch, up to 4K
 • 🔊 Volume-key shutter or zoom — also works with Bluetooth selfie remotes
-• 🗂️ Session gallery with in-app playback, share & delete
+• 📤 One-tap share · 🗂️ session gallery with in-app playback & delete
 • 🎨 Material You colors (Android 12+) · 🌍 6 languages
 • 🔒 100% on-device — no account, no sign-up, no servers, no tracking
 
 PERFECT FOR
 Reaction videos, vlogs, travel, concerts, tutorials, prank reveals, "get ready with me", first-time tastings — anything where your face is half the story.
 
-Dual camera. Front and back. Picture-in-Picture. One tap. Zero cloud. Zero cost.
+Dual camera. Front and back. Picture-in-Picture, side-by-side or stacked. One tap. Zero cloud. Zero cost.
 
 Heads-up: simultaneous dual capture depends on your phone's hardware; if it isn't supported, TwinLens smoothly falls back to a single camera.
