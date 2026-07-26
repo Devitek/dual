@@ -98,7 +98,7 @@
     "shutterSoundDesc": "Desativa o clique de captura. Algumas regiões o impõem em todo o sistema.",
     "geotag": "Localização nas fotos",
     "geotagDesc": "Incorpora as coordenadas GPS nos metadados das fotos, no aparelho — como a câmera nativa. Desativado por padrão; pede permissão de localização ao ativar.",
-    "pipDragHint": "Dica: arraste a miniatura para movê-la, pince para redimensionar.",
+    "pipDragHint": "Dica: pressione e segure a miniatura e arraste para movê-la, pince para redimensionar.",
     "watermark": "Marca d’água TwinLens",
     "watermarkDesc": "Adiciona uma pequena marca “TwinLens” no canto das fotos combinadas. Desativada por padrão."
   },
