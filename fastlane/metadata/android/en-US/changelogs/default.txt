@@ -1,4 +1,6 @@
-🙈 NEW: Surprise mode — hide the selfie preview and get surprised at playback!
-✨ Fresh camera design, one-tap shutter, quick zoom presets.
-🎨 Material You colors + 6 languages.
-Have fun with both cameras! 🤳🎥
+New: side-by-side & stacked layouts — for photos AND videos, not just Picture-in-Picture.
+Move & resize the PiP thumbnail (long-press to drag, pinch to scale).
+Sharper shots: "hold still" anti-blur, fast-capture mode and a 3s/10s self-timer.
+Optional geotagging and silent capture. One-tap share.
+Faster, more robust on-device compositing.
+Still 100% free — no ads, no watermark, no sign-up.

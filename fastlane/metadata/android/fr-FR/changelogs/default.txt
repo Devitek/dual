@@ -1,4 +1,6 @@
-🙈 NOUVEAU : mode surprise — masquez l'aperçu du selfie et découvrez la vidéo à la relecture !
-✨ Nouveau design caméra, obturateur en un tap, paliers de zoom rapides.
-🎨 Couleurs Material You + 6 langues.
-Amusez-vous avec vos deux caméras ! 🤳🎥
+Nouveau : mises en page côte à côte & haut-bas — pour les photos ET les vidéos, plus seulement le Picture-in-Picture.
+Déplacez & redimensionnez la vignette PiP (appui long pour glisser, pincez pour ajuster).
+Photos nettes : anti-flou « Ne bougez pas », capture rapide et retardateur 3 s/10 s.
+Géolocalisation optionnelle et capture silencieuse. Partage en 1 tap.
+Composition sur l'appareil plus rapide et plus robuste.
+Toujours 100% gratuit — sans pub, sans filigrane, sans inscription.

@@ -188,3 +188,23 @@ svg { fill: none; stroke: #E6E0E9; stroke-width: 2; }
 .photocap { position: absolute; left: 0; right: 0; bottom: 180px; text-align: center; padding: 0 80px; }
 .photocap h2 { font-size: 64px; font-weight: 800; color: #fff; line-height: 1.12; text-shadow: 0 4px 22px rgba(0,0,0,.6); }
 .photocap p { margin-top: 16px; font-size: 40px; color: rgba(255,255,255,.88); font-weight: 500; text-shadow: 0 2px 14px rgba(0,0,0,.5); }
+
+/* ===================== Écran dispositions (layouts_*.html) ===================== */
+/* Rendu « côte à côte » : arrière (scene) à gauche, avant (face) à droite. */
+.layoutsplit { position: absolute; inset: 0; display: flex; }
+.layoutsplit .half { flex: 1; height: 100%; }
+.layoutsplit .back { background: #1b2233 url('assets/scene.jpg') center/cover no-repeat; }
+.layoutsplit .front { background: #2b2540 url('assets/face.jpg') center/cover no-repeat; }
+.layoutsplit .divider { position: absolute; left: 50%; top: 0; bottom: 0; width: 4px; transform: translateX(-2px);
+  background: rgba(255,255,255,.35); }
+.layoutscrim { position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,.6) 0%, transparent 26%, transparent 60%, rgba(0,0,0,.78) 100%); }
+.layoutcap { position: absolute; left: 0; right: 0; top: 132px; text-align: center; padding: 0 70px; z-index: 5; }
+.layoutcap h2 { font-size: 62px; line-height: 1.12; font-weight: 800; color: #EADDFF; letter-spacing: -0.5px;
+  text-shadow: 0 4px 24px rgba(0,0,0,.75); }
+.layoutcap p { margin-top: 16px; font-size: 36px; color: rgba(230,224,233,.92); font-weight: 500;
+  text-shadow: 0 2px 14px rgba(0,0,0,.65); }
+.layoutpills { position: absolute; left: 0; right: 0; bottom: 190px; display: flex; justify-content: center; gap: 20px; z-index: 5; }
+.laypill { padding: 22px 40px; border-radius: 40px; background: rgba(0,0,0,.66); border: 2px solid #49454F;
+  font-size: 34px; font-weight: 700; color: #CAC4D0; }
+.laypill.on { background: #D0BCFF; color: #381E72; border-color: #D0BCFF; }
