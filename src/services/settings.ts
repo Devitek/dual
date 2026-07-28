@@ -50,6 +50,7 @@ export const SETTINGS_KEYS = {
   outputRatio: 'tl_output_ratio',
   videoFps: 'tl_video_fps',
   boomerangGif: 'tl_boomerang_gif',
+  mirrorFront: 'tl_mirror_front',
 } as const;
 
 export interface PersistedSettings {
@@ -81,6 +82,8 @@ export interface PersistedSettings {
   videoFps: VideoFps;
   /** Boomerang exporté en GIF animé plutôt qu'en MP4. */
   boomerangGif: boolean;
+  /** Miroir de la caméra avant à la sauvegarde (selfie comme l'aperçu). */
+  mirrorFront: boolean;
 }
 
 export type SettingKey = keyof PersistedSettings;
@@ -164,6 +167,7 @@ export async function loadPersistedSettings(): Promise<Partial<PersistedSettings
   const fps = Number(g('videoFps'));
   if (fps === 30 || fps === 60) out.videoFps = fps;
   if (g('boomerangGif') != null) out.boomerangGif = g('boomerangGif') === '1';
+  if (g('mirrorFront') != null) out.mirrorFront = g('mirrorFront') === '1';
 
   return out;
 }

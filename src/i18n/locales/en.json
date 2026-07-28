@@ -120,6 +120,8 @@
     "grid": "Rule-of-thirds grid",
     "level": "Level",
     "levelDesc": "Show a horizon line that turns green when the phone is level.",
+    "mirrorFront": "Mirror front camera",
+    "mirrorFrontDesc": "Save selfies mirrored, as shown in the preview. Off keeps the true (un-mirrored) orientation.",
     "pipDragHint": "Tip: long-press the thumbnail then drag to move it, pinch to resize.",
     "watermark": "TwinLens watermark",
     "watermarkDesc": "Add a small “TwinLens” tag in the corner of merged photos. Off by default."

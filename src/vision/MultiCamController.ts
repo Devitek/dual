@@ -89,6 +89,8 @@ export interface MultiCamSnapshot {
   outputRatio: OutputRatio;
   /** Boomerang exporté en GIF animé plutôt qu'en MP4. */
   boomerangGif: boolean;
+  /** Miroir de la caméra avant à la SAUVEGARDE (selfie comme dans l'aperçu). */
+  mirrorFront: boolean;
   /** Cadence vidéo cible (30 / 60 ips). */
   videoFps: VideoFps;
   /** Compensation d'exposition (EV) courante. Transitoire (non persisté). */
@@ -166,6 +168,7 @@ const INITIAL: MultiCamSnapshot = {
   watermark: false,
   outputRatio: 'full',
   boomerangGif: false,
+  mirrorFront: true,
   videoFps: 30,
   exposureBias: 0,
   aeLocked: false,
@@ -354,9 +357,11 @@ export class MultiCamController {
         connections.push({
           input: frontDevice,
           outputs: [
+            // Aperçu TOUJOURS en miroir (vue selfie). La SAUVEGARDE (photo+vidéo)
+            // suit le réglage : miroir (= comme l'aperçu) ou orientation réelle.
             { output: frontPreview, mirrorMode: 'on' },
-            { output: this.frontPhoto, mirrorMode: 'off' },
-            { output: this.frontVideo, mirrorMode: 'on' },
+            { output: this.frontPhoto, mirrorMode: this.snapshot.mirrorFront ? 'on' : 'off' },
+            { output: this.frontVideo, mirrorMode: this.snapshot.mirrorFront ? 'on' : 'off' },
           ],
           constraints: [...fpsConstraints],
         });
@@ -486,6 +491,19 @@ export class MultiCamController {
       await this.teardownSession();
       await this.buildSession();
     }
+  }
+
+  /**
+   * Miroir de la caméra avant à la sauvegarde. `mirrorMode` est figé à la
+   * configuration des sorties -> on reconfigure la session (l'aperçu, lui, reste
+   * toujours en miroir). Sans repli : un simple flag de miroir ne peut pas échouer.
+   */
+  async setMirrorFront(value: boolean): Promise<void> {
+    if (value === this.snapshot.mirrorFront) return;
+    this.update({ mirrorFront: value });
+    if (this.disposed || this.session == null) return;
+    await this.teardownSession();
+    await this.buildSession();
   }
 
   /** Active/désactive le son d'obturateur système (appliqué à la prochaine prise). */
