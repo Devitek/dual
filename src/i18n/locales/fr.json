@@ -124,8 +124,6 @@
     "levelDesc": "Affiche une ligne d’horizon qui passe au vert quand le téléphone est à niveau.",
     "mirrorFront": "Miroir caméra avant",
     "mirrorFrontDesc": "Enregistre les selfies en miroir, comme dans l’aperçu. Désactivé = orientation réelle (non inversée).",
-    "quickTile": "Tuile de capture rapide",
-    "quickTileDesc": "Ajoute une tuile au volet Réglages rapides pour ouvrir TwinLens en un tap.",
     "pipDragHint": "Astuce : appui long sur la vignette puis glissez pour la déplacer, pincez pour la redimensionner.",
     "watermark": "Filigrane TwinLens",
     "watermarkDesc": "Ajoute une petite mention « TwinLens » dans le coin des photos fusionnées. Désactivé par défaut."

@@ -30,7 +30,6 @@ import type { CaptureQuality, CaptureSpeed, SaveMode, VideoFps } from '../vision
 import type { CompositionLayout, OutputRatio, PipCorner } from '../services/pipComposer';
 import type { PhotoFlashMode } from './CameraTopBar';
 import type { VolumeKeyAction } from '../native/volumeKeys';
-import { canRequestCaptureTile, requestAddCaptureTile } from '../native/videoPip';
 
 interface Option<T extends string> {
   value: T;
@@ -569,25 +568,6 @@ export function SettingsSheet({
             />
           </View>
           <Text style={styles.optDesc}>{t('settings.mirrorFrontDesc')}</Text>
-
-          {canRequestCaptureTile && (
-            <>
-              <Pressable
-                style={styles.row}
-                onPress={() => {
-                  haptics.selection();
-                  void requestAddCaptureTile();
-                }}
-                accessibilityRole="button"
-                accessibilityLabel={t('settings.quickTile')}
-              >
-                <MaterialIcons name="dashboard-customize" size={22} color={colors.onSurface} />
-                <Text style={styles.rowLabel}>{t('settings.quickTile')}</Text>
-                <MaterialIcons name="add-circle-outline" size={22} color={colors.primary} />
-              </Pressable>
-              <Text style={styles.optDesc}>{t('settings.quickTileDesc')}</Text>
-            </>
-          )}
 
           <Text style={styles.section}>{t('settings.sectionLayout')}</Text>
           <Segmented options={layoutOptions} value={layout} onChange={onSetLayout} />
