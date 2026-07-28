@@ -366,7 +366,7 @@ export function MultiCameraScreen(): React.ReactElement {
     [zoomBounds],
   );
   // Zoom continu (slider) : applique + met à jour l'état (le tick haptique
-  // d'accroche est géré dans le ZoomSlider).
+  // d'accroche est géré dans le ZoomControl).
   const onZoom = useCallback(
     (z: number) => {
       const c = Math.min(zoomBounds.max, Math.max(zoomBounds.min, z));
