@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Animated, Linking, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Gesture } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
@@ -247,6 +247,19 @@ export function MultiCameraScreen(): React.ReactElement {
   useEffect(() => {
     cam.controller.setBoomerangMode(mode === 'boomerang');
   }, [mode, cam.controller]);
+
+  // Deep-link du widget d'accueil : `twinlens://capture?mode=photo|video|boomerang`
+  // -> ouvre l'app directement dans le mode demandé (démarrage à froid + à chaud).
+  useEffect(() => {
+    const apply = (url: string | null): void => {
+      if (url == null) return;
+      const m = /[?&]mode=(photo|video|boomerang)/.exec(url);
+      if (m != null) onSetMode(m[1] as CaptureMode);
+    };
+    void Linking.getInitialURL().then(apply);
+    const sub = Linking.addEventListener('url', (e) => apply(e.url));
+    return () => sub.remove();
+  }, [onSetMode]);
 
   // Hint one-shot « maintenir » la 1re fois qu'on passe en mode boomerang.
   useEffect(() => {
