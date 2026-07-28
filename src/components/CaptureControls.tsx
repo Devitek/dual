@@ -1,13 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Animated, Easing, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Circle } from 'react-native-svg';
 
 import { useColors, useThemedStyles, type Palette } from '../theme/theme';
 import { ModeSwitch, type CaptureMode } from './ModeSwitch';
 import { ZoomBar } from './ZoomBar';
 import type { CapturedMedia } from '../vision/MultiCamController';
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+// Anneau de progression du boomerang (rayon aligné sur le bord du bouton 70px).
+const RING_R = 33;
+const RING_C = 2 * Math.PI * RING_R;
 
 interface CaptureControlsProps {
   mode: CaptureMode;
@@ -16,6 +22,11 @@ interface CaptureControlsProps {
   isBusy: boolean;
   onPhoto: () => void;
   onToggleRecording: () => void;
+  /** Boomerang : appui long. Démarre/arrête l'enregistrement (le natif le boucle). */
+  onBoomerangStart: () => void;
+  onBoomerangStop: () => void;
+  /** Durée max (ms) de l'appui long boomerang -> durée de remplissage de l'anneau. */
+  boomerangMaxMs: number;
   /** Inversion arrière/avant (remplace l'ancien bouton rec de droite). */
   onSwap: () => void;
   /** false en mono-caméra : le bouton d'inversion est grisé. */
@@ -49,6 +60,9 @@ export function CaptureControls({
   isBusy,
   onPhoto,
   onToggleRecording,
+  onBoomerangStart,
+  onBoomerangStop,
+  boomerangMaxMs,
   onSwap,
   canSwap = true,
   lastCapture,
@@ -85,17 +99,59 @@ export function CaptureControls({
     ]).start();
   }, [lastCapture, thumbScale]);
 
-  const isVideo = mode === 'video' || mode === 'boomerang';
+  const boomerang = mode === 'boomerang';
+  const isVideo = mode === 'video' || boomerang;
   const shutterDisabled = isVideo ? isBusy && !isRecording : isBusy;
-  const onShutter = isVideo ? onToggleRecording : onPhoto;
+  const onShutter = mode === 'video' ? onToggleRecording : onPhoto;
   const swapDisabled = !canSwap || isRecording;
+
+  // Boomerang : appui long -> l'anneau se remplit sur `boomerangMaxMs` puis
+  // arrête tout seul ; relâcher avant la fin arrête aussi (durée = temps tenu).
+  const ring = useRef(new Animated.Value(0)).current;
+  const ringAnim = useRef<Animated.CompositeAnimation | null>(null);
+  const holdingRef = useRef(false);
+  const [holding, setHolding] = useState(false);
+
+  const startBoom = (): void => {
+    if (holdingRef.current || shutterDisabled) return;
+    holdingRef.current = true;
+    setHolding(true);
+    onBoomerangStart();
+    ring.setValue(0);
+    ringAnim.current = Animated.timing(ring, {
+      toValue: 1,
+      duration: boomerangMaxMs,
+      easing: Easing.linear,
+      useNativeDriver: false, // strokeDashoffset SVG -> pas de native driver
+    });
+    ringAnim.current.start(({ finished }) => {
+      if (finished && holdingRef.current) stopBoom();
+    });
+  };
+  const stopBoom = (): void => {
+    if (!holdingRef.current) return;
+    holdingRef.current = false;
+    setHolding(false);
+    ringAnim.current?.stop();
+    ring.setValue(0);
+    onBoomerangStop();
+  };
+
+  const innerStyle = boomerang
+    ? styles.shutterRecDot
+    : isVideo
+      ? isRecording
+        ? styles.shutterRecStop
+        : styles.shutterRecDot
+      : styles.shutterPhoto;
+  const ringOffset = ring.interpolate({ inputRange: [0, 1], outputRange: [RING_C, 0] });
 
   return (
     <View
       style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom + 8, 34) }]}
       pointerEvents="box-none"
     >
-      {isRecording && (
+      {isRecording && !boomerang && (
         <View style={styles.timer}>
           <View style={styles.recDot} />
           <Text style={styles.timerText}>{formatDuration(elapsed)}</Text>
@@ -146,20 +202,41 @@ export function CaptureControls({
           {/* Centre : obturateur unique (photo / vidéo repos / vidéo en cours) */}
           <View style={styles.zone}>
             <Pressable
-              onPress={onShutter}
+              onPress={boomerang ? undefined : onShutter}
+              onPressIn={boomerang ? startBoom : undefined}
+              onPressOut={boomerang ? stopBoom : undefined}
               disabled={shutterDisabled}
               style={styles.shutterOuter}
               accessibilityRole="button"
               accessibilityLabel={
-                isVideo ? (isRecording ? t('capture.recStopA11y') : t('capture.recStartA11y')) : t('capture.shutterPhotoA11y')
+                boomerang
+                  ? t('capture.boomerangHoldA11y')
+                  : isVideo
+                    ? isRecording
+                      ? t('capture.recStopA11y')
+                      : t('capture.recStartA11y')
+                    : t('capture.shutterPhotoA11y')
               }
             >
-              <View
-                style={[
-                  isVideo ? (isRecording ? styles.shutterRecStop : styles.shutterRecDot) : styles.shutterPhoto,
-                  shutterDisabled && styles.shutterBusy,
-                ]}
-              />
+              {holding && (
+                <Svg width={70} height={70} style={StyleSheet.absoluteFill} pointerEvents="none">
+                  <AnimatedCircle
+                    cx={35}
+                    cy={35}
+                    r={RING_R}
+                    fill="none"
+                    stroke={colors.danger}
+                    strokeWidth={4}
+                    strokeDasharray={`${RING_C} ${RING_C}`}
+                    strokeDashoffset={ringOffset}
+                    strokeLinecap="round"
+                    originX={35}
+                    originY={35}
+                    rotation={-90}
+                  />
+                </Svg>
+              )}
+              <View style={[innerStyle, shutterDisabled && styles.shutterBusy]} />
             </Pressable>
           </View>
 

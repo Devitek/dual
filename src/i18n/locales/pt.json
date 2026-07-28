@@ -27,6 +27,8 @@
     "swapA11y": "Trocar de câmera",
     "holdStill": "Não se mexa…",
     "exposure": "Exposição",
+    "boomerangHoldA11y": "Segure para gravar um boomerang",
+    "boomerangHint": "Segure o obturador para gravar um boomerang",
     "cancelTimer": "Toque para cancelar",
     "cancelTimerA11y": "Cancelar o temporizador"
   },

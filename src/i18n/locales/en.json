@@ -27,6 +27,8 @@
     "swapA11y": "Switch cameras",
     "holdStill": "Hold still…",
     "exposure": "Exposure",
+    "boomerangHoldA11y": "Hold to record a boomerang",
+    "boomerangHint": "Hold the shutter to record a boomerang",
     "cancelTimer": "Tap to cancel",
     "cancelTimerA11y": "Cancel timer"
   },

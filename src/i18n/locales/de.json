@@ -27,6 +27,8 @@
     "swapA11y": "Kameras wechseln",
     "holdStill": "Nicht bewegen…",
     "exposure": "Belichtung",
+    "boomerangHoldA11y": "Zum Aufnehmen eines Boomerangs gedrückt halten",
+    "boomerangHint": "Auslöser gedrückt halten, um ein Boomerang aufzunehmen",
     "cancelTimer": "Zum Abbrechen tippen",
     "cancelTimerA11y": "Timer abbrechen"
   },

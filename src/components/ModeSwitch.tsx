@@ -1,11 +1,14 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
 import { useThemedStyles, type Palette } from '../theme/theme';
 import { haptics } from '../utils/haptics';
 
 export type CaptureMode = 'photo' | 'video' | 'boomerang';
+
+type IconName = React.ComponentProps<typeof MaterialIcons>['name'];
 
 interface ModeSwitchProps {
   mode: CaptureMode;
@@ -14,10 +17,11 @@ interface ModeSwitchProps {
   disabled?: boolean;
 }
 
-const MODES: { value: CaptureMode; labelKey: string; a11yKey: string }[] = [
+const MODES: { value: CaptureMode; labelKey: string; a11yKey: string; icon?: IconName }[] = [
   { value: 'photo', labelKey: 'mode.photo', a11yKey: 'mode.photoA11y' },
   { value: 'video', labelKey: 'mode.video', a11yKey: 'mode.videoA11y' },
-  { value: 'boomerang', labelKey: 'mode.boomerang', a11yKey: 'mode.boomerangA11y' },
+  // ∞ (comme Instagram) plutôt qu'un texte peu clair.
+  { value: 'boomerang', labelKey: 'mode.boomerang', a11yKey: 'mode.boomerangA11y', icon: 'all-inclusive' },
 ];
 
 /**
@@ -48,14 +52,22 @@ export function ModeSwitch({ mode, onChange, disabled = false }: ModeSwitchProps
             accessibilityState={{ selected: active, disabled }}
             accessibilityLabel={t(m.a11yKey)}
           >
-            <Text
-              style={[
-                styles.label,
-                active ? (isVideo ? styles.labelActiveVideo : styles.labelActive) : styles.labelInactive,
-              ]}
-            >
-              {t(m.labelKey)}
-            </Text>
+            {m.icon != null ? (
+              <MaterialIcons
+                name={m.icon}
+                size={19}
+                color={active ? '#fff' : 'rgba(255,255,255,0.62)'}
+              />
+            ) : (
+              <Text
+                style={[
+                  styles.label,
+                  active ? (isVideo ? styles.labelActiveVideo : styles.labelActive) : styles.labelInactive,
+                ]}
+              >
+                {t(m.labelKey)}
+              </Text>
+            )}
           </Pressable>
         );
       })}
