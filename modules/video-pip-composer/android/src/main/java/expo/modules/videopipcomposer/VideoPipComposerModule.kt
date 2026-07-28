@@ -1,6 +1,8 @@
 package expo.modules.videopipcomposer
 
 import android.Manifest
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import androidx.core.app.ActivityCompat
 import expo.modules.kotlin.Promise
@@ -105,6 +107,39 @@ class VideoPipComposerModule : Module(), PipComposerBus.Listener {
         outputRatio = params.outputRatio,
         saveOriginals = params.saveOriginals,
       )
+    }
+
+    // Partage DIRECT vers une app cible (Instagram / TikTok…) : ACTION_SEND ciblé
+    // sur le 1er `packages` installé, média en EXTRA_STREAM (Uri content://) avec
+    // droit de lecture. Renvoie true si lancé ; false si aucune cible n'est
+    // installée -> le JS retombe sur le partage système.
+    AsyncFunction("shareToApp") { uri: String, mimeType: String, packages: List<String>, promise: Promise ->
+      val activity = appContext.currentActivity
+      if (activity == null) {
+        promise.resolve(false)
+        return@AsyncFunction
+      }
+      try {
+        val parsed = Uri.parse(uri)
+        var launched = false
+        for (pkg in packages) {
+          val intent = Intent(Intent.ACTION_SEND).apply {
+            setPackage(pkg)
+            type = mimeType
+            putExtra(Intent.EXTRA_STREAM, parsed)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+          }
+          if (intent.resolveActivity(activity.packageManager) != null) {
+            activity.startActivity(intent)
+            launched = true
+            break
+          }
+        }
+        promise.resolve(launched)
+      } catch (e: Exception) {
+        promise.resolve(false)
+      }
     }
 
     AsyncFunction("requestNotificationsPermission") {
