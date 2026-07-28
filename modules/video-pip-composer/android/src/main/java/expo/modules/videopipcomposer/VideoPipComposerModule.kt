@@ -1,7 +1,10 @@
 package expo.modules.videopipcomposer
 
 import android.Manifest
+import android.app.StatusBarManager
+import android.content.ComponentName
 import android.content.Intent
+import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.Build
 import androidx.core.app.ActivityCompat
@@ -137,6 +140,33 @@ class VideoPipComposerModule : Module(), PipComposerBus.Listener {
           }
         }
         promise.resolve(launched)
+      } catch (e: Exception) {
+        promise.resolve(false)
+      }
+    }
+
+    // Propose à l'utilisateur d'ajouter la tuile « capture rapide » aux Réglages
+    // rapides (API 33+, dialogue système). Renvoie false si indisponible.
+    AsyncFunction("requestAddCaptureTile") { promise: Promise ->
+      if (Build.VERSION.SDK_INT < 33) {
+        promise.resolve(false)
+        return@AsyncFunction
+      }
+      val activity = appContext.currentActivity
+      if (activity == null) {
+        promise.resolve(false)
+        return@AsyncFunction
+      }
+      try {
+        val sbm = activity.getSystemService(StatusBarManager::class.java)
+        sbm.requestAddTileService(
+          ComponentName(activity, CaptureTileService::class.java),
+          activity.getString(R.string.tile_capture_label),
+          Icon.createWithResource(activity, R.drawable.ic_tile_camera),
+          java.util.concurrent.Executor { it.run() },
+          java.util.function.Consumer<Int> { },
+        )
+        promise.resolve(true)
       } catch (e: Exception) {
         promise.resolve(false)
       }

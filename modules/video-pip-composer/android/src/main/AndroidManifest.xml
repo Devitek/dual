@@ -20,6 +20,20 @@
       android:name="expo.modules.videopipcomposer.PipComposerService"
       android:exported="false"
       android:foregroundServiceType="dataSync" />
+
+    <!-- Tuile Réglages rapides « capture rapide » : ouvre l'app sur la caméra.
+         Le système lie ce service (BIND_QUICK_SETTINGS_TILE) ; l'app ne demande
+         AUCUNE permission sensible. -->
+    <service
+      android:name="expo.modules.videopipcomposer.CaptureTileService"
+      android:exported="true"
+      android:icon="@drawable/ic_tile_camera"
+      android:label="@string/tile_capture_label"
+      android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+      <intent-filter>
+        <action android:name="android.service.quicksettings.action.QS_TILE" />
+      </intent-filter>
+    </service>
   </application>
 
 </manifest>

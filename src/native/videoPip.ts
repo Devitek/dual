@@ -44,6 +44,7 @@ interface VideoPipComposerNative {
   composePip: (primaryPath: string, secondaryPath: string, params: NativeVideoParams) => Promise<string>;
   composePipPhoto: (primaryPath: string, secondaryPath: string, params: NativePhotoParams) => Promise<string>;
   shareToApp: (uri: string, mimeType: string, packages: string[]) => Promise<boolean>;
+  requestAddCaptureTile: () => Promise<boolean>;
   requestNotificationsPermission: () => Promise<void>;
   addListener: (event: string, listener: (payload: PipProgressEvent) => void) => { remove: () => void };
 }
@@ -67,6 +68,22 @@ export async function shareToApp(uri: string, mimeType: string, packages: string
   if (Native?.shareToApp == null) return false;
   try {
     return await Native.shareToApp(uri, mimeType, packages);
+  } catch {
+    return false;
+  }
+}
+
+/** Le module natif expose-t-il la demande d'ajout de tuile (Android 13+) ? */
+export const canRequestCaptureTile = Native?.requestAddCaptureTile != null;
+
+/**
+ * Propose à l'utilisateur d'ajouter la tuile « capture rapide » aux Réglages
+ * rapides (dialogue système, Android 13+). Renvoie false si indisponible.
+ */
+export async function requestAddCaptureTile(): Promise<boolean> {
+  if (Native?.requestAddCaptureTile == null) return false;
+  try {
+    return await Native.requestAddCaptureTile();
   } catch {
     return false;
   }
