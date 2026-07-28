@@ -7,7 +7,7 @@ import Svg, { Circle } from 'react-native-svg';
 
 import { useColors, useThemedStyles, type Palette } from '../theme/theme';
 import { ModeSwitch, type CaptureMode } from './ModeSwitch';
-import { ZoomBar } from './ZoomBar';
+import { ZoomSlider } from './ZoomSlider';
 import type { CapturedMedia } from '../vision/MultiCamController';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -36,10 +36,12 @@ interface CaptureControlsProps {
   processing?: boolean;
   /** Ouvre la revue de la dernière capture. */
   onOpenReview: () => void;
-  // Paliers de zoom rapides
+  // Zoom : bornes device + paliers « objectif » (accroche) + zoom courant + setter continu.
+  zoomMin: number;
+  zoomMax: number;
   zoomLevels: number[];
   currentZoom: number;
-  onSelectZoom: (level: number) => void;
+  onZoom: (zoom: number) => void;
 }
 
 function formatDuration(seconds: number): string {
@@ -50,7 +52,7 @@ function formatDuration(seconds: number): string {
 
 /**
  * Barre de capture inférieure — modèle appareil photo classique :
- *   [ ZoomBar ] [ ModeSwitch Photo|Vidéo ] [ miniature · obturateur unique · inversion ].
+ *   [ ZoomSlider ] [ ModeSwitch Photo|Vidéo ] [ miniature · obturateur unique · inversion ].
  * L'obturateur unique s'adapte au mode (photo/vidéo, repos/enregistrement).
  */
 export function CaptureControls({
@@ -68,9 +70,11 @@ export function CaptureControls({
   lastCapture,
   processing = false,
   onOpenReview,
+  zoomMin,
+  zoomMax,
   zoomLevels,
   currentZoom,
-  onSelectZoom,
+  onZoom,
 }: CaptureControlsProps): React.ReactElement {
   const [elapsed, setElapsed] = useState(0);
   const thumbScale = useRef(new Animated.Value(1)).current;
@@ -159,7 +163,7 @@ export function CaptureControls({
       )}
 
       <View style={styles.stack}>
-        <ZoomBar levels={zoomLevels} current={currentZoom} onSelect={onSelectZoom} />
+        <ZoomSlider min={zoomMin} max={zoomMax} presets={zoomLevels} value={currentZoom} onZoom={onZoom} />
 
         <ModeSwitch mode={mode} onChange={onSetMode} disabled={isRecording} />
 
