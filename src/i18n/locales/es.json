@@ -122,6 +122,8 @@
     "levelDesc": "Muestra una línea de horizonte que se vuelve verde cuando el teléfono está nivelado.",
     "mirrorFront": "Espejo cámara frontal",
     "mirrorFrontDesc": "Guarda los selfies en espejo, como en la vista previa. Desactivado = orientación real (sin espejo).",
+    "quickTile": "Mosaico de captura rápida",
+    "quickTileDesc": "Añade un mosaico al panel de Ajustes rápidos para abrir TwinLens con un toque.",
     "pipDragHint": "Consejo: mantén pulsada la miniatura y arrástrala para moverla, pellizca para redimensionarla.",
     "watermark": "Marca de agua TwinLens",
     "watermarkDesc": "Añade una pequeña marca «TwinLens» en la esquina de las fotos combinadas. Desactivada por defecto."

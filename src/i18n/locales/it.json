@@ -122,6 +122,8 @@
     "levelDesc": "Mostra una linea d’orizzonte che diventa verde quando il telefono è in piano.",
     "mirrorFront": "Specchia fotocamera frontale",
     "mirrorFrontDesc": "Salva i selfie speculari, come nell’anteprima. Off = orientamento reale (non speculare).",
+    "quickTile": "Riquadro di scatto rapido",
+    "quickTileDesc": "Aggiunge un riquadro al pannello Impostazioni rapide per aprire TwinLens con un tocco.",
     "pipDragHint": "Suggerimento: tieni premuta la miniatura e trascina per spostarla, pizzica per ridimensionarla.",
     "watermark": "Filigrana TwinLens",
     "watermarkDesc": "Aggiunge una piccola scritta “TwinLens” nell’angolo delle foto combinate. Disattivata di default."
