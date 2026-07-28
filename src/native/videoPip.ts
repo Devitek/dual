@@ -43,6 +43,7 @@ interface VideoPipComposerNative {
    */
   composePip: (primaryPath: string, secondaryPath: string, params: NativeVideoParams) => Promise<string>;
   composePipPhoto: (primaryPath: string, secondaryPath: string, params: NativePhotoParams) => Promise<string>;
+  shareToApp: (uri: string, mimeType: string, packages: string[]) => Promise<boolean>;
   requestNotificationsPermission: () => Promise<void>;
   addListener: (event: string, listener: (payload: PipProgressEvent) => void) => { remove: () => void };
 }
@@ -55,6 +56,20 @@ export const isVideoPipComposerAvailable = Native != null;
 /** Demande la permission de notifications (Android 13+), pour la barre de progression. */
 export function requestVideoPipNotificationsPermission(): void {
   Native?.requestNotificationsPermission?.().catch(() => {});
+}
+
+/**
+ * Partage DIRECT du média vers la 1ʳᵉ app installée parmi `packages` (ACTION_SEND
+ * ciblé, natif). Renvoie `false` si aucune n'est installée (ou module absent) →
+ * l'appelant retombe sur le partage système.
+ */
+export async function shareToApp(uri: string, mimeType: string, packages: string[]): Promise<boolean> {
+  if (Native?.shareToApp == null) return false;
+  try {
+    return await Native.shareToApp(uri, mimeType, packages);
+  } catch {
+    return false;
+  }
 }
 
 /** S'abonne à la progression (0..1, ou -1 pour indéterminé). */

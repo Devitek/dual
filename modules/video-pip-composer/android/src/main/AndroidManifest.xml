@@ -7,6 +7,14 @@
     android:name="android.permission.WRITE_EXTERNAL_STORAGE"
     android:maxSdkVersion="28" />
 
+  <!-- Visibilité de packages (Android 11+) pour le partage DIRECT vers ces apps.
+       Packages spécifiques uniquement (jamais QUERY_ALL_PACKAGES) -> conforme Play. -->
+  <queries>
+    <package android:name="com.instagram.android" />
+    <package android:name="com.zhiliaoapp.musically" />
+    <package android:name="com.ss.android.ugc.trill" />
+  </queries>
+
   <application>
     <service
       android:name="expo.modules.videopipcomposer.PipComposerService"

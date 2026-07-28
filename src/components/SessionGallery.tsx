@@ -10,11 +10,13 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons, FontAwesome6 } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import * as VideoThumbnails from 'expo-video-thumbnails';
 import * as Sharing from 'expo-sharing';
+
+import { shareToSocial, type ShareTarget } from '../services/directShare';
 import * as IntentLauncher from 'expo-intent-launcher';
 import { useVideoPlayer, VideoView } from 'expo-video';
 
@@ -155,6 +157,16 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
 
   const shareSelected = useCallback(() => shareItem(firstSelected), [shareItem, firstSelected]);
 
+  const shareToTarget = useCallback(
+    (target: ShareTarget) => {
+      const item = firstSelected;
+      if (item == null) return;
+      haptics.selection();
+      void shareToSocial(target, item.primaryUri, item.kind);
+    },
+    [firstSelected],
+  );
+
   const openSelected = useCallback(async () => {
     if (firstSelected == null) return;
     const mime = firstSelected.kind === 'video' ? 'video/*' : 'image/*';
@@ -286,6 +298,24 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
             >
               <MaterialIcons name="share" size={22} color={colors.onSurface} />
               <Text style={styles.actionLabel}>{t('gallery.share')}</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.action, selectedItems.length !== 1 && styles.actionDim]}
+              disabled={selectedItems.length !== 1}
+              onPress={() => shareToTarget('instagram')}
+              accessibilityLabel={t('gallery.shareInstagramA11y')}
+            >
+              <FontAwesome6 name="instagram" size={21} color={colors.onSurface} />
+              <Text style={styles.actionLabel}>Instagram</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.action, selectedItems.length !== 1 && styles.actionDim]}
+              disabled={selectedItems.length !== 1}
+              onPress={() => shareToTarget('tiktok')}
+              accessibilityLabel={t('gallery.shareTiktokA11y')}
+            >
+              <FontAwesome6 name="tiktok" size={21} color={colors.onSurface} />
+              <Text style={styles.actionLabel}>TikTok</Text>
             </Pressable>
             <Pressable
               style={[styles.action, selectedItems.length !== 1 && styles.actionDim]}
