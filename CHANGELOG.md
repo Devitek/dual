@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.18.0](https://github.com/Devitek/dual/compare/v1.17.0...v1.18.0) (2026-07-28)
+
+
+### Features
+
+* **zoom:** redesign zoom control (animated collapsed pill &lt;-&gt; ruler) ([#94](https://github.com/Devitek/dual/issues/94)) ([209df24](https://github.com/Devitek/dual/commit/209df24fad8470d7ae5a50f5c1b389a03db2111b))
+
+
+### Bug Fixes
+
+* **capture:** boomerang ring alignment, hide progress pill, contextual save messages ([#92](https://github.com/Devitek/dual/issues/92)) ([c3f0814](https://github.com/Devitek/dual/commit/c3f0814ce910c56925b1db9a361f48560ce9aa20))
+
 ## [1.17.0](https://github.com/Devitek/dual/compare/v1.16.0...v1.17.0) (2026-07-28)
 
 
