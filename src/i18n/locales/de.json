@@ -177,6 +177,7 @@
     "twoVideosNoPip": "2 Videos gespeichert (PiP-Zusammenführung nicht verfügbar)",
     "twoVideos": "2 Videos gespeichert",
     "videoSaved": "Video gespeichert",
+    "boomerangSaved": "Boomerang gespeichert",
     "noVideo": "Kein Video aufgenommen.",
     "recError": "Aufnahme ({{slot}}): {{error}}",
     "processingFailed": "Verarbeitung fehlgeschlagen: {{error}}",

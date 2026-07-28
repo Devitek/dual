@@ -755,7 +755,9 @@ export function MultiCameraScreen(): React.ReactElement {
               <UpdateBanner onUpdate={update.startUpdate} onDismiss={update.snooze} />
             )}
 
-            <ProcessingIndicator count={cam.processingCount} progress={videoProgress} />
+            {/* Pill de progression masquée pour l'instant : la miniature affiche déjà
+                un loader (hors charte + non alignée). Réactivable selon retours. */}
+            {/* <ProcessingIndicator count={cam.processingCount} progress={videoProgress} /> */}
 
             {cam.mode === 'single' && cam.status === 'running' && <UnsupportedBanner />}
 

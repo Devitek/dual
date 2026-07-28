@@ -210,7 +210,7 @@ export function CaptureControls({
               onPressIn={boomerang ? startBoom : undefined}
               onPressOut={boomerang ? stopBoom : undefined}
               disabled={shutterDisabled}
-              style={styles.shutterOuter}
+              style={[styles.shutterOuter, boomerang && styles.shutterOuterNoBorder]}
               accessibilityRole="button"
               accessibilityLabel={
                 boomerang
@@ -222,25 +222,34 @@ export function CaptureControls({
                     : t('capture.shutterPhotoA11y')
               }
             >
-              {holding && (
-                <Svg width={70} height={70} style={StyleSheet.absoluteFill} pointerEvents="none">
-                  <AnimatedCircle
-                    cx={35}
-                    cy={35}
-                    r={RING_R}
-                    fill="none"
-                    stroke={colors.danger}
-                    strokeWidth={4}
-                    strokeDasharray={`${RING_C} ${RING_C}`}
-                    strokeDashoffset={ringOffset}
-                    strokeLinecap="round"
-                    originX={35}
-                    originY={35}
-                    rotation={-90}
-                  />
-                </Svg>
+              {boomerang ? (
+                <>
+                  {/* Le SVG couvre TOUT le bouton (70px, sans bordure) : rail gris
+                      + arc de progression rouge, parfaitement centrés. */}
+                  <Svg width={70} height={70} style={StyleSheet.absoluteFill} pointerEvents="none">
+                    <Circle cx={35} cy={35} r={RING_R} fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth={4} />
+                    {holding && (
+                      <AnimatedCircle
+                        cx={35}
+                        cy={35}
+                        r={RING_R}
+                        fill="none"
+                        stroke={colors.danger}
+                        strokeWidth={4}
+                        strokeDasharray={`${RING_C} ${RING_C}`}
+                        strokeDashoffset={ringOffset}
+                        strokeLinecap="round"
+                        originX={35}
+                        originY={35}
+                        rotation={-90}
+                      />
+                    )}
+                  </Svg>
+                  <View style={[styles.shutterRecDot, shutterDisabled && styles.shutterBusy]} />
+                </>
+              ) : (
+                <View style={[innerStyle, shutterDisabled && styles.shutterBusy]} />
               )}
-              <View style={[innerStyle, shutterDisabled && styles.shutterBusy]} />
             </Pressable>
           </View>
 
@@ -301,6 +310,7 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  shutterOuterNoBorder: { borderWidth: 0 }, // boomerang : le rail est dessiné en SVG
   shutterPhoto: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.onSurface },
   shutterRecDot: { width: 30, height: 30, borderRadius: 15, backgroundColor: colors.danger },
   shutterRecStop: { width: 30, height: 30, borderRadius: 8, backgroundColor: colors.danger },

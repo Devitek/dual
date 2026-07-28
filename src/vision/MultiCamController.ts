@@ -708,7 +708,7 @@ export class MultiCamController {
           secondaryUri: saveOriginals ? toFileUri(secondaryPath) : null,
           createdAt: Date.now(),
         });
-        this.notify('success', i18n.t(saveOriginals ? 'notices.pipPlusPhotos' : 'notices.pipSaved'));
+        this.notify('success', i18n.t('notices.photoSaved'));
         return;
       }
 
@@ -734,10 +734,7 @@ export class MultiCamController {
       const displayUri = pipUri ?? originalPrimaryUri ?? toFileUri(primaryPath);
       const secondaryUri = secondaryPath != null ? toFileUri(secondaryPath) : null;
       this.pushCapture({ kind: 'photo', primaryUri: displayUri, secondaryUri, createdAt: Date.now() });
-      if (pipUri != null && wantOriginals) this.notify('success', i18n.t('notices.pipPlusPhotos'));
-      else if (pipUri != null) this.notify('success', i18n.t('notices.pipSaved'));
-      else if (secondaryPath != null) this.notify('success', i18n.t('notices.twoPhotos'));
-      else this.notify('success', i18n.t('notices.photoSaved'));
+      this.notify('success', i18n.t('notices.photoSaved'));
     });
   }
 
@@ -792,20 +789,13 @@ export class MultiCamController {
           createdAt: Date.now(),
           durationMs,
         });
-        this.notify('success', i18n.t(saveOriginals ? 'notices.videoPipPlus' : 'notices.videoPipSaved'));
+        this.notify('success', i18n.t(boomerang ? 'notices.boomerangSaved' : 'notices.videoSaved'));
       } else {
         // Mode originaux, ou pas de composeur natif -> sauvegarde JS des originaux.
         const primaryUri = await this.persist(primaryPath);
         const secondaryUri = secondaryPath != null ? await this.persist(secondaryPath) : null;
         this.pushCapture({ kind: 'video', primaryUri, secondaryUri, createdAt: Date.now(), durationMs });
-        this.notify(
-          'success',
-          secondaryPath != null
-            ? wantPip
-              ? i18n.t('notices.twoVideosNoPip')
-              : i18n.t('notices.twoVideos')
-            : i18n.t('notices.videoSaved'),
-        );
+        this.notify('success', i18n.t(boomerang ? 'notices.boomerangSaved' : 'notices.videoSaved'));
       }
     });
   }
