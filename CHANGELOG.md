@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.16.0](https://github.com/Devitek/dual/compare/v1.15.1...v1.16.0) (2026-07-28)
+
+
+### Features
+
+* **android:** quick-capture Quick Settings tile ([#86](https://github.com/Devitek/dual/issues/86)) ([164ffa6](https://github.com/Devitek/dual/commit/164ffa630d6079a94de8889181b61b3cb09a828e))
+* **capture:** mirror front camera toggle ([#83](https://github.com/Devitek/dual/issues/83)) ([0592665](https://github.com/Devitek/dual/commit/05926659cf38860418114e10e4f11e664894e152))
+* **share:** direct share to Instagram & TikTok ([#85](https://github.com/Devitek/dual/issues/85)) ([6bbd535](https://github.com/Devitek/dual/commit/6bbd535809af728c4314d6e5f1d88fab27fbd431))
+
 ## [1.15.1](https://github.com/Devitek/dual/compare/v1.15.0...v1.15.1) (2026-07-26)
 
 
