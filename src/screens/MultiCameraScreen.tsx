@@ -77,8 +77,8 @@ function buildZoomLevels(min: number, max: number): number[] {
   const levels: number[] = [];
   if (min <= 0.6) levels.push(0.5); // ultra grand-angle si dispo
   levels.push(1); // principal
-  for (const z of [2, 5, 10]) {
-    if (max + 0.05 >= z) levels.push(z); // téléobjectifs disponibles
+  for (const z of [2, 5, 10, 30, 100]) {
+    if (max + 0.05 >= z) levels.push(z); // téléobjectifs / super-zoom disponibles
   }
   return levels;
 }
@@ -342,25 +342,28 @@ export function MultiCameraScreen(): React.ReactElement {
     }
   }, [countdown, doCapture]);
 
-  const onSelectZoom = useCallback(
-    (level: number) => {
-      const { min, max } = cam.controller.getZoomBounds(primarySlot);
-      const z = Math.min(max, Math.max(min, level));
-      void cam.controller.setZoom(primarySlot, z);
-      setCurrentZoom(z);
-      setZoomDisplay(z);
-      setZoomNonce((n) => n + 1);
-      haptics.selection();
-    },
-    [cam.controller, primarySlot],
-  );
-
-  // Paliers de zoom rapides selon les bornes de la caméra principale.
-  const zoomLevels = useMemo(() => {
-    const { min, max } = cam.controller.getZoomBounds(primarySlot);
-    return buildZoomLevels(min, max);
+  // Bornes + paliers de zoom selon la caméra principale.
+  const zoomBounds = useMemo(
+    () => cam.controller.getZoomBounds(primarySlot),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cam.controller, primarySlot, cam.status]);
+    [cam.controller, primarySlot, cam.status],
+  );
+  const zoomLevels = useMemo(
+    () => buildZoomLevels(zoomBounds.min, zoomBounds.max),
+    [zoomBounds],
+  );
+  // Zoom continu (slider) : applique + met à jour l'état (le tick haptique
+  // d'accroche est géré dans le ZoomSlider).
+  const onZoom = useCallback(
+    (z: number) => {
+      const c = Math.min(zoomBounds.max, Math.max(zoomBounds.min, z));
+      void cam.controller.setZoom(primarySlot, c);
+      setCurrentZoom(c);
+      setZoomDisplay(c);
+      setZoomNonce((n) => n + 1);
+    },
+    [cam.controller, primarySlot, zoomBounds],
+  );
 
   // Bornes de compensation d'exposition (EV) de la caméra principale.
   const exposureBounds = useMemo(
@@ -758,9 +761,11 @@ export function MultiCameraScreen(): React.ReactElement {
               lastCapture={cam.lastCapture}
               processing={cam.processingCount > 0}
               onOpenReview={() => setGalleryOpen(true)}
+              zoomMin={zoomBounds.min}
+              zoomMax={zoomBounds.max}
               zoomLevels={zoomLevels}
               currentZoom={currentZoom}
-              onSelectZoom={onSelectZoom}
+              onZoom={onZoom}
             />
 
             {boomHint && (
