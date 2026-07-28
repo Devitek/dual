@@ -27,6 +27,8 @@
     "swapA11y": "Inverser les caméras",
     "holdStill": "Ne bougez pas…",
     "exposure": "Exposition",
+    "boomerangHoldA11y": "Maintenez pour enregistrer un boomerang",
+    "boomerangHint": "Maintenez l’obturateur pour enregistrer un boomerang",
     "cancelTimer": "Toucher pour annuler",
     "cancelTimerA11y": "Annuler le retardateur"
   },

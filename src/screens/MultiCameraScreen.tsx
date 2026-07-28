@@ -54,9 +54,14 @@ import {
 
 /** Clé du hint « touchez la vignette » (1er lancement — one-shot, hors réglages). */
 const PIP_HINT_KEY = 'tl_seen_pip_hint';
+/** Hint one-shot « maintenir pour le boomerang » (1re fois en mode boomerang). */
+const BOOM_HINT_KEY = 'tl_seen_boom_hint';
 
-/** Durée du clip source d'un boomerang (ms) avant auto-stop. */
-const BOOMERANG_MS = 1600;
+/** Boomerang (appui long) : durées mini / maxi du clip source (ms). */
+const BOOMERANG_MIN_MS = 700;
+const BOOMERANG_MAX_MS = 3000;
+/** Durée fixe d'un boomerang déclenché par une touche de volume (pas d'appui long). */
+const BOOMERANG_KEY_MS = 1500;
 
 // Réexport pour compat (le type vit désormais dans services/settings).
 export type { TimerSeconds };
@@ -104,6 +109,7 @@ export function MultiCameraScreen(): React.ReactElement {
   const [currentZoom, setCurrentZoom] = useState(1);
   const [videoProgress, setVideoProgress] = useState<number | null>(null);
   const [pipHintVisible, setPipHintVisible] = useState(false);
+  const [boomHint, setBoomHint] = useState(false);
   const [volumeKeyAction, setVolumeKeyActionState] = useState<VolumeKeyAction>('volume');
   const [stabilization, setStabilizationState] = useState(true);
   const [timerSeconds, setTimerSecondsState] = useState<TimerSeconds>(0);
@@ -242,6 +248,26 @@ export function MultiCameraScreen(): React.ReactElement {
     cam.controller.setBoomerangMode(mode === 'boomerang');
   }, [mode, cam.controller]);
 
+  // Hint one-shot « maintenir » la 1re fois qu'on passe en mode boomerang.
+  useEffect(() => {
+    if (mode !== 'boomerang') {
+      setBoomHint(false);
+      return;
+    }
+    let cancelled = false;
+    let hideTimer: ReturnType<typeof setTimeout> | undefined;
+    void AsyncStorage.getItem(BOOM_HINT_KEY).then((seen) => {
+      if (cancelled || seen === '1') return;
+      setBoomHint(true);
+      void AsyncStorage.setItem(BOOM_HINT_KEY, '1').catch(() => {});
+      hideTimer = setTimeout(() => setBoomHint(false), 4500);
+    });
+    return () => {
+      cancelled = true;
+      if (hideTimer != null) clearTimeout(hideTimer);
+    };
+  }, [mode]);
+
   // Capture réelle : flash blanc instantané puis capture async (l'overlay
   // « Ne bougez pas » est piloté séparément par l'état isBusy du contrôleur).
   // En rafale (burstCount > 1), N captures séquentielles : chaque capturePhoto
@@ -353,31 +379,42 @@ export function MultiCameraScreen(): React.ReactElement {
     void cam.controller.setAeLock(!cam.aeLocked);
   }, [cam.controller, cam.aeLocked]);
 
-  const boomerangTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onToggleRecording = useCallback(() => {
     if (cam.isRecording) {
-      if (boomerangTimer.current != null) {
-        clearTimeout(boomerangTimer.current);
-        boomerangTimer.current = null;
-      }
       haptics.medium();
       void cam.controller.stopRecording();
     } else {
       haptics.heavy();
       void cam.controller.startRecording();
-      // Boomerang : clip court auto-stoppé (le natif le boucle avant/arrière).
-      if (mode === 'boomerang') {
-        boomerangTimer.current = setTimeout(() => {
-          boomerangTimer.current = null;
-          void cam.controller.stopRecording();
-        }, BOOMERANG_MS);
-      }
     }
-  }, [cam.controller, cam.isRecording, mode]);
+  }, [cam.controller, cam.isRecording]);
+
+  // Boomerang = appui long : démarre à l'appui, arrête au relâchement (le natif
+  // boucle avant/arrière). On garantit une durée mini pour un clip exploitable.
+  const boomStartRef = useRef(0);
+  const boomMinTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onBoomerangStart = useCallback(() => {
+    haptics.heavy();
+    boomStartRef.current = Date.now();
+    void cam.controller.startRecording();
+  }, [cam.controller]);
+  const onBoomerangStop = useCallback(() => {
+    if (boomMinTimer.current != null) {
+      clearTimeout(boomMinTimer.current);
+      boomMinTimer.current = null;
+    }
+    const doStop = () => {
+      haptics.medium();
+      void cam.controller.stopRecording();
+    };
+    const elapsed = Date.now() - boomStartRef.current;
+    if (elapsed >= BOOMERANG_MIN_MS) doStop();
+    else boomMinTimer.current = setTimeout(doStop, BOOMERANG_MIN_MS - elapsed);
+  }, [cam.controller]);
 
   useEffect(
     () => () => {
-      if (boomerangTimer.current != null) clearTimeout(boomerangTimer.current);
+      if (boomMinTimer.current != null) clearTimeout(boomMinTimer.current);
     },
     [],
   );
@@ -602,7 +639,11 @@ export function MultiCameraScreen(): React.ReactElement {
       cam.status === 'running' && permissions.allGranted && !settingsOpen && !galleryOpen,
     onShutter: () => {
       if (mode === 'photo') onPhoto();
-      else onToggleRecording();
+      else if (mode === 'boomerang') {
+        // Touche volume : pas d'appui long -> boomerang de durée fixe.
+        onBoomerangStart();
+        setTimeout(onBoomerangStop, BOOMERANG_KEY_MS);
+      } else onToggleRecording();
     },
     onZoom: zoomBy,
   });
@@ -709,6 +750,9 @@ export function MultiCameraScreen(): React.ReactElement {
               isBusy={cam.isBusy}
               onPhoto={onPhoto}
               onToggleRecording={onToggleRecording}
+              onBoomerangStart={onBoomerangStart}
+              onBoomerangStop={onBoomerangStop}
+              boomerangMaxMs={BOOMERANG_MAX_MS}
               onSwap={swap}
               canSwap={cam.mode === 'multi'}
               lastCapture={cam.lastCapture}
@@ -718,6 +762,26 @@ export function MultiCameraScreen(): React.ReactElement {
               currentZoom={currentZoom}
               onSelectZoom={onSelectZoom}
             />
+
+            {boomHint && (
+              <View
+                pointerEvents="none"
+                style={{
+                  position: 'absolute',
+                  bottom: 210,
+                  alignSelf: 'center',
+                  maxWidth: '80%',
+                  backgroundColor: 'rgba(0,0,0,0.72)',
+                  paddingHorizontal: 16,
+                  paddingVertical: 10,
+                  borderRadius: 20,
+                }}
+              >
+                <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600', textAlign: 'center' }}>
+                  {t('capture.boomerangHint')}
+                </Text>
+              </View>
+            )}
 
             {cam.mode === 'multi' && cam.showSecondaryPreview && (
               <PipHint visible={pipHintVisible} corner={cam.pipCorner} onDismiss={dismissPipHint} />

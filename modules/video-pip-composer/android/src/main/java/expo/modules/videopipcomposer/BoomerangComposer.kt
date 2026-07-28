@@ -36,7 +36,11 @@ class BoomerangComposer(
 ) {
   private val timeoutUs = 10_000L
 
-  fun compose() {
+  /**
+   * @param onProgress avancement 0..1 (échantillonnage puis ré-encodage), pour la
+   *   barre de progression (sinon le boomerang « restait bloqué » à la fin).
+   */
+  fun compose(onProgress: (Float) -> Unit = {}) {
     val retriever = MediaMetadataRetriever()
     val frames = ArrayList<Bitmap>()
     try {
@@ -47,8 +51,11 @@ class BoomerangComposer(
       val n = frameCount.coerceIn(2, 60)
       for (i in 0 until n) {
         val t = durUs * i / (n - 1)
-        val bmp = retriever.getFrameAtTime(t, MediaMetadataRetriever.OPTION_CLOSEST)
+        // OPTION_CLOSEST_SYNC : bien plus rapide que CLOSEST (pas de décodage
+        // exact frame par frame) -> échantillonnage nettement plus court.
+        val bmp = retriever.getFrameAtTime(t, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
         if (bmp != null) frames.add(bmp)
+        onProgress(0.3f * (i + 1) / n) // échantillonnage : 0 -> 0.3
       }
     } finally {
       runCatching { retriever.release() }
@@ -58,6 +65,7 @@ class BoomerangComposer(
     if (asGif) {
       try {
         writeGif(frames)
+        onProgress(1f)
       } finally {
         frames.forEach { runCatching { it.recycle() } }
       }
@@ -124,6 +132,7 @@ class BoomerangComposer(
 
     try {
       val frameDurNs = 1_000_000_000L / fps
+      val total = order.size
       order.forEachIndexed { pos, frameIdx ->
         glSurface.makeCurrent()
         GLES20.glClearColor(0f, 0f, 0f, 1f)
@@ -133,8 +142,10 @@ class BoomerangComposer(
         glSurface.setPresentationTime(pos * frameDurNs)
         glSurface.swapBuffers()
         drainEncoder(false)
+        onProgress(0.3f + 0.7f * (pos + 1) / total) // ré-encodage : 0.3 -> 1.0
       }
       drainEncoder(true)
+      onProgress(1f)
     } finally {
       runCatching { if (muxerStarted) muxer.stop() }
       runCatching { muxer.release() }

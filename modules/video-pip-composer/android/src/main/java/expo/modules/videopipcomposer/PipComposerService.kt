@@ -182,6 +182,17 @@ class PipComposerService : Service() {
         } else {
           val outFile = File.createTempFile("pip_", ".mp4", cacheDir)
           var lastPct = -1
+          // Émet un avancement global 0..1 (ou -1 indéterminé). En boomerang, la
+          // compo PiP occupe 0..0.6 et le ré-encodage boomerang 0.6..1.0, pour que
+          // la barre progresse jusqu'au bout (fin du « bloqué à 97 % »).
+          fun report(fraction: Float) {
+            val pct = (fraction * 100).toInt().coerceIn(0, 100)
+            if (pct != lastPct || fraction < 0) {
+              lastPct = pct
+              updateNotification(buildNotification(pct, fraction < 0, title))
+              PipComposerBus.progress(jobId, fraction.toDouble())
+            }
+          }
           PipVideoComposer(
             primaryPath = primaryPath,
             secondaryPath = secondaryPath,
@@ -197,12 +208,7 @@ class PipComposerService : Service() {
             marginRatio = MARGIN_RATIO,
             bitRate = bitRate,
           ).compose { fraction ->
-            val pct = (fraction * 100).toInt().coerceIn(0, 100)
-            if (pct != lastPct) {
-              lastPct = pct
-              updateNotification(buildNotification(pct, fraction < 0, title))
-              PipComposerBus.progress(jobId, fraction.toDouble())
-            }
+            report(if (fraction < 0f) fraction else if (boomerang) fraction * 0.6f else fraction)
           }
           // Boomerang (optionnel) : post-traite la vidéo PiP en avant+arrière
           // bouclé (MP4) ou en GIF animé. FAIL-SAFE : toute erreur laisse la
@@ -214,7 +220,8 @@ class PipComposerService : Service() {
             try {
               val ext = if (boomerangGif) ".gif" else ".mp4"
               val bf = File.createTempFile("boom_", ext, cacheDir)
-              BoomerangComposer(outFile.absolutePath, bf.absolutePath, asGif = boomerangGif).compose()
+              BoomerangComposer(outFile.absolutePath, bf.absolutePath, asGif = boomerangGif)
+                .compose { p -> report(0.6f + 0.4f * p) } // boomerang : 0.6 -> 1.0
               boomFile = bf
               finalFile = bf
               savedAsGif = boomerangGif
