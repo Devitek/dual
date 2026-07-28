@@ -7,7 +7,7 @@ import Svg, { Circle } from 'react-native-svg';
 
 import { useColors, useThemedStyles, type Palette } from '../theme/theme';
 import { ModeSwitch, type CaptureMode } from './ModeSwitch';
-import { ZoomSlider } from './ZoomSlider';
+import { ZoomControl } from './ZoomControl';
 import type { CapturedMedia } from '../vision/MultiCamController';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -52,7 +52,7 @@ function formatDuration(seconds: number): string {
 
 /**
  * Barre de capture inférieure — modèle appareil photo classique :
- *   [ ZoomSlider ] [ ModeSwitch Photo|Vidéo ] [ miniature · obturateur unique · inversion ].
+ *   [ ZoomControl ] [ ModeSwitch Photo|Vidéo ] [ miniature · obturateur unique · inversion ].
  * L'obturateur unique s'adapte au mode (photo/vidéo, repos/enregistrement).
  */
 export function CaptureControls({
@@ -163,7 +163,7 @@ export function CaptureControls({
       )}
 
       <View style={styles.stack}>
-        <ZoomSlider min={zoomMin} max={zoomMax} presets={zoomLevels} value={currentZoom} onZoom={onZoom} />
+        <ZoomControl min={zoomMin} max={zoomMax} presets={zoomLevels} value={currentZoom} onZoom={onZoom} />
 
         <ModeSwitch mode={mode} onChange={onSetMode} disabled={isRecording} />
 
