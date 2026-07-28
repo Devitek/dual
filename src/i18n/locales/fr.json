@@ -177,6 +177,7 @@
     "twoVideosNoPip": "2 vidéos enregistrées (fusion PiP indisponible)",
     "twoVideos": "2 vidéos enregistrées",
     "videoSaved": "Vidéo enregistrée",
+    "boomerangSaved": "Boomerang sauvegardé",
     "noVideo": "Aucune vidéo enregistrée.",
     "recError": "Enregistrement ({{slot}}) : {{error}}",
     "processingFailed": "Traitement échoué : {{error}}",

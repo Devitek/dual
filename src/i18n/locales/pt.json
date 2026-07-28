@@ -177,6 +177,7 @@
     "twoVideosNoPip": "2 vídeos salvos (combinação PiP indisponível)",
     "twoVideos": "2 vídeos salvos",
     "videoSaved": "Vídeo salvo",
+    "boomerangSaved": "Boomerang salvo",
     "noVideo": "Nenhum vídeo gravado.",
     "recError": "Gravação ({{slot}}): {{error}}",
     "processingFailed": "Falha no processamento: {{error}}",

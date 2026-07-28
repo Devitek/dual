@@ -177,6 +177,7 @@
     "twoVideosNoPip": "2 videos saved (PiP merge unavailable)",
     "twoVideos": "2 videos saved",
     "videoSaved": "Video saved",
+    "boomerangSaved": "Boomerang saved",
     "noVideo": "No video recorded.",
     "recError": "Recording ({{slot}}): {{error}}",
     "processingFailed": "Processing failed: {{error}}",
