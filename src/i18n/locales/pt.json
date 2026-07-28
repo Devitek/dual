@@ -120,6 +120,8 @@
     "grid": "Grade de terços",
     "level": "Nível",
     "levelDesc": "Mostra uma linha de horizonte que fica verde quando o telefone está nivelado.",
+    "mirrorFront": "Espelhar câmera frontal",
+    "mirrorFrontDesc": "Salva as selfies espelhadas, como na pré-visualização. Desativado = orientação real (sem espelho).",
     "pipDragHint": "Dica: pressione e segure a miniatura e arraste para movê-la, pince para redimensionar.",
     "watermark": "Marca d’água TwinLens",
     "watermarkDesc": "Adiciona uma pequena marca “TwinLens” no canto das fotos combinadas. Desativada por padrão."

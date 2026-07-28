@@ -453,6 +453,13 @@ export function MultiCameraScreen(): React.ReactElement {
     },
     [cam.controller],
   );
+  const setMirrorFront = useCallback(
+    (v: boolean) => {
+      void cam.controller.setMirrorFront(v);
+      saveSetting('mirrorFront', v);
+    },
+    [cam.controller],
+  );
 
   const toggleSecondaryPreview = useCallback(() => {
     haptics.selection();
@@ -487,6 +494,7 @@ export function MultiCameraScreen(): React.ReactElement {
       if (s.captureQuality != null) void c.setQuality(s.captureQuality);
       if (s.videoFps != null) void c.setVideoFps(s.videoFps);
       if (s.boomerangGif != null) c.setBoomerangGif(s.boomerangGif);
+      if (s.mirrorFront != null) void c.setMirrorFront(s.mirrorFront);
       if (s.showSecondaryPreview != null) c.setShowSecondaryPreview(s.showSecondaryPreview);
       if (s.photoFlash != null) setPhotoFlash(s.photoFlash);
       if (s.mode != null) setMode(s.mode);
@@ -766,6 +774,8 @@ export function MultiCameraScreen(): React.ReactElement {
               onSetVideoFps={setVideoFps}
               boomerangGif={cam.boomerangGif}
               onToggleBoomerangGif={() => setBoomerangGif(!cam.boomerangGif)}
+              mirrorFront={cam.mirrorFront}
+              onToggleMirrorFront={() => setMirrorFront(!cam.mirrorFront)}
               volumeKeyAction={volumeKeyAction}
               onSetVolumeKeyAction={setVolumeKeyAction}
               stabilization={stabilization}

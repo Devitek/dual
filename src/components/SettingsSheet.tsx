@@ -239,6 +239,8 @@ interface SettingsSheetProps {
   onSetVideoFps: (fps: VideoFps) => void;
   boomerangGif: boolean;
   onToggleBoomerangGif: () => void;
+  mirrorFront: boolean;
+  onToggleMirrorFront: () => void;
   volumeKeyAction: VolumeKeyAction;
   onSetVolumeKeyAction: (action: VolumeKeyAction) => void;
   stabilization: boolean;
@@ -292,6 +294,8 @@ export function SettingsSheet({
   onSetVideoFps,
   boomerangGif,
   onToggleBoomerangGif,
+  mirrorFront,
+  onToggleMirrorFront,
   volumeKeyAction,
   onSetVolumeKeyAction,
   stabilization,
@@ -552,6 +556,18 @@ export function SettingsSheet({
             />
           </View>
           <Text style={styles.optDesc}>{t('settings.levelDesc')}</Text>
+
+          <View style={styles.row}>
+            <MaterialIcons name="flip" size={22} color={colors.onSurface} />
+            <Text style={styles.rowLabel}>{t('settings.mirrorFront')}</Text>
+            <Switch
+              value={mirrorFront}
+              onValueChange={onToggleMirrorFront}
+              trackColor={{ true: colors.primary, false: colors.outlineVariant }}
+              thumbColor={colors.onPrimary}
+            />
+          </View>
+          <Text style={styles.optDesc}>{t('settings.mirrorFrontDesc')}</Text>
 
           <Text style={styles.section}>{t('settings.sectionLayout')}</Text>
           <Segmented options={layoutOptions} value={layout} onChange={onSetLayout} />

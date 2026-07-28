@@ -120,6 +120,8 @@
     "grid": "Griglia dei terzi",
     "level": "Livella",
     "levelDesc": "Mostra una linea d’orizzonte che diventa verde quando il telefono è in piano.",
+    "mirrorFront": "Specchia fotocamera frontale",
+    "mirrorFrontDesc": "Salva i selfie speculari, come nell’anteprima. Off = orientamento reale (non speculare).",
     "pipDragHint": "Suggerimento: tieni premuta la miniatura e trascina per spostarla, pizzica per ridimensionarla.",
     "watermark": "Filigrana TwinLens",
     "watermarkDesc": "Aggiunge una piccola scritta “TwinLens” nell’angolo delle foto combinate. Disattivata di default."
