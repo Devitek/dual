@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.17.0](https://github.com/Devitek/dual/compare/v1.16.0...v1.17.0) (2026-07-28)
+
+
+### Features
+
+* **android:** home-screen widget (Photo/Video/Boomerang) + rename scheme to twinlens ([#90](https://github.com/Devitek/dual/issues/90)) ([cf19420](https://github.com/Devitek/dual/commit/cf19420cfba41ef33b3497e42985b159291a6d82))
+* **boomerang:** hold-to-record with progress ring + fix stuck progress ([#87](https://github.com/Devitek/dual/issues/87)) ([fa0d436](https://github.com/Devitek/dual/commit/fa0d436970c2be348b9fed47121819b555d08c25))
+* **zoom:** magnetic zoom slider (log scale + snap) ([#89](https://github.com/Devitek/dual/issues/89)) ([c2351e4](https://github.com/Devitek/dual/commit/c2351e41124d7872198ecbcad5610af993d0cf44))
+
 ## [1.16.0](https://github.com/Devitek/dual/compare/v1.15.1...v1.16.0) (2026-07-28)
 
 
