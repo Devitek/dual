@@ -44,6 +44,7 @@ interface VideoPipComposerNative {
   composePip: (primaryPath: string, secondaryPath: string, params: NativeVideoParams) => Promise<string>;
   composePipPhoto: (primaryPath: string, secondaryPath: string, params: NativePhotoParams) => Promise<string>;
   shareToApp: (uri: string, mimeType: string, packages: string[]) => Promise<boolean>;
+  shareSystem: (uri: string, mimeType: string) => Promise<boolean>;
   requestAddCaptureTile: () => Promise<boolean>;
   requestNotificationsPermission: () => Promise<void>;
   addListener: (event: string, listener: (payload: PipProgressEvent) => void) => { remove: () => void };
@@ -68,6 +69,19 @@ export async function shareToApp(uri: string, mimeType: string, packages: string
   if (Native?.shareToApp == null) return false;
   try {
     return await Native.shareToApp(uri, mimeType, packages);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Partage SYSTÈME (feuille de partage) — fiable sur les URI `content://` (MediaStore),
+ * là où `expo-sharing` échoue en silence. Renvoie false si indisponible.
+ */
+export async function shareSystem(uri: string, mimeType: string): Promise<boolean> {
+  if (Native?.shareSystem == null) return false;
+  try {
+    return await Native.shareSystem(uri, mimeType);
   } catch {
     return false;
   }

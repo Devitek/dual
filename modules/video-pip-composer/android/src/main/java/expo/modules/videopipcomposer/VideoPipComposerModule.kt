@@ -147,6 +147,29 @@ class VideoPipComposerModule : Module(), PipComposerBus.Listener {
 
     // Propose à l'utilisateur d'ajouter la tuile « capture rapide » aux Réglages
     // rapides (API 33+, dialogue système). Renvoie false si indisponible.
+    // Partage SYSTÈME (feuille de partage) d'un média content:// — fiable, contrairement
+    // à expo-sharing qui échoue silencieusement sur les URI MediaStore. ACTION_SEND +
+    // createChooser, média en EXTRA_STREAM avec droit de lecture.
+    AsyncFunction("shareSystem") { uri: String, mimeType: String, promise: Promise ->
+      val activity = appContext.currentActivity
+      if (activity == null) {
+        promise.resolve(false)
+        return@AsyncFunction
+      }
+      try {
+        val send = Intent(Intent.ACTION_SEND).apply {
+          type = mimeType
+          putExtra(Intent.EXTRA_STREAM, Uri.parse(uri))
+          addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        val chooser = Intent.createChooser(send, null).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+        activity.startActivity(chooser)
+        promise.resolve(true)
+      } catch (e: Exception) {
+        promise.resolve(false)
+      }
+    }
+
     AsyncFunction("requestAddCaptureTile") { promise: Promise ->
       if (Build.VERSION.SDK_INT < 33) {
         promise.resolve(false)

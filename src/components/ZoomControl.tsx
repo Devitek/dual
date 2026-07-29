@@ -48,6 +48,17 @@ export function ZoomControl({ min, max, presets, value, onZoom }: ZoomControlPro
   const cfg = useRef({ min, max, presets, onZoom });
   cfg.current = { min, max, presets, onZoom };
 
+  // Position ABSOLUE (fenêtre) de la barre, pour suivre le doigt PARTOUT à l'écran
+  // et gérer les 3 zones (gauche de la barre = min, sur la barre = navigation,
+  // droite = max). On mesure en fenêtre (le X du geste est un X écran absolu).
+  const pillRef = useRef<View>(null);
+  const bar = useRef({ left: 0, width: WIDTH });
+  const measure = (): void => {
+    pillRef.current?.measureInWindow((x, _y, w) => {
+      if (w > 0) bar.current = { left: x, width: w };
+    });
+  };
+
   const logRange = Math.log(max) - Math.log(min);
   const pOf = (z: number): number => (logRange > 0 ? clamp((Math.log(clamp(z, min, max)) - Math.log(min)) / logRange, 0, 1) : 0);
 
@@ -74,11 +85,13 @@ export function ZoomControl({ min, max, presets, value, onZoom }: ZoomControlPro
     [],
   );
 
-  const setFromX = (x: number): void => {
+  const setFromMoveX = (moveX: number): void => {
     const c = cfg.current;
     const range = Math.log(c.max) - Math.log(c.min);
     if (range <= 0) return;
-    const p = clamp(x / WIDTH, 0, 1);
+    // X écran absolu -> fraction sur la barre, CLAMPÉE : hors de la barre à
+    // gauche = min, à droite = max (le doigt peut être n'importe où à l'écran).
+    const p = clamp((moveX - bar.current.left) / bar.current.width, 0, 1);
     let z = Math.exp(Math.log(c.min) + p * range);
     // Accroche magnétique proche d'un palier.
     let snapped: number | null = null;
@@ -100,10 +113,13 @@ export function ZoomControl({ min, max, presets, value, onZoom }: ZoomControlPro
       // Laisse les taps aux chips ; ne capte QUE le glissement horizontal.
       onStartShouldSetPanResponder: () => false,
       onMoveShouldSetPanResponder: (_e, g) => Math.abs(g.dx) > 6 && Math.abs(g.dx) > Math.abs(g.dy),
-      onPanResponderGrant: () => openExpanded(),
-      onPanResponderMove: (e) => {
+      onPanResponderGrant: () => {
+        measure();
         openExpanded();
-        setFromX(e.nativeEvent.locationX);
+      },
+      onPanResponderMove: (_e, g) => {
+        openExpanded();
+        setFromMoveX(g.moveX);
       },
       onPanResponderRelease: () => {
         lastSnap.current = null;
@@ -147,7 +163,7 @@ export function ZoomControl({ min, max, presets, value, onZoom }: ZoomControlPro
         <Text style={styles.bubbleText}>{fmt(value)}</Text>
       </Animated.View>
 
-      <View style={styles.pill} {...pan.panHandlers}>
+      <View ref={pillRef} onLayout={measure} style={styles.pill} {...pan.panHandlers}>
         {/* Couche REPLIÉE : chips espacés. */}
         <Animated.View style={[styles.layer, styles.chips, { opacity: collapsedOpacity }]} pointerEvents={expanded ? 'none' : 'auto'}>
           {presets.map((pr, i) => {
