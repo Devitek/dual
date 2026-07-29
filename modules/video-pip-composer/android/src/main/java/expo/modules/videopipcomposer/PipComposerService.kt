@@ -207,6 +207,7 @@ class PipComposerService : Service() {
             insetWidthRatio = INSET_WIDTH_RATIO,
             marginRatio = MARGIN_RATIO,
             bitRate = bitRate,
+            allKeyframes = boomerang, // boomerang : toutes-images-clés pour le re-mux
           ).compose { fraction ->
             report(if (fraction < 0f) fraction else if (boomerang) fraction * 0.6f else fraction)
           }

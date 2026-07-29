@@ -39,6 +39,8 @@ class PipVideoComposer(
   private val insetWidthRatio: Float,
   private val marginRatio: Float,
   private val bitRate: Int,
+  /** true (boomerang) -> toutes-images-clés, pour permettre un re-mux inverse. */
+  private val allKeyframes: Boolean = false,
 ) {
   private val timeoutUs = 10_000L
 
@@ -116,7 +118,8 @@ class PipVideoComposer(
       setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface)
       setInteger(MediaFormat.KEY_BIT_RATE, effBitRate)
       setInteger(MediaFormat.KEY_FRAME_RATE, frameRate)
-      setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 2)
+      // 0 = toutes-images-clés (boomerang : requis pour le re-mux inverse).
+      setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, if (allKeyframes) 0 else 2)
     }
     val encoder = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
     encoder.configure(encFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)

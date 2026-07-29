@@ -45,6 +45,7 @@ interface VideoPipComposerNative {
   composePipPhoto: (primaryPath: string, secondaryPath: string, params: NativePhotoParams) => Promise<string>;
   shareToApp: (uri: string, mimeType: string, packages: string[]) => Promise<boolean>;
   shareSystem: (uri: string, mimeType: string) => Promise<boolean>;
+  updateCaptureWidget: (uri: string, kind: string) => Promise<boolean>;
   requestAddCaptureTile: () => Promise<boolean>;
   requestNotificationsPermission: () => Promise<void>;
   addListener: (event: string, listener: (payload: PipProgressEvent) => void) => { remove: () => void };
@@ -85,6 +86,11 @@ export async function shareSystem(uri: string, mimeType: string): Promise<boolea
   } catch {
     return false;
   }
+}
+
+/** Met à jour la miniature de la dernière capture sur le widget d'accueil (best-effort). */
+export function updateCaptureWidget(uri: string, kind: 'photo' | 'video'): void {
+  Native?.updateCaptureWidget?.(uri, kind).catch(() => {});
 }
 
 /** Le module natif expose-t-il la demande d'ajout de tuile (Android 13+) ? */

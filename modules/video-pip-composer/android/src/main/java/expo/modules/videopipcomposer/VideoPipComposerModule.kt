@@ -2,12 +2,21 @@ package expo.modules.videopipcomposer
 
 import android.Manifest
 import android.app.StatusBarManager
+import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.RectF
 import android.graphics.drawable.Icon
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
 import androidx.core.app.ActivityCompat
+import java.io.File
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
@@ -195,6 +204,56 @@ class VideoPipComposerModule : Module(), PipComposerBus.Listener {
       }
     }
 
+    // Widget v3 : met à jour la miniature de la dernière capture sur le widget
+    // d'accueil (écrit une vignette arrondie dans filesDir puis rafraîchit).
+    AsyncFunction("updateCaptureWidget") { uri: String, kind: String, promise: Promise ->
+      val ctx = appContext.reactContext
+      if (ctx == null) {
+        promise.resolve(false)
+        return@AsyncFunction
+      }
+      try {
+        val parsed = Uri.parse(uri)
+        val src: Bitmap? = if (kind == "video") {
+          val r = MediaMetadataRetriever()
+          try {
+            r.setDataSource(ctx, parsed)
+            r.getFrameAtTime(-1)
+          } finally {
+            runCatching { r.release() }
+          }
+        } else {
+          ctx.contentResolver.openInputStream(parsed)?.use {
+            BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = 4 })
+          }
+        }
+        if (src == null) {
+          promise.resolve(false)
+          return@AsyncFunction
+        }
+        val thumb = roundedSquare(src, 180, 26f)
+        src.recycle()
+        File(ctx.filesDir, CaptureWidgetProvider.THUMB_FILE).outputStream().use {
+          thumb.compress(Bitmap.CompressFormat.PNG, 100, it)
+        }
+        thumb.recycle()
+
+        val mgr = AppWidgetManager.getInstance(ctx)
+        val ids = mgr.getAppWidgetIds(ComponentName(ctx, CaptureWidgetProvider::class.java))
+        if (ids.isNotEmpty()) {
+          ctx.sendBroadcast(
+            Intent(ctx, CaptureWidgetProvider::class.java).apply {
+              action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+              putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+            },
+          )
+        }
+        promise.resolve(true)
+      } catch (e: Exception) {
+        promise.resolve(false)
+      }
+    }
+
     AsyncFunction("requestNotificationsPermission") {
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         appContext.currentActivity?.let { activity ->
@@ -202,6 +261,24 @@ class VideoPipComposerModule : Module(), PipComposerBus.Listener {
         }
       }
     }
+  }
+
+  /** Vignette carrée (center-crop) à coins arrondis pour le widget. */
+  private fun roundedSquare(src: Bitmap, size: Int, radius: Float): Bitmap {
+    val out = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(out)
+    val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+    val path = Path().apply {
+      addRoundRect(RectF(0f, 0f, size.toFloat(), size.toFloat()), radius, radius, Path.Direction.CW)
+    }
+    canvas.clipPath(path)
+    val scale = maxOf(size / src.width.toFloat(), size / src.height.toFloat())
+    val dw = src.width * scale
+    val dh = src.height * scale
+    val left = (size - dw) / 2f
+    val top = (size - dh) / 2f
+    canvas.drawBitmap(src, null, RectF(left, top, left + dw, top + dh), paint)
+    return out
   }
 
   override fun onProgress(jobId: String, fraction: Double) {

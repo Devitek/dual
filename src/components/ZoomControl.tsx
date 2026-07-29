@@ -46,10 +46,15 @@ function chipLabel(z: number): string {
  */
 export function ZoomControl({ min, max, presets, value, onZoom }: ZoomControlProps): React.ReactElement | null {
   const [expanded, setExpanded] = useState(false);
+  // Valeur LOCALE pendant le glissement : pilote le ruler à 60fps sans re-rendre
+  // tout l'écran (le zoom natif, lui, n'est appliqué que throttlé -> plus de lag).
+  const [dragValue, setDragValue] = useState<number | null>(null);
   const expand = useRef(new Animated.Value(0)).current;
   const collapseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSnap = useRef<number | null>(null);
   const drag = useRef({ startZoom: 1, dxAtGrant: 0 });
+  const lastApply = useRef(0);
+  const pendingZoom = useRef<number | null>(null);
 
   // Config lue par le PanResponder (créé une fois) via ref -> pas de closure périmée.
   const cfg = useRef({ min, max, presets, onZoom, value });
@@ -98,7 +103,22 @@ export function ZoomControl({ min, max, presets, value, onZoom }: ZoomControlPro
     }
     if (snapped != null && snapped !== lastSnap.current) haptics.selection();
     lastSnap.current = snapped;
-    c.onZoom(z);
+    // Ruler fluide (état local) ; zoom natif appliqué au plus toutes les ~45ms.
+    setDragValue(z);
+    pendingZoom.current = z;
+    const now = Date.now();
+    if (now - lastApply.current >= 45) {
+      lastApply.current = now;
+      c.onZoom(z);
+    }
+  };
+  const endDrag = (): void => {
+    // Applique la valeur finale exacte, puis rend la main à la prop `value`.
+    if (pendingZoom.current != null) cfg.current.onZoom(pendingZoom.current);
+    pendingZoom.current = null;
+    lastSnap.current = null;
+    setDragValue(null);
+    scheduleCollapse();
   };
 
   const pan = useRef(
@@ -111,17 +131,10 @@ export function ZoomControl({ min, max, presets, value, onZoom }: ZoomControlPro
         openExpanded();
       },
       onPanResponderMove: (_e, g) => {
-        openExpanded();
         setFromDrag(g.dx - drag.current.dxAtGrant);
       },
-      onPanResponderRelease: () => {
-        lastSnap.current = null;
-        scheduleCollapse();
-      },
-      onPanResponderTerminate: () => {
-        lastSnap.current = null;
-        scheduleCollapse();
-      },
+      onPanResponderRelease: endDrag,
+      onPanResponderTerminate: endDrag,
     }),
   ).current;
 
@@ -147,11 +160,14 @@ export function ZoomControl({ min, max, presets, value, onZoom }: ZoomControlPro
 
   if (presets.length < 2 || max <= min) return null;
 
+  // Pendant le glissement on affiche la valeur LOCALE (fluide) ; sinon la prop.
+  const shownValue = dragValue ?? value;
+
   // Chip la plus proche de la valeur (affiche la valeur exacte en actif).
   let activeIdx = 0;
   let best = Infinity;
   presets.forEach((pr, i) => {
-    const d = Math.abs(Math.log(pr) - Math.log(value));
+    const d = Math.abs(Math.log(pr) - Math.log(shownValue));
     if (d < best) {
       best = d;
       activeIdx = i;
@@ -164,7 +180,7 @@ export function ZoomControl({ min, max, presets, value, onZoom }: ZoomControlPro
   };
 
   // Défilement : on centre la valeur, en épinglant aux bords (pas de vide).
-  const xAbsValue = PX_PER_LN * (Math.log(value) - lnMin);
+  const xAbsValue = PX_PER_LN * (Math.log(shownValue) - lnMin);
   const translateX = stripW <= WIDTH ? (WIDTH - stripW) / 2 : clamp(WIDTH / 2 - xAbsValue, WIDTH - stripW, 0);
   const thumbX = xAbsValue + translateX;
   const collapsedOpacity = expand.interpolate({ inputRange: [0, 1], outputRange: [1, 0] });
@@ -176,7 +192,7 @@ export function ZoomControl({ min, max, presets, value, onZoom }: ZoomControlPro
         pointerEvents="none"
         style={[styles.bubble, { opacity: expand, transform: [{ translateX: clamp(thumbX - 22, 0, WIDTH - 44) }] }]}
       >
-        <Text style={styles.bubbleText}>{fmt(value)}</Text>
+        <Text style={styles.bubbleText}>{fmt(shownValue)}</Text>
       </Animated.View>
 
       <View style={styles.pill} {...pan.panHandlers}>
@@ -191,7 +207,7 @@ export function ZoomControl({ min, max, presets, value, onZoom }: ZoomControlPro
               <Pressable key={pr} onPress={() => tapChip(pr)} style={styles.chipHit} accessibilityRole="button">
                 {active ? (
                   <View style={styles.activeChip}>
-                    <Text style={styles.activeText}>{fmt(value)}</Text>
+                    <Text style={styles.activeText}>{fmt(shownValue)}</Text>
                   </View>
                 ) : (
                   <Text style={styles.chipText}>{chipLabel(pr)}</Text>
