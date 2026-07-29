@@ -14,10 +14,9 @@ import { MaterialIcons, FontAwesome6 } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import * as VideoThumbnails from 'expo-video-thumbnails';
-import * as Sharing from 'expo-sharing';
 
 import { shareToSocial, type ShareTarget } from '../services/directShare';
-import { shareSystem } from '../native/videoPip';
+import { shareCapture } from '../services/shareMedia';
 import * as IntentLauncher from 'expo-intent-launcher';
 import { useVideoPlayer, VideoView } from 'expo-video';
 
@@ -56,7 +55,7 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
   const insets = useSafeAreaInsets();
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [preview, setPreview] = useState<CapturedMedia | null>(null);
   const [playing, setPlaying] = useState<CapturedMedia | null>(null);
   const [selectMode, setSelectMode] = useState(false);
@@ -146,20 +145,19 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
   const selectedItems = data.filter((i) => selected.has(keyOf(i)));
   const firstSelected = selectedItems[0];
 
-  const shareItem = useCallback(async (item: CapturedMedia | null | undefined) => {
-    if (item == null) return;
-    haptics.selection();
-    // Partage SYSTÈME natif d'abord (fiable sur les URI content:// MediaStore ;
-    // expo-sharing échoue en silence dessus). Repli sur expo-sharing sinon.
-    const mime = item.kind === 'video' ? 'video/*' : 'image/*';
-    const shared = await shareSystem(item.primaryUri, mime);
-    if (shared) return;
-    try {
-      if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(item.primaryUri);
-    } catch {
-      /* partage indisponible pour cette URI */
-    }
-  }, []);
+  const shareItem = useCallback(
+    async (item: CapturedMedia | null | undefined) => {
+      if (item == null) return;
+      haptics.selection();
+      const label = item.boomerang
+        ? t('share.boomerang')
+        : item.kind === 'video'
+          ? t('share.video')
+          : t('share.photo');
+      await shareCapture(item, label, i18n.language);
+    },
+    [t, i18n.language],
+  );
 
   const shareSelected = useCallback(() => shareItem(firstSelected), [shareItem, firstSelected]);
 

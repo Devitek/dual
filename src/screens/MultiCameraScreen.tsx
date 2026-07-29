@@ -37,6 +37,7 @@ import {
   isVideoPipComposerAvailable,
   requestVideoPipNotificationsPermission,
   subscribeVideoPipProgress,
+  updateCaptureWidget,
 } from '../native/videoPip';
 import { haptics } from '../utils/haptics';
 import type { FocusPoint } from '../components/FocusIndicator';
@@ -247,6 +248,12 @@ export function MultiCameraScreen(): React.ReactElement {
   useEffect(() => {
     cam.controller.setBoomerangMode(mode === 'boomerang');
   }, [mode, cam.controller]);
+
+  // Widget d'accueil : miniature de la dernière capture (best-effort).
+  useEffect(() => {
+    const lc = cam.lastCapture;
+    if (lc != null) updateCaptureWidget(lc.primaryUri, lc.kind);
+  }, [cam.lastCapture]);
 
   // Deep-link du widget d'accueil : `twinlens://capture?mode=photo|video|boomerang`
   // -> ouvre l'app directement dans le mode demandé (démarrage à froid + à chaud).

@@ -53,6 +53,8 @@ export interface CapturedMedia {
   createdAt: number;
   /** Durée de la vidéo en millisecondes (approx.), pour l'affichage galerie. */
   durationMs?: number;
+  /** Vidéo boomerang (pour un nom de partage explicite). */
+  boomerang?: boolean;
 }
 
 export interface Notice {
@@ -788,6 +790,7 @@ export class MultiCamController {
           secondaryUri: saveOriginals ? toFileUri(secondaryPath!) : null,
           createdAt: Date.now(),
           durationMs,
+          boomerang,
         });
         this.notify('success', i18n.t(boomerang ? 'notices.boomerangSaved' : 'notices.videoSaved'));
       } else {

@@ -213,5 +213,10 @@
     "available": "È disponibile una nuova versione.",
     "cta": "Aggiorna",
     "later": "Più tardi"
+  },
+  "share": {
+    "photo": "Foto",
+    "video": "Video",
+    "boomerang": "Boomerang"
   }
 }
