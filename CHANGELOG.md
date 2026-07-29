@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.18.1](https://github.com/Devitek/dual/compare/v1.18.0...v1.18.1) (2026-07-29)
+
+
+### Bug Fixes
+
+* zoom drag tracking, share on content:// URIs, widget preview ([#95](https://github.com/Devitek/dual/issues/95)) ([d7d5a97](https://github.com/Devitek/dual/commit/d7d5a97676b7628b6b639cf49b073ad51c739864))
+
 ## [1.18.0](https://github.com/Devitek/dual/compare/v1.17.0...v1.18.0) (2026-07-28)
 
 
