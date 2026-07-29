@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { haptics } from '../utils/haptics';
@@ -15,8 +15,13 @@ interface ZoomControlProps {
 }
 
 const WIDTH = 280;
-const MINOR_TICKS = 31;
-/** Délai d'auto-repli après la dernière interaction. */
+/** Pixels par unité de ln(zoom) — échelle CONSTANTE (le ruler défile). */
+const PX_PER_LN = 96;
+/** Espacement des graduations fines (en ln). */
+const TICK_LN = Math.LN2 / 8;
+/** Seuil d'accroche magnétique (distance en ln à un palier). */
+const SNAP_LN = 0.035;
+/** Auto-repli après la dernière interaction. */
 const COLLAPSE_MS = 1600;
 
 function clamp(v: number, lo: number, hi: number): number {
@@ -32,35 +37,28 @@ function chipLabel(z: number): string {
 
 /**
  * Contrôle de zoom façon appareil photo, animé, à deux états :
- *  - **replié** : pilule de chips espacés (le plus proche = cercle blanc montrant
+ *  - **replié** : chips de paliers espacés (le plus proche = cercle blanc montrant
  *    la valeur courante) ; tap = accroche sur le palier.
- *  - **déplié** (au glissement) : ruler à graduations, labels majeurs en échelle
- *    LOG, curseur + bulle de valeur qui suit le doigt ; accroche magnétique +
- *    tick haptique. Auto-repli après inactivité.
+ *  - **déplié** (au glissement) : **ruler DÉFILANT** — échelle log à pas constant
+ *    qui glisse pour amener la valeur courante au centre (curseur ~centré), bulle
+ *    de valeur, accroche magnétique + tick haptique. Glissement RELATIF : marche
+ *    quelle que soit la position du doigt à l'écran. Auto-repli après inactivité.
  */
 export function ZoomControl({ min, max, presets, value, onZoom }: ZoomControlProps): React.ReactElement | null {
   const [expanded, setExpanded] = useState(false);
   const expand = useRef(new Animated.Value(0)).current;
   const collapseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSnap = useRef<number | null>(null);
+  const drag = useRef({ startZoom: 1, dxAtGrant: 0 });
 
   // Config lue par le PanResponder (créé une fois) via ref -> pas de closure périmée.
-  const cfg = useRef({ min, max, presets, onZoom });
-  cfg.current = { min, max, presets, onZoom };
+  const cfg = useRef({ min, max, presets, onZoom, value });
+  cfg.current = { min, max, presets, onZoom, value };
 
-  // Position ABSOLUE (fenêtre) de la barre, pour suivre le doigt PARTOUT à l'écran
-  // et gérer les 3 zones (gauche de la barre = min, sur la barre = navigation,
-  // droite = max). On mesure en fenêtre (le X du geste est un X écran absolu).
-  const pillRef = useRef<View>(null);
-  const bar = useRef({ left: 0, width: WIDTH });
-  const measure = (): void => {
-    pillRef.current?.measureInWindow((x, _y, w) => {
-      if (w > 0) bar.current = { left: x, width: w };
-    });
-  };
-
-  const logRange = Math.log(max) - Math.log(min);
-  const pOf = (z: number): number => (logRange > 0 ? clamp((Math.log(clamp(z, min, max)) - Math.log(min)) / logRange, 0, 1) : 0);
+  const lnMin = Math.log(min);
+  const lnMax = Math.log(max);
+  const lnRange = lnMax - lnMin;
+  const stripW = PX_PER_LN * lnRange;
 
   const animateExpand = (to: number): void => {
     Animated.timing(expand, { toValue: to, duration: 200, useNativeDriver: true }).start();
@@ -85,19 +83,14 @@ export function ZoomControl({ min, max, presets, value, onZoom }: ZoomControlPro
     [],
   );
 
-  const setFromMoveX = (moveX: number): void => {
+  // Glissement RELATIF : zoom = zoomDébut × exp(Δx / k). Doigt à droite = zoom in.
+  const setFromDrag = (deltaX: number): void => {
     const c = cfg.current;
-    const range = Math.log(c.max) - Math.log(c.min);
-    if (range <= 0) return;
-    // X écran absolu -> fraction sur la barre, CLAMPÉE : hors de la barre à
-    // gauche = min, à droite = max (le doigt peut être n'importe où à l'écran).
-    const p = clamp((moveX - bar.current.left) / bar.current.width, 0, 1);
-    let z = Math.exp(Math.log(c.min) + p * range);
-    // Accroche magnétique proche d'un palier.
+    if (Math.log(c.max) - Math.log(c.min) <= 0) return;
+    let z = clamp(drag.current.startZoom * Math.exp(deltaX / PX_PER_LN), c.min, c.max);
     let snapped: number | null = null;
     for (const preset of c.presets) {
-      const pp = clamp((Math.log(clamp(preset, c.min, c.max)) - Math.log(c.min)) / range, 0, 1);
-      if (Math.abs(pp - p) < 0.04) {
+      if (Math.abs(Math.log(z) - Math.log(preset)) < SNAP_LN) {
         z = preset;
         snapped = preset;
         break;
@@ -113,13 +106,13 @@ export function ZoomControl({ min, max, presets, value, onZoom }: ZoomControlPro
       // Laisse les taps aux chips ; ne capte QUE le glissement horizontal.
       onStartShouldSetPanResponder: () => false,
       onMoveShouldSetPanResponder: (_e, g) => Math.abs(g.dx) > 6 && Math.abs(g.dx) > Math.abs(g.dy),
-      onPanResponderGrant: () => {
-        measure();
+      onPanResponderGrant: (_e, g) => {
+        drag.current = { startZoom: cfg.current.value, dxAtGrant: g.dx };
         openExpanded();
       },
       onPanResponderMove: (_e, g) => {
         openExpanded();
-        setFromMoveX(g.moveX);
+        setFromDrag(g.dx - drag.current.dxAtGrant);
       },
       onPanResponderRelease: () => {
         lastSnap.current = null;
@@ -132,13 +125,33 @@ export function ZoomControl({ min, max, presets, value, onZoom }: ZoomControlPro
     }),
   ).current;
 
+  // Contenu du ruler (graduations + labels), positionné en X ABSOLU sur la bande,
+  // mémoïsé : seule la translation (translateX) change pendant le zoom.
+  const stripContent = useMemo(() => {
+    if (lnRange <= 0) return null;
+    const ticks: number[] = [];
+    for (let ln = lnMin; ln <= lnMax + 1e-6; ln += TICK_LN) ticks.push(PX_PER_LN * (ln - lnMin));
+    return (
+      <>
+        {ticks.map((x, i) => (
+          <View key={i} style={[styles.minorTick, { left: x }]} />
+        ))}
+        {presets.map((p) => (
+          <Text key={p} style={[styles.rulerLabel, { left: PX_PER_LN * (Math.log(p) - lnMin) - 16 }]}>
+            {chipLabel(p)}
+          </Text>
+        ))}
+      </>
+    );
+  }, [lnMin, lnMax, lnRange, presets]);
+
   if (presets.length < 2 || max <= min) return null;
 
   // Chip la plus proche de la valeur (affiche la valeur exacte en actif).
   let activeIdx = 0;
   let best = Infinity;
   presets.forEach((pr, i) => {
-    const d = Math.abs(pOf(pr) - pOf(value));
+    const d = Math.abs(Math.log(pr) - Math.log(value));
     if (d < best) {
       best = d;
       activeIdx = i;
@@ -150,12 +163,15 @@ export function ZoomControl({ min, max, presets, value, onZoom }: ZoomControlPro
     onZoom(z);
   };
 
+  // Défilement : on centre la valeur, en épinglant aux bords (pas de vide).
+  const xAbsValue = PX_PER_LN * (Math.log(value) - lnMin);
+  const translateX = stripW <= WIDTH ? (WIDTH - stripW) / 2 : clamp(WIDTH / 2 - xAbsValue, WIDTH - stripW, 0);
+  const thumbX = xAbsValue + translateX;
   const collapsedOpacity = expand.interpolate({ inputRange: [0, 1], outputRange: [1, 0] });
-  const thumbX = pOf(value) * WIDTH;
 
   return (
     <View style={styles.wrap}>
-      {/* Bulle de valeur (dépliée) qui suit le curseur. */}
+      {/* Bulle de valeur (dépliée) au-dessus du curseur. */}
       <Animated.View
         pointerEvents="none"
         style={[styles.bubble, { opacity: expand, transform: [{ translateX: clamp(thumbX - 22, 0, WIDTH - 44) }] }]}
@@ -163,9 +179,12 @@ export function ZoomControl({ min, max, presets, value, onZoom }: ZoomControlPro
         <Text style={styles.bubbleText}>{fmt(value)}</Text>
       </Animated.View>
 
-      <View ref={pillRef} onLayout={measure} style={styles.pill} {...pan.panHandlers}>
-        {/* Couche REPLIÉE : chips espacés. */}
-        <Animated.View style={[styles.layer, styles.chips, { opacity: collapsedOpacity }]} pointerEvents={expanded ? 'none' : 'auto'}>
+      <View style={styles.pill} {...pan.panHandlers}>
+        {/* REPLIÉ : chips espacés. */}
+        <Animated.View
+          style={[styles.layer, styles.chips, { opacity: collapsedOpacity }]}
+          pointerEvents={expanded ? 'none' : 'auto'}
+        >
           {presets.map((pr, i) => {
             const active = i === activeIdx;
             return (
@@ -182,16 +201,11 @@ export function ZoomControl({ min, max, presets, value, onZoom }: ZoomControlPro
           })}
         </Animated.View>
 
-        {/* Couche DÉPLIÉE : ruler (graduations + labels log + curseur). */}
+        {/* DÉPLIÉ : ruler défilant (bande translatée) + curseur ~centré. */}
         <Animated.View style={[styles.layer, { opacity: expand }]} pointerEvents="none">
-          {Array.from({ length: MINOR_TICKS }).map((_, i) => (
-            <View key={i} style={[styles.minorTick, { left: (i / (MINOR_TICKS - 1)) * WIDTH }]} />
-          ))}
-          {presets.map((pr) => (
-            <Text key={pr} style={[styles.rulerLabel, { left: clamp(pOf(pr) * WIDTH - 16, 2, WIDTH - 34) }]}>
-              {chipLabel(pr)}
-            </Text>
-          ))}
+          <View style={[styles.strip, { width: Math.max(stripW, WIDTH), transform: [{ translateX }] }]}>
+            {stripContent}
+          </View>
           <View style={[styles.thumb, { left: thumbX - 1.5 }]} />
         </Animated.View>
       </View>
@@ -233,11 +247,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   activeText: { color: '#111', fontSize: 12.5, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  strip: { position: 'absolute', top: 0, bottom: 0, left: 0 },
   minorTick: {
     position: 'absolute',
-    top: 8,
+    top: 9,
     width: StyleSheet.hairlineWidth,
-    height: 8,
+    height: 9,
     backgroundColor: 'rgba(255,255,255,0.35)',
   },
   rulerLabel: {
@@ -252,9 +267,9 @@ const styles = StyleSheet.create({
   },
   thumb: {
     position: 'absolute',
-    top: 6,
+    top: 5,
     width: 3,
-    height: 20,
+    height: 22,
     borderRadius: 1.5,
     backgroundColor: '#fff',
   },
