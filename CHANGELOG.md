@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.18.2](https://github.com/Devitek/dual/compare/v1.18.1...v1.18.2) (2026-07-29)
+
+
+### Bug Fixes
+
+* boomerang rebuild + zoom lag + friendly share name + widget thumbnail ([#99](https://github.com/Devitek/dual/issues/99)) ([e5db716](https://github.com/Devitek/dual/commit/e5db71621b61af0493ed36e3cc273b4e965ac3e6))
+
 ## [1.18.1](https://github.com/Devitek/dual/compare/v1.18.0...v1.18.1) (2026-07-29)
 
 
