@@ -1,6 +1,4 @@
-import * as Sharing from 'expo-sharing';
-
-import { shareToApp } from '../native/videoPip';
+import { shareToApp, shareSystem } from '../native/videoPip';
 
 export type ShareTarget = 'instagram' | 'tiktok';
 
@@ -23,10 +21,6 @@ export async function shareToSocial(
   const mime = kind === 'video' ? 'video/*' : 'image/*';
   const launched = await shareToApp(uri, mime, PACKAGES[target]);
   if (launched) return;
-  // Cible non installée -> feuille de partage système (best-effort).
-  try {
-    if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(uri);
-  } catch {
-    /* partage indisponible pour cette URI */
-  }
+  // Cible non installée -> feuille de partage SYSTÈME native (fiable sur content://).
+  await shareSystem(uri, mime);
 }

@@ -17,6 +17,7 @@ import * as VideoThumbnails from 'expo-video-thumbnails';
 import * as Sharing from 'expo-sharing';
 
 import { shareToSocial, type ShareTarget } from '../services/directShare';
+import { shareSystem } from '../native/videoPip';
 import * as IntentLauncher from 'expo-intent-launcher';
 import { useVideoPlayer, VideoView } from 'expo-video';
 
@@ -148,6 +149,11 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
   const shareItem = useCallback(async (item: CapturedMedia | null | undefined) => {
     if (item == null) return;
     haptics.selection();
+    // Partage SYSTÈME natif d'abord (fiable sur les URI content:// MediaStore ;
+    // expo-sharing échoue en silence dessus). Repli sur expo-sharing sinon.
+    const mime = item.kind === 'video' ? 'video/*' : 'image/*';
+    const shared = await shareSystem(item.primaryUri, mime);
+    if (shared) return;
     try {
       if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(item.primaryUri);
     } catch {
