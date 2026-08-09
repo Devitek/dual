@@ -1,0 +1,20 @@
+{
+  "name": "TwinLens — Dual Camera",
+  "short_name": "TwinLens",
+  "description": "Double caméra : filmez l'avant et l'arrière en même temps, fusion Picture-in-Picture. 100% gratuit, sans pub, sur l'appareil.",
+  "lang": "fr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "browser",
+  "background_color": "#141218",
+  "theme_color": "#141218",
+  "categories": ["photo", "video", "photography"],
+  "icons": [
+    {
+      "src": "/assets/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
