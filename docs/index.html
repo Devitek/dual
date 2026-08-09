@@ -3,13 +3,98 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Dual Camera — TwinLens · double caméra gratuite, sans pub</title>
-  <meta name="description" content="TwinLens : app double caméra (dual camera) 100% gratuite et sans pub. Filmez l'avant et l'arrière en même temps, fusion Picture-in-Picture, entièrement sur l'appareil.">
-  <meta property="og:title" content="Dual Camera — TwinLens">
-  <meta property="og:description" content="Double caméra, avant + arrière en une seule prise. 100% gratuit, sans pub, sans filigrane.">
-  <meta property="og:image" content="assets/feature-graphic.png">
+
+  <title>TwinLens · Dual Camera — filmer l'avant + l'arrière en même temps</title>
+  <meta name="description" content="TwinLens : app double caméra (dual camera) 100% gratuite et sans pub. Filmez l'avant et l'arrière en même temps, fusion Picture-in-Picture, entièrement sur l'appareil. Android.">
+  <meta name="keywords" content="double caméra, dual camera, caméra avant arrière, filmer avant et arrière en même temps, picture-in-picture, PiP caméra, application photo gratuite, sans pub, Android">
+  <meta name="author" content="Devitek">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+  <meta name="theme-color" content="#141218">
+
+  <link rel="canonical" href="https://twinlens.devitek.fr/">
+  <link rel="alternate" hreflang="fr" href="https://twinlens.devitek.fr/">
+  <link rel="alternate" hreflang="x-default" href="https://twinlens.devitek.fr/">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="TwinLens">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:url" content="https://twinlens.devitek.fr/">
+  <meta property="og:title" content="TwinLens · Dual Camera — avant + arrière en une seule prise">
+  <meta property="og:description" content="Double caméra, avant + arrière en même temps, fusion Picture-in-Picture. 100% gratuit, sans pub, sans filigrane, sur l'appareil.">
+  <meta property="og:image" content="https://twinlens.devitek.fr/assets/feature-graphic.png">
+  <meta property="og:image:width" content="1024">
+  <meta property="og:image:height" content="500">
+  <meta property="og:image:alt" content="TwinLens — double caméra avant + arrière en Picture-in-Picture">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="TwinLens · Dual Camera — avant + arrière en une seule prise">
+  <meta name="twitter:description" content="Double caméra, avant + arrière en même temps, fusion Picture-in-Picture. 100% gratuit, sans pub, sur l'appareil.">
+  <meta name="twitter:image" content="https://twinlens.devitek.fr/assets/feature-graphic.png">
+  <meta name="twitter:image:alt" content="TwinLens — double caméra avant + arrière en Picture-in-Picture">
+
   <link rel="icon" href="assets/icon.png">
+  <link rel="apple-touch-icon" href="assets/icon.png">
+  <link rel="manifest" href="site.webmanifest">
   <link rel="stylesheet" href="styles.css">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "@id": "https://twinlens.devitek.fr/#app",
+        "name": "TwinLens",
+        "alternateName": "Dual Camera",
+        "operatingSystem": "Android 8.0+",
+        "applicationCategory": "MultimediaApplication",
+        "applicationSubCategory": "Photography",
+        "description": "App double caméra : filmez l'avant et l'arrière en même temps, fusion Picture-in-Picture. 100% gratuit, sans pub, sans filigrane, entièrement sur l'appareil.",
+        "url": "https://twinlens.devitek.fr/",
+        "downloadUrl": "https://play.google.com/store/apps/details?id=fr.devitek.twinlens",
+        "installUrl": "https://play.google.com/store/apps/details?id=fr.devitek.twinlens",
+        "inLanguage": ["fr", "en", "es", "de", "pt", "it"],
+        "image": "https://twinlens.devitek.fr/assets/feature-graphic.png",
+        "screenshot": [
+          "https://twinlens.devitek.fr/assets/screenshots/phone-1.jpg",
+          "https://twinlens.devitek.fr/assets/screenshots/phone-2.jpg",
+          "https://twinlens.devitek.fr/assets/screenshots/phone-4.jpg"
+        ],
+        "featureList": [
+          "Double caméra simultanée : avant + arrière en une seule prise",
+          "Fusion Picture-in-Picture, côte à côte ou haut-bas",
+          "Photo et vidéo jusqu'en 4K",
+          "100% sur l'appareil, sans compte ni serveur",
+          "Gratuit, sans pub, sans filigrane"
+        ],
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "EUR"
+        },
+        "author": { "@id": "https://devitek.fr/#org" },
+        "publisher": { "@id": "https://devitek.fr/#org" }
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://devitek.fr/#org",
+        "name": "Devitek",
+        "url": "https://devitek.fr",
+        "logo": "https://twinlens.devitek.fr/assets/icon.png"
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://twinlens.devitek.fr/#website",
+        "url": "https://twinlens.devitek.fr/",
+        "name": "TwinLens",
+        "inLanguage": "fr-FR",
+        "publisher": { "@id": "https://devitek.fr/#org" }
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
   <header class="nav">
@@ -19,6 +104,7 @@
       <span class="sp"></span>
       <a href="#features">Fonctions</a>
       <a href="#shots">Aperçu</a>
+      <a href="#faq">FAQ</a>
       <a href="privacy.html">Confidentialité</a>
       <a href="support.html">Support</a>
     </div>
@@ -66,6 +152,93 @@
       <img src="assets/screenshots/phone-7.jpg" alt="Galerie de session" loading="lazy">
     </div>
   </section>
+
+  <section id="faq" class="wrap">
+    <h2>Questions fréquentes</h2>
+    <p class="sub">Tout ce qu'il faut savoir sur l'application double caméra TwinLens.</p>
+    <div class="faq">
+      <details open>
+        <summary>Comment filmer avec la caméra avant et arrière en même temps ?</summary>
+        <p>Ouvrez TwinLens, choisissez une mise en page (Picture-in-Picture, côte à côte
+        ou haut-bas), puis appuyez sur le déclencheur : l'app capture l'avant et l'arrière
+        <strong>simultanément</strong> dans une seule photo ou vidéo, fusionnées directement
+        sur votre appareil.</p>
+      </details>
+      <details>
+        <summary>TwinLens est-il vraiment gratuit et sans publicité ?</summary>
+        <p>Oui. TwinLens est <strong>100% gratuit</strong>, sans publicité, sans filigrane,
+        sans abonnement et sans inscription. Toutes les fonctions sont incluses.</p>
+      </details>
+      <details>
+        <summary>Sur quels téléphones la double caméra fonctionne-t-elle ?</summary>
+        <p>La capture simultanée avant + arrière dépend du matériel (ISP) du téléphone.
+        De nombreux appareils Android récents la prennent en charge ; sur les modèles qui
+        ne le permettent pas, TwinLens bascule automatiquement sur une seule caméra.</p>
+      </details>
+      <details>
+        <summary>Peut-on faire des photos et des vidéos en double caméra ?</summary>
+        <p>Oui, les deux. TwinLens capture des <strong>photos</strong> et des
+        <strong>vidéos jusqu'en 4K</strong> en double caméra, avec zoom, mise au point
+        tactile, flash, retardateur et déclencheur par touches de volume ou télécommande
+        Bluetooth.</p>
+      </details>
+      <details>
+        <summary>Mes photos et vidéos restent-elles privées ?</summary>
+        <p>Oui. Tout se passe <strong>sur votre appareil</strong> : aucun compte, aucun
+        serveur, aucune analyse. Vos médias sont enregistrés dans votre galerie et ne sont
+        jamais envoyés en ligne. Voir la <a href="privacy.html">politique de confidentialité</a>.</p>
+      </details>
+    </div>
+  </section>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Comment filmer avec la caméra avant et arrière en même temps ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Ouvrez TwinLens, choisissez une mise en page (Picture-in-Picture, côte à côte ou haut-bas), puis appuyez sur le déclencheur : l'app capture l'avant et l'arrière simultanément dans une seule photo ou vidéo, fusionnées directement sur votre appareil."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "TwinLens est-il vraiment gratuit et sans publicité ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Oui. TwinLens est 100% gratuit, sans publicité, sans filigrane, sans abonnement et sans inscription. Toutes les fonctions sont incluses."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Sur quels téléphones la double caméra fonctionne-t-elle ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "La capture simultanée avant + arrière dépend du matériel (ISP) du téléphone. De nombreux appareils Android récents la prennent en charge ; sur les modèles qui ne le permettent pas, TwinLens bascule automatiquement sur une seule caméra."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Peut-on faire des photos et des vidéos en double caméra ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Oui, les deux. TwinLens capture des photos et des vidéos jusqu'en 4K en double caméra, avec zoom, mise au point tactile, flash, retardateur et déclencheur par touches de volume ou télécommande Bluetooth."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Mes photos et vidéos restent-elles privées ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Oui. Tout se passe sur votre appareil : aucun compte, aucun serveur, aucune analyse. Vos médias sont enregistrés dans votre galerie et ne sont jamais envoyés en ligne."
+        }
+      }
+    ]
+  }
+  </script>
 
   <footer>
     <div class="wrap">
