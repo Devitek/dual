@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.1](https://github.com/Devitek/dual/compare/v1.19.0...v1.19.1) (2026-08-09)
+
+
+### Miscellaneous Chores
+
+* release 1.19.1 (ship Expo SDK 57 patch alignment) ([d88fc59](https://github.com/Devitek/dual/commit/d88fc5992f427604a02d608a988ec1eda59cee3b))
+
 ## [1.19.0](https://github.com/Devitek/dual/compare/v1.18.2...v1.19.0) (2026-08-09)
 
 
