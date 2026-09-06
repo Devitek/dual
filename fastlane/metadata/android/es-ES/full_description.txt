@@ -27,4 +27,5 @@ Vídeos de reacción, vlogs, viajes, conciertos, tutoriales, revelaciones, «pre
 
 Dual camera. Delantera y trasera. Picture-in-Picture, lado a lado o apilado. Un toque. Cero nube. Cero coste.
 
-Nota: la captura doble simultánea depende del hardware de tu teléfono; si no es compatible, TwinLens pasa suavemente a una sola cámara.
+COMPATIBILIDAD
+La captura frontal + trasera simultánea usa la función de «cámaras concurrentes» de Android, que no todos los teléfonos ofrecen a las apps. En los que no la admiten, TwinLens cambia automáticamente a una sola cámara — el resto de funciones siguen disponibles. Toca «¿Por qué?» en la app para un diagnóstico rápido de tu dispositivo.

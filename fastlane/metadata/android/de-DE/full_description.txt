@@ -27,4 +27,5 @@ Reaktionsvideos, Vlogs, Reisen, Konzerte, Tutorials, Überraschungen, „Get rea
 
 Dual Camera. Vorne und hinten. Bild-in-Bild, nebeneinander oder gestapelt. Ein Tipp. Keine Cloud. Keine Kosten.
 
-Hinweis: Die gleichzeitige Doppelaufnahme hängt von der Hardware deines Handys ab; wird sie nicht unterstützt, wechselt TwinLens sanft zu einer einzelnen Kamera.
+KOMPATIBILITÄT
+Die gleichzeitige Aufnahme mit Front- und Rückkamera nutzt Androids Funktion für gleichzeitige Kameras, die nicht jedes Handy für Apps freigibt. Auf Geräten ohne Unterstützung wechselt TwinLens automatisch zu einer einzelnen Kamera — alle anderen Funktionen bleiben nutzbar. Tippe in der App auf „Warum?“ für eine schnelle Geräteprüfung.
