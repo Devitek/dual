@@ -64,6 +64,22 @@ export interface Notice {
   text: string;
 }
 
+/**
+ * Diagnostic de détection multi-caméra, exposé à l'UI (bandeau « mode caméra
+ * unique »). Les deux premières portes sont purement DÉCLARATIVES côté
+ * constructeur : `concurrentFeature` = `FEATURE_CAMERA_CONCURRENT`, `comboCount`
+ * = nombre de combinaisons renvoyées par `getConcurrentCameraIds()` (via
+ * CameraX). Une app tierce ne peut RIEN forcer si l'OEM ne les expose pas.
+ */
+export interface MultiCamDiagnostics {
+  /** L'OS déclare la capacité concurrent-camera (FEATURE_CAMERA_CONCURRENT). */
+  concurrentFeature: boolean;
+  /** Nombre de combinaisons multi-caméra exposées par le HAL (getConcurrentCameraIds). */
+  comboCount: number;
+  /** Une combinaison avant+arrière exploitable a été trouvée. */
+  frontBackCombo: boolean;
+}
+
 export interface MultiCamSnapshot {
   status: MultiCamStatus;
   mode: MultiCamMode;
@@ -115,6 +131,8 @@ export interface MultiCamSnapshot {
   showSecondaryPreview: boolean;
   /** Inscrire la localisation (GPS EXIF) dans les photos. Opt-in, on-device. */
   geotag: boolean;
+  /** Diagnostic de détection multi-caméra (null tant que la session n'est pas construite). */
+  diagnostics: MultiCamDiagnostics | null;
 }
 
 interface QualityConfig {
@@ -185,6 +203,8 @@ const INITIAL: MultiCamSnapshot = {
   showSecondaryPreview: true,
   // Géotag désactivé par défaut (permission sensible, strictement opt-in).
   geotag: false,
+  // Renseigné à la première construction de session (buildSession).
+  diagnostics: null,
 };
 
 /**
@@ -302,8 +322,17 @@ export class MultiCamController {
       let backDevice: CameraDevice | undefined;
       let frontDevice: CameraDevice | undefined;
 
-      if (VisionCamera.supportsMultiCamSessions) {
-        const combo = factory.supportedMultiCamDeviceCombinations.find(
+      // Détection multi-cam : les deux portes ci-dessous sont purement
+      // DÉCLARATIVES côté OEM (FEATURE_CAMERA_CONCURRENT puis
+      // getConcurrentCameraIds via CameraX). On mémorise le résultat pour le
+      // diagnostic utilisateur ; une app tierce ne peut rien forcer.
+      const concurrentFeature = VisionCamera.supportsMultiCamSessions;
+      let comboCount = 0;
+
+      if (concurrentFeature) {
+        const combos = factory.supportedMultiCamDeviceCombinations;
+        comboCount = combos.length;
+        const combo = combos.find(
           (devices) =>
             devices.some((d) => d.position === 'back') &&
             devices.some((d) => d.position === 'front'),
@@ -314,6 +343,10 @@ export class MultiCamController {
           mode = 'multi';
         }
       }
+
+      this.update({
+        diagnostics: { concurrentFeature, comboCount, frontBackCombo: mode === 'multi' },
+      });
 
       if (mode !== 'multi') {
         backDevice = factory.getDefaultCamera('back') ?? factory.getDefaultCamera('front');

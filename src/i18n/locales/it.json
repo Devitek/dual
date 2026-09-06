@@ -156,6 +156,9 @@
     "textMissing": "Questo dispositivo non ha entrambe le fotocamere.",
     "why": "Perché?",
     "hide": "Nascondi",
+    "details": "Dettagli tecnici",
+    "copy": "Copia",
+    "copied": "Copiato ✓",
     "explain": "L’acquisizione simultanea anteriore + posteriore dipende dall’ISP del dispositivo: molti modelli la consentono solo con certe combinazioni di fotocamere, o non la consentono affatto. TwinLens passa allora a una sola fotocamera per restare funzionante."
   },
   "pipHint": {

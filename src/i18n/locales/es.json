@@ -156,6 +156,9 @@
     "textMissing": "Este dispositivo no tiene ambas cámaras.",
     "why": "¿Por qué?",
     "hide": "Ocultar",
+    "details": "Detalles técnicos",
+    "copy": "Copiar",
+    "copied": "Copiado ✓",
     "explain": "La captura simultánea frontal + trasera depende del ISP del dispositivo: muchos modelos solo la permiten en ciertas combinaciones de cámaras, o no la permiten. TwinLens cambia entonces a una sola cámara para seguir funcionando."
   },
   "pipHint": {
