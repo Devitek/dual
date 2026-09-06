@@ -27,4 +27,5 @@ Reaction videos, vlogs, travel, concerts, tutorials, prank reveals, "get ready w
 
 Dual camera. Front and back. Picture-in-Picture, side-by-side or stacked. One tap. Zero cloud. Zero cost.
 
-Heads-up: simultaneous dual capture depends on your phone's hardware; if it isn't supported, TwinLens smoothly falls back to a single camera.
+COMPATIBILITY
+Simultaneous front + back capture uses Android's concurrent-camera support, which not every phone exposes to apps. On phones that don't support it, TwinLens automatically switches to a single camera — every other feature still works. Tap "Why?" in the app for a quick device check.

@@ -156,6 +156,9 @@
     "textMissing": "This device doesn’t have both cameras.",
     "why": "Why?",
     "hide": "Hide",
+    "details": "Technical details",
+    "copy": "Copy",
+    "copied": "Copied ✓",
     "explain": "Simultaneous front + back capture depends on the device ISP: many models only allow it on certain camera combinations, or not at all. TwinLens then falls back to a single camera to stay functional."
   },
   "pipHint": {

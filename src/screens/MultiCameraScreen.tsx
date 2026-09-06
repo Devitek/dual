@@ -766,7 +766,9 @@ export function MultiCameraScreen(): React.ReactElement {
                 un loader (hors charte + non alignée). Réactivable selon retours. */}
             {/* <ProcessingIndicator count={cam.processingCount} progress={videoProgress} /> */}
 
-            {cam.mode === 'single' && cam.status === 'running' && <UnsupportedBanner />}
+            {cam.mode === 'single' && cam.status === 'running' && (
+              <UnsupportedBanner diagnostics={cam.diagnostics} />
+            )}
 
             <CaptureControls
               mode={mode}

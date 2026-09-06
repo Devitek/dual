@@ -156,6 +156,9 @@
     "textMissing": "Dieses Gerät hat nicht beide Kameras.",
     "why": "Warum?",
     "hide": "Ausblenden",
+    "details": "Technische Details",
+    "copy": "Kopieren",
+    "copied": "Kopiert ✓",
     "explain": "Die gleichzeitige Vorder- + Rückaufnahme hängt vom ISP des Geräts ab: Viele Modelle erlauben sie nur bei bestimmten Kamerakombinationen oder gar nicht. TwinLens wechselt dann zu einer einzelnen Kamera, um funktionsfähig zu bleiben."
   },
   "pipHint": {

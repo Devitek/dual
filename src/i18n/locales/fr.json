@@ -156,6 +156,9 @@
     "textMissing": "Cet appareil ne dispose pas des deux caméras.",
     "why": "Pourquoi ?",
     "hide": "Masquer",
+    "details": "Détails techniques",
+    "copy": "Copier",
+    "copied": "Copié ✓",
     "explain": "La capture avant + arrière simultanée dépend de l’ISP de l’appareil : beaucoup de modèles ne l’autorisent que sur certaines combinaisons de caméras, ou pas du tout. TwinLens bascule alors sur une seule caméra pour rester fonctionnel."
   },
   "pipHint": {
