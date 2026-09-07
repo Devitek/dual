@@ -14,6 +14,9 @@ platform :android do
       track: ENV["SUPPLY_TRACK"] || "internal",
       release_status: ENV["SUPPLY_RELEASE_STATUS"] || "draft",
       aab: ENV.fetch("AAB_PATH"),
+      # Mapping R8 : rend les crashs/ANR lisibles dans Play Vitals (notre canal
+      # d'observabilité sans transmission — ADR 0007).
+      mapping: (ENV["MAPPING_PATH"].to_s.empty? ? nil : ENV["MAPPING_PATH"]),
       skip_upload_apk: true,
       # Le binaire + les release notes uniquement ; la fiche (textes/images) se
       # pousse via le lane `metadata` pour ne pas écraser la console par erreur.

@@ -145,7 +145,7 @@ jobs:
             -Pandroid.injected.signing.key.alias="$SIGNING_KEY_ALIAS" \
             -Pandroid.injected.signing.key.password="$SIGNING_KEY_PASSWORD"
 
-      - name: Name the AAB
+      - name: Name the AAB (+ R8 mapping)
         id: aab
         run: |
           SRC=android/app/build/outputs/bundle/release/app-release.aab
@@ -154,18 +154,33 @@ jobs:
           OUT="TwinLens-${VER}.aab"
           cp "$SRC" "$OUT"
           echo "path=$OUT" >> "$GITHUB_OUTPUT"
+          # Mapping R8 (désobfuscation des crashs — Play Vitals + archive Release).
+          MAP=android/app/build/outputs/mapping/release/mapping.txt
+          if [ -f "$MAP" ]; then
+            MOUT="TwinLens-${VER}-mapping.txt"
+            cp "$MAP" "$MOUT"
+            echo "mapping=$MOUT" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::mapping.txt absent (minify désactivé ?)"
+            echo "mapping=" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Attach AAB to the GitHub release
+      - name: Attach AAB + mapping to the GitHub release
         if: steps.ver.outputs.tag != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "${{ steps.ver.outputs.tag }}" "${{ steps.aab.outputs.path }}" --clobber
+          MAPPING: ${{ steps.aab.outputs.mapping }}
+        run: |
+          gh release upload "${{ steps.ver.outputs.tag }}" "${{ steps.aab.outputs.path }}" --clobber
+          [ -n "$MAPPING" ] && gh release upload "${{ steps.ver.outputs.tag }}" "$MAPPING" --clobber
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: twinlens-aab
-          path: ${{ steps.aab.outputs.path }}
+          path: |
+            ${{ steps.aab.outputs.path }}
+            ${{ steps.aab.outputs.mapping }}
           if-no-files-found: error
 
       # Upload Play : AUTO sur l'event release → canal interne, DÉPLOYÉ
@@ -182,6 +197,7 @@ jobs:
         if: ${{ github.event_name == 'release' || inputs.upload_to_play }}
         env:
           AAB_PATH: ${{ steps.aab.outputs.path }}
+          MAPPING_PATH: ${{ steps.aab.outputs.mapping }}
           PLAY_SERVICE_ACCOUNT_JSON_PATH: ${{ runner.temp }}/play.json
           SUPPLY_TRACK: ${{ inputs.track || 'internal' }}
           SUPPLY_RELEASE_STATUS: ${{ github.event_name == 'release' && 'completed' || inputs.release_status || 'draft' }}

@@ -158,5 +158,8 @@ le workflow **Store Metadata**.
 - Chaque upload doit **augmenter le `versionCode`** → `git rev-list --count HEAD`
   (monotone tant qu'on ne réécrit jamais l'historique de `main` — cf. AGENTS.md §2.4).
 - `release_status: draft` = rien n'est diffusé tant que tu n'as pas cliqué *Rollout*.
+- **R8/minify actif** (expo-build-properties) : le `mapping.txt` est uploadé sur Play
+  (crashs Vitals désobfusqués) et attaché à la GitHub Release. Ne jamais le perdre :
+  sans lui, les stacks de cette version sont illisibles.
 - Assets de la fiche : `fastlane/metadata/android/` · sources des captures :
   `store/screenshots/src/` (régénérables via Chrome headless).
