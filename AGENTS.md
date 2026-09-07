@@ -94,6 +94,7 @@ Toute permission « sensible » déclenche une **déclaration obligatoire** dans
 npm run typecheck   # tsc --noEmit — DOIT être vert
 npm run lint        # ESLint (ratchet --max-warnings : interdit d'AJOUTER une warning)
 npm run format:check # Prettier
+npm test            # Jest (invariant réglages §8, helpers purs)
 npx expo-doctor     # DOIT être OK
 # si tu as touché aux permissions / config native :
 npx expo prebuild --platform android --no-install --clean   # + grep du manifest

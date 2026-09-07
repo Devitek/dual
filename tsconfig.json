@@ -3,7 +3,8 @@
   "compilerOptions": {
     "strict": true,
     "noUncheckedIndexedAccess": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "types": ["jest", "node"]
   },
   "include": ["**/*.ts", "**/*.tsx"]
 }

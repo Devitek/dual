@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --max-warnings 9",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test": "jest"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
@@ -49,11 +50,15 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@react-native/jest-preset": "^0.86.3",
     "@types/base-64": "^1.0.2",
+    "@types/jest": "^29.5.14",
     "@types/react": "~19.2.4",
     "babel-preset-expo": "~57.0.2",
     "eslint": "^9.39.5",
     "eslint-config-expo": "^57.0.2",
+    "jest": "~29.7.0",
+    "jest-expo": "~57.0.5",
     "prettier": "^3.9.6",
     "typescript": "~6.0.3"
   },
@@ -66,5 +71,8 @@
         ]
       }
     }
+  },
+  "jest": {
+    "preset": "jest-expo"
   }
 }
