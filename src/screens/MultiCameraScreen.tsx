@@ -125,6 +125,8 @@ export function MultiCameraScreen(): React.ReactElement {
   const pipRef = useRef<PipCompositorHandle>(null);
   const flashOpacity = useRef(new Animated.Value(0)).current;
   const holdStillOpacity = useRef(new Animated.Value(0)).current;
+  /** Mode demandé par un deep-link (widget/tuile) — prime sur le mode persisté. */
+  const deepLinkMode = useRef<CaptureMode | null>(null);
   const wasBusy = useRef(false);
   const countdownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const styles = useThemedStyles(makeStyles);
@@ -259,11 +261,17 @@ export function MultiCameraScreen(): React.ReactElement {
 
   // Deep-link du widget d'accueil : `twinlens://capture?mode=photo|video|boomerang`
   // -> ouvre l'app directement dans le mode demandé (démarrage à froid + à chaud).
+  // `deepLinkMode` mémorise le mode demandé : la restauration des réglages
+  // persistés (async, ordre d'arrivée non garanti) ne doit PAS l'écraser —
+  // sinon le widget ouvrait l'app dans le DERNIER mode utilisé au cold start.
   useEffect(() => {
     const apply = (url: string | null): void => {
       if (url == null) return;
       const m = /[?&]mode=(photo|video|boomerang)/.exec(url);
-      if (m != null) onSetMode(m[1] as CaptureMode);
+      if (m != null) {
+        deepLinkMode.current = m[1] as CaptureMode;
+        onSetMode(m[1] as CaptureMode);
+      }
     };
     void Linking.getInitialURL().then(apply);
     const sub = Linking.addEventListener('url', (e) => apply(e.url));
@@ -536,7 +544,8 @@ export function MultiCameraScreen(): React.ReactElement {
       if (s.mirrorFront != null) void c.setMirrorFront(s.mirrorFront);
       if (s.showSecondaryPreview != null) c.setShowSecondaryPreview(s.showSecondaryPreview);
       if (s.photoFlash != null) setPhotoFlash(s.photoFlash);
-      if (s.mode != null) setMode(s.mode);
+      // Le mode d'un deep-link (widget/tuile) prime sur le mode persisté.
+      if (s.mode != null && deepLinkMode.current == null) setMode(s.mode);
       if (s.grid != null) setGridState(s.grid);
       if (s.level != null) setLevelState(s.level);
       if (s.burstCount != null) setBurstCountState(s.burstCount);
