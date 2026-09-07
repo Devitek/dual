@@ -32,7 +32,15 @@ import { writeGpsToJpeg, type GpsCoords } from '../services/exifGps';
 import i18n from '../i18n';
 
 export type CameraSlot = 'back' | 'front';
-export type MultiCamMode = 'multi' | 'single' | 'none';
+/**
+ * - `multi`      : capture avant+arrière SIMULTANÉE (concurrent-camera OK).
+ * - `sequential` : les deux capteurs existent mais pas de session concurrente →
+ *   photo prise en DEUX temps (arrière puis avant) puis composée ; vidéo
+ *   simultanée impossible (bloquée).
+ * - `single`     : un seul capteur exploitable (pas de dual possible).
+ * - `none`       : aucune caméra.
+ */
+export type MultiCamMode = 'multi' | 'sequential' | 'single' | 'none';
 export type MultiCamStatus = 'idle' | 'starting' | 'running' | 'error';
 export type MediaKind = 'photo' | 'video';
 /** Que sauvegarder après une capture. */
@@ -133,6 +141,9 @@ export interface MultiCamSnapshot {
   geotag: boolean;
   /** Diagnostic de détection multi-caméra (null tant que la session n'est pas construite). */
   diagnostics: MultiCamDiagnostics | null;
+  /** Étape de la capture photo séquentielle : 0 = repos, 1 = arrière, 2 = avant.
+   *  Transitoire (pilote l'overlay « gardez la pose »). */
+  sequentialStep: number;
 }
 
 interface QualityConfig {
@@ -143,6 +154,13 @@ interface QualityConfig {
   /** largeur du canvas de composition PiP photo (px). */
   pipCanvas: number;
 }
+
+// ⚠️ DEV UNIQUEMENT — SIMULATEUR « appareil sans concurrent-camera ».
+// Mets `true` pour FORCER le mode séquentiel sur un téléphone qui, lui, supporte
+// le multi-cam : permet de tester le repli (photo séquentielle + vidéo bloquée +
+// bulle d'info) en local, comme sur un Oppo Reno12 5G.
+// ⚠️ REPASSER À `false` AVANT MERGE. Sans effet en production (gardé par __DEV__).
+const DEV_FORCE_SEQUENTIAL = false;
 
 // NB : en multi-cam la bande passante ISP est partagée ; les vidéos restent ≤ 1080p.
 const QUALITY: Record<CaptureQuality, QualityConfig> = {
@@ -205,6 +223,7 @@ const INITIAL: MultiCamSnapshot = {
   geotag: false,
   // Renseigné à la première construction de session (buildSession).
   diagnostics: null,
+  sequentialStep: 0,
 };
 
 /**
@@ -229,6 +248,9 @@ export class MultiCamController {
 
   private primarySlot: CameraSlot = 'back';
   private disposed = false;
+  /** Devices mémorisés pour la capture PHOTO séquentielle (mode `sequential`). */
+  private sequentialBack: CameraDevice | undefined;
+  private sequentialFront: CameraDevice | undefined;
   /** Mode boomerang : le prochain enregistrement sera post-traité en boomerang. */
   private boomerangMode = false;
   /** Dernier point de mise au point (normalisé) — sert d'ancrage au verrou AE/AF. */
@@ -322,11 +344,17 @@ export class MultiCamController {
       let backDevice: CameraDevice | undefined;
       let frontDevice: CameraDevice | undefined;
 
+      // DEV : simule un appareil sans concurrent-camera (test du repli séquentiel).
+      const forceSequential = __DEV__ && DEV_FORCE_SEQUENTIAL;
+      if (forceSequential) {
+        console.warn('[multicam] DEV_FORCE_SEQUENTIAL actif — multi-cam simulé indisponible.');
+      }
+
       // Détection multi-cam : les deux portes ci-dessous sont purement
       // DÉCLARATIVES côté OEM (FEATURE_CAMERA_CONCURRENT puis
       // getConcurrentCameraIds via CameraX). On mémorise le résultat pour le
       // diagnostic utilisateur ; une app tierce ne peut rien forcer.
-      const concurrentFeature = VisionCamera.supportsMultiCamSessions;
+      const concurrentFeature = !forceSequential && VisionCamera.supportsMultiCamSessions;
       let comboCount = 0;
 
       if (concurrentFeature) {
@@ -349,9 +377,22 @@ export class MultiCamController {
       });
 
       if (mode !== 'multi') {
-        backDevice = factory.getDefaultCamera('back') ?? factory.getDefaultCamera('front');
+        // Pas de session concurrente : on garde l'ARRIÈRE comme aperçu principal.
+        // Si l'AVANT existe aussi, on active le mode `sequential` (photo en deux
+        // temps) ; sinon `single` (un seul capteur, pas de dual possible).
+        const back = factory.getDefaultCamera('back');
+        const front = factory.getDefaultCamera('front');
+        this.sequentialBack = back ?? undefined;
+        this.sequentialFront = front ?? undefined;
+        backDevice = back ?? front;
         frontDevice = undefined;
-        mode = backDevice != null ? 'single' : 'none';
+        if (backDevice == null) {
+          mode = 'none';
+        } else if (back != null && front != null) {
+          mode = 'sequential';
+        } else {
+          mode = 'single';
+        }
       }
 
       if (backDevice == null) {
@@ -415,7 +456,8 @@ export class MultiCamController {
 
       this.update({
         status: 'running',
-        mode: enableMultiCam ? 'multi' : 'single',
+        // `mode` a été déterminé plus haut (multi / sequential / single).
+        mode,
         backPreview,
         frontPreview,
         hasTorch: this.backController?.device.hasTorch ?? false,
@@ -676,7 +718,13 @@ export class MultiCamController {
   }
 
   async capturePhoto(flash: FlashMode): Promise<void> {
-    if (this.backPhoto == null || this.snapshot.isBusy || this.snapshot.isRecording) return;
+    if (this.snapshot.isBusy || this.snapshot.isRecording) return;
+    // Appareils sans concurrent-camera : capture PHOTO en deux temps.
+    if (this.snapshot.mode === 'sequential') {
+      await this.captureSequentialPhoto(flash);
+      return;
+    }
+    if (this.backPhoto == null) return;
     this.update({ isBusy: true });
 
     // 1) Capture BRUTE des deux photos EN PARALLÈLE — seule partie qui bloque
@@ -708,7 +756,115 @@ export class MultiCamController {
     // 2) Obturateur de nouveau disponible IMMÉDIATEMENT. Composition PiP +
     //    sauvegarde galerie partent en tâche de fond (UI réactive).
     this.update({ isBusy: false });
+    this.enqueuePhotoSave(primaryPath, secondaryPath);
+  }
 
+  /**
+   * Capture PHOTO SÉQUENTIELLE (repli pour appareils sans concurrent-camera) :
+   * photo arrière depuis l'aperçu courant, puis bascule de session sur l'avant
+   * (une seule caméra à la fois), puis composition PiP. L'aperçu arrière est
+   * TOUJOURS restauré (try/finally). Si l'avant échoue, on garde l'arrière (mono).
+   */
+  async captureSequentialPhoto(flash: FlashMode): Promise<void> {
+    if (this.backPhoto == null || this.sequentialFront == null) return;
+    if (this.snapshot.isBusy || this.snapshot.isRecording) return;
+
+    const fast = this.snapshot.captureSpeed === 'speed' ? { enableVirtualDeviceFusion: false } : {};
+
+    // Étape 1/2 : photo ARRIÈRE depuis la session d'aperçu déjà active.
+    this.update({ isBusy: true, sequentialStep: 1 });
+    let backPath: string;
+    try {
+      const backFile = await this.backPhoto.capturePhotoToFile(
+        { flashMode: flash, enableShutterSound: this.snapshot.shutterSound, ...fast },
+        {},
+      );
+      backPath = backFile.filePath;
+    } catch (error) {
+      this.notify('error', i18n.t('notices.captureFailed', { error: (error as Error)?.message ?? String(error) }));
+      this.update({ isBusy: false, sequentialStep: 0 });
+      return;
+    }
+
+    // Étape 2/2 : bascule sur l'AVANT (démonte l'arrière, monte l'avant).
+    this.update({ sequentialStep: 2 });
+    let frontPath: string | null = null;
+    try {
+      await this.teardownSession();
+      frontPath = await this.captureFrontStillSequential();
+    } catch (error) {
+      if (__DEV__) console.warn('[multicam] sequential front capture failed', error);
+      this.notify('error', i18n.t('sequential.frontFailed'));
+    } finally {
+      // Restaure l'aperçu ARRIÈRE quoi qu'il arrive (sauf si l'écran a été démonté).
+      await this.teardownSession();
+      await this.buildSession();
+      this.update({ isBusy: false, sequentialStep: 0 });
+    }
+
+    // Mappe principale/secondaire selon le slot choisi, puis compose en tâche de fond.
+    let primaryPath: string;
+    let secondaryPath: string | null;
+    if (frontPath == null) {
+      primaryPath = backPath;
+      secondaryPath = null;
+    } else if (this.primarySlot === 'front') {
+      primaryPath = frontPath;
+      secondaryPath = backPath;
+    } else {
+      primaryPath = backPath;
+      secondaryPath = frontPath;
+    }
+    this.enqueuePhotoSave(primaryPath, secondaryPath);
+  }
+
+  /**
+   * Session AVANT éphémère (aperçu + photo) pour le 2ᵉ temps de la capture
+   * séquentielle. Publie l'aperçu (rendu comme `backPreview`) pour que
+   * l'utilisateur se cadre, laisse l'AF/AE se stabiliser, puis déclenche.
+   * L'appelant démonte la session (finally).
+   */
+  private async captureFrontStillSequential(): Promise<string | null> {
+    if (this.sequentialFront == null) return null;
+    const q = QUALITY[this.snapshot.captureQuality];
+    const fast = this.snapshot.captureSpeed === 'speed' ? { enableVirtualDeviceFusion: false } : {};
+    const session = await VisionCamera.createCameraSession(false);
+    this.session = session;
+    const preview = VisionCamera.createPreviewOutput();
+    const frontPhoto = VisionCamera.createPhotoOutput(photoOptions(q.photoRes, this.snapshot.captureSpeed));
+    this.frontPhoto = frontPhoto;
+    const controllers = await session.configure([
+      {
+        input: this.sequentialFront,
+        outputs: [
+          { output: preview, mirrorMode: 'on' },
+          { output: frontPhoto, mirrorMode: this.snapshot.mirrorFront ? 'on' : 'off' },
+        ],
+        constraints: [],
+      },
+    ]);
+    this.frontController = controllers[0] ?? null;
+    if (this.disposed) {
+      await session.stop();
+      return null;
+    }
+    await session.start();
+    // Aperçu AVANT visible pendant l'étape 2/2 (surface active + cadrage selfie).
+    this.update({ backPreview: preview });
+    await new Promise((resolve) => setTimeout(resolve, 350)); // stabilisation AF/AE
+    const file = await frontPhoto.capturePhotoToFile(
+      { flashMode: 'off', enableShutterSound: false, ...fast },
+      {},
+    );
+    return file.filePath;
+  }
+
+  /**
+   * Composition PiP + sauvegarde galerie d'une paire de clichés, en tâche de
+   * fond. `secondaryPath` = null → sauvegarde mono. Partagé entre la capture
+   * simultanée et la capture séquentielle.
+   */
+  private enqueuePhotoSave(primaryPath: string, secondaryPath: string | null): void {
     const mode = this.snapshot.photoSaveMode;
     const corner = this.snapshot.pipCorner;
     const canvasWidth = QUALITY[this.snapshot.captureQuality].pipCanvas;
@@ -852,6 +1008,12 @@ export class MultiCamController {
   }
 
   async startRecording(): Promise<void> {
+    // Vidéo bloquée sur les appareils sans concurrent-camera (pas de flux
+    // simultané → une vidéo « double » séquentielle ne serait pas simultanée).
+    if (this.snapshot.mode === 'sequential') {
+      this.notify('error', i18n.t('sequential.videoBlocked'));
+      return;
+    }
     if (this.backVideo == null || this.snapshot.isRecording || this.snapshot.isBusy) return;
     this.recAgg = { expected: this.frontVideo != null ? 2 : 1, settled: 0, backPath: null, frontPath: null };
     this.recStartedAt = Date.now();

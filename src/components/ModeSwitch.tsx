@@ -15,6 +15,10 @@ interface ModeSwitchProps {
   onChange: (mode: CaptureMode) => void;
   /** true pendant l'enregistrement (le mode ne peut plus changer). */
   disabled?: boolean;
+  /** Modes indisponibles sur cet appareil (grisés) — ex. vidéo en mode séquentiel. */
+  blockedModes?: CaptureMode[];
+  /** Appelé quand un mode bloqué est touché (afficher un message explicatif). */
+  onBlocked?: (mode: CaptureMode) => void;
 }
 
 const MODES: { value: CaptureMode; labelKey: string; a11yKey: string; icon?: IconName }[] = [
@@ -28,7 +32,13 @@ const MODES: { value: CaptureMode; labelKey: string; a11yKey: string; icon?: Ico
  * Pilule segmentée translucide (style appareil photo) posée au-dessus de
  * l'obturateur : bascule Photo | Vidéo. L'obturateur unique s'adapte au mode.
  */
-export function ModeSwitch({ mode, onChange, disabled = false }: ModeSwitchProps): React.ReactElement {
+export function ModeSwitch({
+  mode,
+  onChange,
+  disabled = false,
+  blockedModes = [],
+  onBlocked,
+}: ModeSwitchProps): React.ReactElement {
   const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation();
   return (
@@ -36,20 +46,28 @@ export function ModeSwitch({ mode, onChange, disabled = false }: ModeSwitchProps
       {MODES.map((m) => {
         const active = m.value === mode;
         const isVideo = m.value === 'video';
+        const blocked = blockedModes.includes(m.value);
         return (
           <Pressable
             key={m.value}
+            // Un mode bloqué reste pressable (pour afficher le message), mais jamais actif.
             disabled={disabled || active}
             onPress={() => {
+              if (blocked) {
+                haptics.error();
+                onBlocked?.(m.value);
+                return;
+              }
               haptics.selection();
               onChange(m.value);
             }}
             style={[
               styles.segment,
               active && (isVideo ? styles.segmentActiveVideo : styles.segmentActivePhoto),
+              blocked && styles.segmentBlocked,
             ]}
             accessibilityRole="button"
-            accessibilityState={{ selected: active, disabled }}
+            accessibilityState={{ selected: active, disabled: disabled || blocked }}
             accessibilityLabel={t(m.a11yKey)}
           >
             {m.icon != null ? (
@@ -89,6 +107,7 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 15,
   },
+  segmentBlocked: { opacity: 0.35 },
   segmentActivePhoto: { backgroundColor: 'rgba(255,255,255,0.2)' },
   segmentActiveVideo: { backgroundColor: 'rgba(255,180,171,0.22)' },
   label: { fontSize: 12.5, fontWeight: '700', letterSpacing: 0.5 },

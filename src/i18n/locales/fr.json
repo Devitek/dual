@@ -150,6 +150,13 @@
     "retry": "Réessayer",
     "openSettings": "Ouvrir les paramètres de l’app"
   },
+  "sequential": {
+    "title": "Photo double (séquentielle)",
+    "text": "Cet appareil ne peut pas utiliser les deux caméras en même temps : TwinLens prend les deux photos l'une après l'autre. La vidéo simultanée n'est pas disponible.",
+    "videoBlocked": "La vidéo nécessite les deux caméras en même temps, non pris en charge par cet appareil. La photo fonctionne en mode séquentiel.",
+    "capturing": "Gardez la pose — capture des deux ({{step}}/2)",
+    "frontFailed": "La caméra avant n'a pas répondu — seule la photo arrière est conservée."
+  },
   "unsupported": {
     "title": "Mode caméra unique",
     "textUnsupported": "Cet appareil ne prend pas en charge la capture simultanée avant + arrière. Bascule automatique sur une seule caméra.",

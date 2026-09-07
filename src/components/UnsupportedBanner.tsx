@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { MaterialIcons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 
 import { useThemedStyles, type Palette } from '../theme/theme';
@@ -9,8 +10,13 @@ import { haptics } from '../utils/haptics';
 import type { MultiCamDiagnostics } from '../vision/MultiCamController';
 
 interface UnsupportedBannerProps {
-  /** true si l'appareil n'a tout simplement pas les deux capteurs. */
-  missingSensor?: boolean;
+  /**
+   * Mode caméra dégradé courant :
+   *  - `single`     : un seul capteur exploitable (aucun dual possible) ;
+   *  - `sequential` : les deux capteurs existent mais pas de capture simultanée
+   *    (photo double prise en deux temps, vidéo indisponible).
+   */
+  mode: 'single' | 'sequential';
   /** Diagnostic de détection multi-caméra (pour le bloc « détails techniques »). */
   diagnostics?: MultiCamDiagnostics | null;
 }
@@ -53,15 +59,22 @@ function buildReport(diagnostics?: MultiCamDiagnostics | null): string {
  * `FEATURE_CAMERA_CONCURRENT`, pas d'un bug de l'app).
  */
 export function UnsupportedBanner({
-  missingSensor = false,
+  mode,
   diagnostics = null,
 }: UnsupportedBannerProps): React.ReactElement {
-  const [expanded, setExpanded] = useState(false);
+  // Réduit par défaut (peu intrusif) → dépliable au tap.
+  const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const insets = useSafeAreaInsets();
   const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation();
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // `single` = un seul capteur (dual impossible) ; `sequential` = photo double
+  // en deux temps possible, mais vidéo simultanée non → diagnostic disponible.
+  const sequential = mode === 'sequential';
+  const title = t(sequential ? 'sequential.title' : 'unsupported.title');
+  const topStyle = { top: Math.max(insets.top + 52, 92) };
+  const accent = styles.title.color as string;
 
   useEffect(
     () => () => {
@@ -78,56 +91,96 @@ export function UnsupportedBanner({
     resetTimer.current = setTimeout(() => setCopied(false), 1800);
   }, [diagnostics]);
 
+  // --- Mode RÉDUIT : petite pastille icône + titre + chevron ---
+  if (!open) {
+    return (
+      <View style={[styles.wrap, topStyle]} pointerEvents="box-none">
+        <Pressable
+          onPress={() => {
+            haptics.selection();
+            setOpen(true);
+          }}
+          style={styles.compact}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={title}
+        >
+          <MaterialIcons name="info-outline" size={15} color={accent} />
+          <Text style={styles.compactTitle} numberOfLines={1}>{title}</Text>
+          <MaterialIcons name="expand-more" size={16} color={styles.compactTitle.color as string} />
+        </Pressable>
+      </View>
+    );
+  }
+
+  // --- Mode DÉPLIÉ : carte complète (texte + diagnostic copiable) ---
   return (
-    <View style={[styles.container, { top: Math.max(insets.top + 52, 92) }]} pointerEvents="box-none">
-      <Text style={styles.title}>{t('unsupported.title')}</Text>
-      <Text style={styles.text}>{t(missingSensor ? 'unsupported.textMissing' : 'unsupported.textUnsupported')}</Text>
+    <View style={[styles.wrap, topStyle]} pointerEvents="box-none">
+      <View style={styles.card}>
+        <Pressable
+          onPress={() => {
+            haptics.selection();
+            setOpen(false);
+          }}
+          style={styles.header}
+          hitSlop={8}
+          accessibilityRole="button"
+        >
+          <Text style={styles.title}>{title}</Text>
+          <MaterialIcons name="expand-less" size={16} color={accent} />
+        </Pressable>
 
-      {!missingSensor && (
-        <>
-          <Pressable
-            onPress={() => {
-              haptics.selection();
-              setExpanded((v) => !v);
-            }}
-            style={styles.link}
-            hitSlop={8}
-            accessibilityRole="button"
-          >
-            <Text style={styles.linkText}>{expanded ? t('unsupported.hide') : t('unsupported.why')}</Text>
-          </Pressable>
+        <Text style={styles.text}>{t(sequential ? 'sequential.text' : 'unsupported.textMissing')}</Text>
 
-          {expanded && (
-            <>
-              <Text style={styles.explain}>{t('unsupported.explain')}</Text>
+        {sequential && (
+          <>
+            <Text style={styles.explain}>{t('unsupported.explain')}</Text>
 
-              <Text style={styles.detailsLabel}>{t('unsupported.details')}</Text>
-              <Text style={styles.report} selectable>
-                {buildReport(diagnostics)}
-              </Text>
+            <Text style={styles.detailsLabel}>{t('unsupported.details')}</Text>
+            <Text style={styles.report} selectable>
+              {buildReport(diagnostics)}
+            </Text>
 
-              <Pressable
-                onPress={onCopy}
-                style={styles.copyBtn}
-                hitSlop={8}
-                accessibilityRole="button"
-              >
-                <Text style={styles.copyText}>{copied ? t('unsupported.copied') : t('unsupported.copy')}</Text>
-              </Pressable>
-            </>
-          )}
-        </>
-      )}
+            <Pressable onPress={onCopy} style={styles.copyBtn} hitSlop={8} accessibilityRole="button">
+              <Text style={styles.copyText}>{copied ? t('unsupported.copied') : t('unsupported.copy')}</Text>
+            </Pressable>
+          </>
+        )}
+      </View>
     </View>
   );
 }
 
 const makeStyles = (colors: Palette) => StyleSheet.create({
-  container: {
+  // Conteneur de positionnement (transparent) — partagé réduit/déplié.
+  wrap: {
     position: 'absolute',
     top: 92,
     alignSelf: 'center',
     maxWidth: '88%',
+    alignItems: 'center',
+  },
+  // Mode réduit : pastille compacte (une ligne).
+  compact: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    maxWidth: '100%',
+    backgroundColor: colors.surfaceContainerHigh,
+    borderRadius: 20,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.outlineVariant,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  compactTitle: {
+    color: colors.primary,
+    fontWeight: '700',
+    fontSize: 12.5,
+    flexShrink: 1,
+  },
+  // Mode déplié : carte complète.
+  card: {
     backgroundColor: colors.surfaceContainerHigh,
     borderRadius: 12,
     borderWidth: StyleSheet.hairlineWidth,
@@ -136,12 +189,17 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
     paddingHorizontal: 16,
     alignItems: 'center',
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 2,
+  },
   title: {
     color: colors.primary,
     fontWeight: '700',
     fontSize: 13,
     textAlign: 'center',
-    marginBottom: 2,
   },
   text: {
     color: colors.onSurfaceVariant,
@@ -149,8 +207,6 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
     lineHeight: 17,
     textAlign: 'center',
   },
-  link: { marginTop: 6, paddingVertical: 2, paddingHorizontal: 6 },
-  linkText: { color: colors.primary, fontSize: 12, fontWeight: '700' },
   explain: {
     color: colors.onSurfaceVariant,
     fontSize: 11.5,

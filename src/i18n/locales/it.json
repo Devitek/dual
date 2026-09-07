@@ -150,6 +150,13 @@
     "retry": "Riprova",
     "openSettings": "Apri impostazioni app"
   },
+  "sequential": {
+    "title": "Foto doppia (sequenziale)",
+    "text": "Questo dispositivo non può usare entrambe le fotocamere insieme, quindi TwinLens scatta le due foto una dopo l'altra. Il video simultaneo non è disponibile.",
+    "videoBlocked": "Il video richiede entrambe le fotocamere insieme, non supportato da questo dispositivo. La foto funziona in modalità sequenziale.",
+    "capturing": "Non muoverti — scatto di entrambe ({{step}}/2)",
+    "frontFailed": "La fotocamera anteriore non ha risposto — mantenuta solo la foto posteriore."
+  },
   "unsupported": {
     "title": "Modalità fotocamera singola",
     "textUnsupported": "Questo dispositivo non supporta l’acquisizione simultanea anteriore + posteriore. Passaggio automatico a una sola fotocamera.",
