@@ -18,6 +18,8 @@ const RING_C = 2 * Math.PI * RING_R;
 interface CaptureControlsProps {
   mode: CaptureMode;
   onSetMode: (mode: CaptureMode) => void;
+  /** Ouvre le sheet de réglages rapides (bouton en bas à gauche, façon Google Camera). */
+  onOpenSettings: () => void;
   /** Modes indisponibles (grisés) — ex. vidéo/boomerang en mode séquentiel. */
   blockedModes?: CaptureMode[];
   /** Appelé au tap d'un mode bloqué (message explicatif). */
@@ -62,6 +64,7 @@ function formatDuration(seconds: number): string {
 export function CaptureControls({
   mode,
   onSetMode,
+  onOpenSettings,
   blockedModes,
   onBlockedMode,
   isRecording,
@@ -180,7 +183,18 @@ export function CaptureControls({
         />
 
         <View style={styles.bar}>
-          {/* Gauche : miniature de la dernière capture (+ indicateur de traitement) */}
+          {/* Extrême gauche : réglages (façon appareil photo Android). */}
+          <Pressable
+            onPress={onOpenSettings}
+            style={styles.sideBtn}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t('topBar.settingsA11y')}
+          >
+            <MaterialIcons name="tune" size={24} color={colors.onSurface} />
+          </Pressable>
+
+          {/* Miniature de la dernière capture (+ indicateur de traitement) */}
           <View style={styles.zone}>
             {lastCapture != null ? (
               <Animated.View style={{ transform: [{ scale: thumbScale }] }}>
@@ -277,6 +291,10 @@ export function CaptureControls({
               <MaterialIcons name="cameraswitch" size={24} color={colors.onSurface} />
             </Pressable>
           </View>
+
+          {/* Extrême droite : espace invisible pour équilibrer le bouton réglages
+              (obturateur parfaitement centré, marges symétriques). */}
+          <View style={styles.sideBtn} pointerEvents="none" />
         </View>
       </View>
     </View>
@@ -284,6 +302,9 @@ export function CaptureControls({
 }
 
 const makeStyles = (colors: Palette) => StyleSheet.create({
+  // Bouton latéral (réglages) + espace symétrique à droite : même gabarit que la
+  // zone d'inversion, pour des marges équilibrées autour de l'obturateur.
+  sideBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   wrapper: {
     position: 'absolute',
     left: 0,
@@ -310,7 +331,8 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
   bar: {
     flexDirection: 'row',
     alignItems: 'center',
-    width: '86%',
+    width: '100%',
+    paddingHorizontal: 18,
   },
   zone: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   shutterOuter: {

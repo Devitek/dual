@@ -18,10 +18,10 @@ import * as VideoThumbnails from 'expo-video-thumbnails';
 import { shareToSocial, type ShareTarget } from '../services/directShare';
 import { shareCapture } from '../services/shareMedia';
 import * as IntentLauncher from 'expo-intent-launcher';
-import { useVideoPlayer, VideoView } from 'expo-video';
 
 import { useColors, useThemedStyles, type Palette } from '../theme/theme';
 import { haptics } from '../utils/haptics';
+import { MediaViewer } from './MediaViewer';
 import type { CapturedMedia } from '../vision/MultiCamController';
 
 interface SessionGalleryProps {
@@ -56,8 +56,7 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
   const { t, i18n } = useTranslation();
-  const [preview, setPreview] = useState<CapturedMedia | null>(null);
-  const [playing, setPlaying] = useState<CapturedMedia | null>(null);
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [posters, setPosters] = useState<Record<string, string>>({});
@@ -65,19 +64,10 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
   const data = [...captures].reverse(); // plus récent d'abord
   const cellSize = (width - PADDING * 2 - GAP * (COLS - 1)) / COLS;
 
-  const player = useVideoPlayer(playing?.primaryUri ?? null, (p) => {
-    p.loop = false;
-  });
-
-  useEffect(() => {
-    if (playing != null) player.play();
-  }, [playing, player]);
-
   // Réinitialise l'état transitoire à la fermeture de la galerie.
   useEffect(() => {
     if (visible) return;
-    setPreview(null);
-    setPlaying(null);
+    setPreviewIndex(null);
     setSelectMode(false);
     setSelected(new Set());
   }, [visible]);
@@ -127,10 +117,9 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
         toggleSelect(item);
         return;
       }
-      if (item.kind === 'photo') setPreview(item);
-      else setPlaying(item);
+      setPreviewIndex(data.findIndex((m) => keyOf(m) === keyOf(item)));
     },
-    [selectMode, toggleSelect],
+    [selectMode, toggleSelect, data],
   );
 
   const onCellLongPress = useCallback(
@@ -337,47 +326,17 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
         )}
       </View>
 
-      {/* Aperçu photo plein écran (tap = fermer ; le bouton Partager capture son tap) */}
-      {preview != null && (
-        <Pressable style={styles.fullscreen} onPress={() => setPreview(null)}>
-          <Image source={{ uri: preview.primaryUri }} style={styles.fullImg} resizeMode="contain" />
-          <Pressable
-            style={styles.shareFab}
-            onPress={() => shareItem(preview)}
-            accessibilityRole="button"
-            accessibilityLabel={t('gallery.share')}
-          >
-            <MaterialIcons name="share" size={20} color={colors.onPrimary} />
-            <Text style={styles.shareFabText}>{t('gallery.share')}</Text>
-          </Pressable>
-          <Text style={styles.tapHint}>{t('gallery.closePhotoHint')}</Text>
-        </Pressable>
-      )}
-
-      {/* Lecture vidéo plein écran */}
-      {playing != null && (
-        <View style={styles.fullscreen}>
-          <VideoView style={styles.fullVideo} player={player} contentFit="contain" nativeControls />
-          <Pressable
-            style={styles.videoClose}
-            onPress={() => {
-              player.pause();
-              setPlaying(null);
-            }}
-            accessibilityLabel={t('gallery.closeVideoA11y')}
-          >
-            <MaterialIcons name="close" size={26} color="#fff" />
-          </Pressable>
-          <Pressable
-            style={styles.shareFab}
-            onPress={() => shareItem(playing)}
-            accessibilityRole="button"
-            accessibilityLabel={t('gallery.share')}
-          >
-            <MaterialIcons name="share" size={20} color={colors.onPrimary} />
-            <Text style={styles.shareFabText}>{t('gallery.share')}</Text>
-          </Pressable>
-        </View>
+      {/* Visionneuse plein écran (photos + vidéos + boomerangs) — gestes Google
+          Photos : bas = fermer, haut = infos, gauche/droite = naviguer. */}
+      {previewIndex != null && (
+        <MediaViewer
+          media={data}
+          index={previewIndex}
+          onIndexChange={setPreviewIndex}
+          onClose={() => setPreviewIndex(null)}
+          onShare={shareItem}
+          posters={posters}
+        />
       )}
     </Modal>
   );
