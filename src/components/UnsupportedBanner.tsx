@@ -7,6 +7,7 @@ import * as Clipboard from 'expo-clipboard';
 
 import { useThemedStyles, type Palette } from '../theme/theme';
 import { haptics } from '../utils/haptics';
+import { buildDeviceReport } from '../utils/deviceReport';
 import type { MultiCamDiagnostics } from '../vision/MultiCamController';
 
 interface UnsupportedBannerProps {
@@ -19,35 +20,6 @@ interface UnsupportedBannerProps {
   mode: 'single' | 'sequential';
   /** Diagnostic de détection multi-caméra (pour le bloc « détails techniques »). */
   diagnostics?: MultiCamDiagnostics | null;
-}
-
-/** Champs d'intérêt de `Platform.constants` côté Android (typage permissif). */
-type AndroidConstants = {
-  Brand?: string;
-  Manufacturer?: string;
-  Model?: string;
-  Release?: string;
-  Version?: number | string;
-};
-
-/** Construit un rapport technique locale-neutre, copiable pour le support. */
-function buildReport(diagnostics?: MultiCamDiagnostics | null): string {
-  const c = Platform.constants as AndroidConstants;
-  const maker = c.Manufacturer ?? c.Brand ?? '?';
-  const model = c.Model ?? '?';
-  const lines = [
-    'TwinLens · dual camera check',
-    `Device: ${maker} ${model}`,
-    `Android: ${c.Release ?? '?'} (SDK ${c.Version ?? '?'})`,
-  ];
-  if (diagnostics != null) {
-    lines.push(
-      `Concurrent feature: ${diagnostics.concurrentFeature ? 'yes' : 'no'}`,
-      `Camera combinations: ${diagnostics.comboCount}`,
-      `Front+back combo: ${diagnostics.frontBackCombo ? 'yes' : 'no'}`,
-    );
-  }
-  return lines.join('\n');
 }
 
 /**
@@ -85,7 +57,7 @@ export function UnsupportedBanner({
 
   const onCopy = useCallback(() => {
     haptics.selection();
-    void Clipboard.setStringAsync(buildReport(diagnostics));
+    void Clipboard.setStringAsync(buildDeviceReport(diagnostics));
     setCopied(true);
     if (resetTimer.current != null) clearTimeout(resetTimer.current);
     resetTimer.current = setTimeout(() => setCopied(false), 1800);
@@ -138,7 +110,7 @@ export function UnsupportedBanner({
 
             <Text style={styles.detailsLabel}>{t('unsupported.details')}</Text>
             <Text style={styles.report} selectable>
-              {buildReport(diagnostics)}
+              {buildDeviceReport(diagnostics)}
             </Text>
 
             <Pressable onPress={onCopy} style={styles.copyBtn} hitSlop={8} accessibilityRole="button">

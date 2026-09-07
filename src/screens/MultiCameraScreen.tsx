@@ -22,6 +22,7 @@ import { CaptureControls } from '../components/CaptureControls';
 import type { CaptureMode } from '../components/ModeSwitch';
 import { CameraTopBar, type PhotoFlashMode } from '../components/CameraTopBar';
 import { SettingsSheet } from '../components/SettingsSheet';
+import { MoreSettingsModal } from '../components/MoreSettingsModal';
 import { ZoomIndicator } from '../components/ZoomIndicator';
 import { ProcessingIndicator } from '../components/ProcessingIndicator';
 import { UnsupportedBanner } from '../components/UnsupportedBanner';
@@ -108,6 +109,7 @@ export function MultiCameraScreen(): React.ReactElement {
   const [focusPoint, setFocusPoint] = useState<FocusPoint | null>(null);
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [zoomDisplay, setZoomDisplay] = useState<number | null>(null);
   const [zoomNonce, setZoomNonce] = useState(0);
   const [currentZoom, setCurrentZoom] = useState(1);
@@ -467,14 +469,6 @@ export function MultiCameraScreen(): React.ReactElement {
     },
     [cam.controller],
   );
-  const setPipCorner = useCallback(
-    (c: PipCorner) => {
-      cam.controller.setPipCorner(c); // réinitialise aussi la position libre
-      saveSetting('pipCorner', c);
-      saveSetting('pipInset', null); // retour au coin
-    },
-    [cam.controller],
-  );
   const setLayout = useCallback(
     (l: CompositionLayout) => {
       cam.controller.setLayout(l);
@@ -645,8 +639,8 @@ export function MultiCameraScreen(): React.ReactElement {
 
   // Annule un décompte en cours si on quitte le mode photo ou qu'un panneau s'ouvre.
   useEffect(() => {
-    if (mode !== 'photo' || settingsOpen || galleryOpen) cancelCountdown();
-  }, [mode, settingsOpen, galleryOpen, cancelCountdown]);
+    if (mode !== 'photo' || settingsOpen || moreOpen || galleryOpen) cancelCountdown();
+  }, [mode, settingsOpen, moreOpen, galleryOpen, cancelCountdown]);
 
   // Nettoyage du timer au démontage.
   useEffect(() => () => cancelCountdown(), [cancelCountdown]);
@@ -670,7 +664,7 @@ export function MultiCameraScreen(): React.ReactElement {
   useVolumeShutter({
     action: volumeKeyAction,
     enabled:
-      cam.status === 'running' && permissions.allGranted && !settingsOpen && !galleryOpen,
+      cam.status === 'running' && permissions.allGranted && !settingsOpen && !moreOpen && !galleryOpen,
     onShutter: () => {
       if (mode === 'photo') onPhoto();
       else if (mode === 'boomerang') {
@@ -747,7 +741,7 @@ export function MultiCameraScreen(): React.ReactElement {
             {cam.status === 'running' && cam.layout === 'pip' && <RatioMask ratio={cam.outputRatio} />}
             {cam.status === 'running' && <CameraGuides grid={grid} level={level} />}
 
-            {cam.status === 'running' && exposureBounds.supported && !settingsOpen && !galleryOpen && (
+            {cam.status === 'running' && exposureBounds.supported && !settingsOpen && !moreOpen && !galleryOpen && (
               <ExposureControl
                 min={exposureBounds.min}
                 max={exposureBounds.max}
@@ -874,55 +868,59 @@ export function MultiCameraScreen(): React.ReactElement {
             <SettingsSheet
               visible={settingsOpen}
               onClose={() => setSettingsOpen(false)}
-              canSwap={cam.mode === 'multi'}
-              onSwap={swap}
+              onOpenMore={() => {
+                setSettingsOpen(false);
+                setMoreOpen(true);
+              }}
+              mode={mode}
               torch={torchOn}
               torchSupported={cam.hasTorch}
               onToggleTorch={toggleTorch}
               secondaryPreview={cam.showSecondaryPreview}
               secondaryPreviewSupported={cam.mode === 'multi'}
               onToggleSecondaryPreview={toggleSecondaryPreview}
-              photoFlash={photoFlash}
-              flashSupported={cam.hasTorch}
-              onSetPhotoFlash={onSetPhotoFlash}
+              layout={cam.layout}
+              onSetLayout={setLayout}
+              timerSeconds={timerSeconds}
+              onSetTimerSeconds={setTimerSeconds}
+              burstCount={burstCount}
+              onSetBurstCount={setBurstCount}
+              boomerangGif={cam.boomerangGif}
+              onToggleBoomerangGif={() => setBoomerangGif(!cam.boomerangGif)}
+              quality={cam.captureQuality}
+              onSetQuality={setQuality}
+              captureSpeed={cam.captureSpeed}
+              onSetCaptureSpeed={setCaptureSpeed}
+              outputRatio={cam.outputRatio}
+              onSetOutputRatio={setOutputRatio}
               photoSaveMode={cam.photoSaveMode}
               onSetPhotoSaveMode={setPhotoSaveMode}
               videoSaveMode={cam.videoSaveMode}
               onSetVideoSaveMode={setVideoSaveMode}
-              pipCorner={cam.pipCorner}
-              onSetPipCorner={setPipCorner}
-              layout={cam.layout}
-              onSetLayout={setLayout}
-              outputRatio={cam.outputRatio}
-              onSetOutputRatio={setOutputRatio}
-              quality={cam.captureQuality}
-              onSetQuality={setQuality}
               videoFps={cam.videoFps}
               onSetVideoFps={setVideoFps}
-              boomerangGif={cam.boomerangGif}
-              onToggleBoomerangGif={() => setBoomerangGif(!cam.boomerangGif)}
-              mirrorFront={cam.mirrorFront}
-              onToggleMirrorFront={() => setMirrorFront(!cam.mirrorFront)}
-              volumeKeyAction={volumeKeyAction}
-              onSetVolumeKeyAction={setVolumeKeyAction}
-              stabilization={stabilization}
-              onToggleStabilization={() => setStabilization(!stabilization)}
-              captureSpeed={cam.captureSpeed}
-              onSetCaptureSpeed={setCaptureSpeed}
-              timerSeconds={timerSeconds}
-              onSetTimerSeconds={setTimerSeconds}
+            />
+
+            <MoreSettingsModal
+              visible={moreOpen}
+              onClose={() => setMoreOpen(false)}
               shutterSound={cam.shutterSound}
               onToggleShutterSound={() => setShutterSound(!cam.shutterSound)}
+              volumeKeyAction={volumeKeyAction}
+              onSetVolumeKeyAction={setVolumeKeyAction}
               geotag={geo.enabled}
               onToggleGeotag={onToggleGeotag}
-              watermark={cam.watermark}
-              onToggleWatermark={() => setWatermark(!cam.watermark)}
               grid={grid}
               onToggleGrid={() => setGrid(!grid)}
               level={level}
               onToggleLevel={() => setLevel(!level)}
-              burstCount={burstCount}
-              onSetBurstCount={setBurstCount}
+              mirrorFront={cam.mirrorFront}
+              onToggleMirrorFront={() => setMirrorFront(!cam.mirrorFront)}
+              watermark={cam.watermark}
+              onToggleWatermark={() => setWatermark(!cam.watermark)}
+              stabilization={stabilization}
+              onToggleStabilization={() => setStabilization(!stabilization)}
+              diagnostics={cam.diagnostics}
             />
 
             <SessionGallery

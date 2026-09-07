@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
@@ -9,7 +9,6 @@ import {
   Switch,
   Text,
   View,
-  type ViewStyle,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -27,175 +26,58 @@ const { height: SCREEN_H } = Dimensions.get('window');
 import { useColors, useThemedStyles, type Palette } from '../theme/theme';
 import { haptics } from '../utils/haptics';
 import type { CaptureQuality, CaptureSpeed, SaveMode, VideoFps } from '../vision/MultiCamController';
-import type { CompositionLayout, OutputRatio, PipCorner } from '../services/pipComposer';
-import type { PhotoFlashMode } from './CameraTopBar';
-import type { VolumeKeyAction } from '../native/volumeKeys';
+import type { CompositionLayout, OutputRatio } from '../services/pipComposer';
+import type { CaptureMode } from './ModeSwitch';
+import { Segmented, type SegmentedOption } from './Segmented';
 
-interface Option<T extends string> {
-  value: T;
-  label: string;
-  /** Micro-légende sur une 2e ligne (ex. résolutions pour la qualité). */
-  caption?: string;
-}
+type IconName = React.ComponentProps<typeof MaterialIcons>['name'];
 
-interface SegmentedProps<T extends string> {
-  options: Option<T>[];
-  value: T;
-  onChange: (value: T) => void;
-  disabled?: boolean;
-}
-
-/**
- * Segmented buttons Material 3 : conteneur continu (bordure unique + séparateurs
- * internes), segment actif teinté `primaryContainer` avec icône coche.
- */
-function Segmented<T extends string>({ options, value, onChange, disabled = false }: SegmentedProps<T>): React.ReactElement {
-  const colors = useColors();
-  const styles = useThemedStyles(makeStyles);
-  return (
-    <View style={[styles.segGroup, disabled && styles.dim]}>
-      {options.map((opt, i) => {
-        const active = opt.value === value;
-        return (
-          <Pressable
-            key={opt.value}
-            disabled={disabled}
-            onPress={() => {
-              haptics.selection();
-              onChange(opt.value);
-            }}
-            style={[styles.segCell, i > 0 && styles.segDivider, active && styles.segCellActive]}
-            accessibilityRole="button"
-            accessibilityState={{ selected: active, disabled }}
-          >
-            <View style={styles.segLabelRow}>
-              {active && <MaterialIcons name="check" size={15} color={colors.onPrimaryContainer} style={styles.segCheck} />}
-              <Text style={[styles.segLabel, active && styles.segLabelActive]} numberOfLines={1}>
-                {opt.label}
-              </Text>
-            </View>
-            {opt.caption != null && (
-              <Text style={[styles.segCaption, active && styles.segCaptionActive]} numberOfLines={1}>
-                {opt.caption}
-              </Text>
-            )}
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
-
-const CORNERS: PipCorner[] = ['top-left', 'top-right', 'bottom-right', 'bottom-left'];
-
-/** Position absolue du point dans le mini-téléphone selon le coin. */
-function cornerDotStyle(corner: PipCorner): ViewStyle {
-  const isTop = corner === 'top-left' || corner === 'top-right';
-  const isLeft = corner === 'top-left' || corner === 'bottom-left';
-  return {
-    position: 'absolute',
-    ...(isTop ? { top: 3 } : { bottom: 3 }),
-    ...(isLeft ? { left: 3 } : { right: 3 }),
-  };
-}
-
-interface CornerPickerProps {
-  value: PipCorner;
-  onChange: (corner: PipCorner) => void;
-}
-
-/** Sélecteur de coin de vignette sous forme de 4 mini-schémas de téléphone. */
-function CornerPicker({ value, onChange }: CornerPickerProps): React.ReactElement {
-  const styles = useThemedStyles(makeStyles);
-  const { t } = useTranslation();
-  return (
-    <View style={styles.cornerRow}>
-      {CORNERS.map((corner) => {
-        const active = corner === value;
-        return (
-          <Pressable
-            key={corner}
-            onPress={() => {
-              haptics.selection();
-              onChange(corner);
-            }}
-            style={[styles.cornerCell, active && styles.cornerCellActive]}
-            accessibilityRole="button"
-            accessibilityState={{ selected: active }}
-            accessibilityLabel={t('settings.cornerA11y', { corner: t(CORNER_KEYS[corner]) })}
-          >
-            <View style={[styles.phone, active && styles.phoneActive]}>
-              <View style={[styles.dot, active && styles.dotActive, cornerDotStyle(corner)]} />
-            </View>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
-
+// --- Options (libellés techniques universels non traduits, sinon clés i18n) ---
 const SAVE_OPTION_KEYS: { value: SaveMode; labelKey: string }[] = [
   { value: 'pip', labelKey: 'settings.savePip' },
   { value: 'pip_plus_originals', labelKey: 'settings.savePipPlus' },
   { value: 'originals', labelKey: 'settings.saveFiles' },
 ];
-
-const FLASH_OPTION_KEYS: { value: PhotoFlashMode; labelKey: string }[] = [
-  { value: 'off', labelKey: 'settings.flashOff' },
-  { value: 'auto', labelKey: 'settings.flashAuto' },
-  { value: 'on', labelKey: 'settings.flashOn' },
-];
-
 const SPEED_OPTION_KEYS: { value: CaptureSpeed; labelKey: string }[] = [
   { value: 'speed', labelKey: 'settings.speedFast' },
   { value: 'balanced', labelKey: 'settings.speedBalanced' },
   { value: 'quality', labelKey: 'settings.speedQuality' },
 ];
-
 const TIMER_OPTION_KEYS: { value: '0' | '3' | '10'; labelKey: string }[] = [
   { value: '0', labelKey: 'settings.timerOff' },
   { value: '3', labelKey: 'settings.timer3s' },
   { value: '10', labelKey: 'settings.timer10s' },
 ];
-
 const BURST_OPTION_KEYS: { value: '1' | '3' | '5' | '10'; labelKey: string }[] = [
   { value: '1', labelKey: 'settings.burstOff' },
   { value: '3', labelKey: 'settings.burst3' },
   { value: '5', labelKey: 'settings.burst5' },
   { value: '10', labelKey: 'settings.burst10' },
 ];
-
-// Libellés ips universels (non traduits).
 const FPS_OPTION_KEYS: { value: '30' | '60'; label: string }[] = [
   { value: '30', label: '30' },
   { value: '60', label: '60' },
 ];
-
 const LAYOUT_OPTION_KEYS: { value: CompositionLayout; labelKey: string }[] = [
   { value: 'pip', labelKey: 'settings.layoutPip' },
   { value: 'sideBySide', labelKey: 'settings.layoutSideBySide' },
   { value: 'topBottom', labelKey: 'settings.layoutTopBottom' },
 ];
-
 const RATIO_OPTION_KEYS: { value: OutputRatio; labelKey: string }[] = [
   { value: 'full', labelKey: 'settings.ratioFull' },
   { value: 'square', labelKey: 'settings.ratioSquare' },
   { value: 'tall', labelKey: 'settings.ratioTall' },
 ];
-
-// Les légendes de résolution ne se traduisent pas (specs techniques universelles).
 const QUALITY_OPTION_KEYS: { value: CaptureQuality; labelKey: string; caption: string }[] = [
   { value: 'standard', labelKey: 'settings.qualityStandard', caption: '1080p·720p' },
   { value: 'high', labelKey: 'settings.qualityHigh', caption: '1080p·1080p' },
   { value: 'max', labelKey: 'settings.qualityMax', caption: '4K·1080p' },
 ];
-
-const CORNER_KEYS: Record<PipCorner, string> = {
-  'top-left': 'settings.cornerTopLeft',
-  'top-right': 'settings.cornerTopRight',
-  'bottom-right': 'settings.cornerBottomRight',
-  'bottom-left': 'settings.cornerBottomLeft',
-};
+// Format boomerang (technique, non traduit).
+const BOOM_FORMAT_OPTIONS: SegmentedOption<'mp4' | 'gif'>[] = [
+  { value: 'mp4', label: 'MP4' },
+  { value: 'gif', label: 'GIF' },
+];
 
 /** Clé i18n de la description de l'option de sauvegarde active (photo ou vidéo). */
 function saveModeDescKey(mode: SaveMode, kind: 'photo' | 'video'): string {
@@ -212,121 +94,89 @@ function saveModeDescKey(mode: SaveMode, kind: 'photo' | 'video'): string {
 interface SettingsSheetProps {
   visible: boolean;
   onClose: () => void;
-  canSwap: boolean;
-  onSwap: () => void;
+  /** Ouvre l'écran plein « Autres réglages ». */
+  onOpenMore: () => void;
+  /** Mode courant : filtre les réglages pertinents (photo/vidéo/boomerang). */
+  mode: CaptureMode;
+
+  // --- Général ---
   torch: boolean;
   torchSupported: boolean;
   onToggleTorch: () => void;
   secondaryPreview: boolean;
   secondaryPreviewSupported: boolean;
   onToggleSecondaryPreview: () => void;
-  photoFlash: PhotoFlashMode;
-  flashSupported: boolean;
-  onSetPhotoFlash: (mode: PhotoFlashMode) => void;
-  photoSaveMode: SaveMode;
-  onSetPhotoSaveMode: (mode: SaveMode) => void;
-  videoSaveMode: SaveMode;
-  onSetVideoSaveMode: (mode: SaveMode) => void;
-  pipCorner: PipCorner;
-  onSetPipCorner: (corner: PipCorner) => void;
   layout: CompositionLayout;
   onSetLayout: (layout: CompositionLayout) => void;
-  outputRatio: OutputRatio;
-  onSetOutputRatio: (ratio: OutputRatio) => void;
-  quality: CaptureQuality;
-  onSetQuality: (quality: CaptureQuality) => void;
-  videoFps: VideoFps;
-  onSetVideoFps: (fps: VideoFps) => void;
-  boomerangGif: boolean;
-  onToggleBoomerangGif: () => void;
-  mirrorFront: boolean;
-  onToggleMirrorFront: () => void;
-  volumeKeyAction: VolumeKeyAction;
-  onSetVolumeKeyAction: (action: VolumeKeyAction) => void;
-  stabilization: boolean;
-  onToggleStabilization: () => void;
-  captureSpeed: CaptureSpeed;
-  onSetCaptureSpeed: (speed: CaptureSpeed) => void;
   timerSeconds: number;
   onSetTimerSeconds: (seconds: 0 | 3 | 10) => void;
   burstCount: number;
   onSetBurstCount: (count: 1 | 3 | 5 | 10) => void;
-  shutterSound: boolean;
-  onToggleShutterSound: () => void;
-  geotag: boolean;
-  onToggleGeotag: () => void;
-  watermark: boolean;
-  onToggleWatermark: () => void;
-  grid: boolean;
-  onToggleGrid: () => void;
-  level: boolean;
-  onToggleLevel: () => void;
+  boomerangGif: boolean;
+  onToggleBoomerangGif: () => void;
+
+  // --- Pro ---
+  quality: CaptureQuality;
+  onSetQuality: (quality: CaptureQuality) => void;
+  captureSpeed: CaptureSpeed;
+  onSetCaptureSpeed: (speed: CaptureSpeed) => void;
+  outputRatio: OutputRatio;
+  onSetOutputRatio: (ratio: OutputRatio) => void;
+  photoSaveMode: SaveMode;
+  onSetPhotoSaveMode: (mode: SaveMode) => void;
+  videoSaveMode: SaveMode;
+  onSetVideoSaveMode: (mode: SaveMode) => void;
+  videoFps: VideoFps;
+  onSetVideoFps: (fps: VideoFps) => void;
 }
 
-/** Feuille inférieure Material 3 des paramètres caméra + enregistrement. */
-export function SettingsSheet({
-  visible,
-  onClose,
-  canSwap,
-  onSwap,
-  torch,
-  torchSupported,
-  onToggleTorch,
-  secondaryPreview,
-  secondaryPreviewSupported,
-  onToggleSecondaryPreview,
-  photoFlash,
-  flashSupported,
-  onSetPhotoFlash,
-  photoSaveMode,
-  onSetPhotoSaveMode,
-  videoSaveMode,
-  onSetVideoSaveMode,
-  pipCorner,
-  onSetPipCorner,
-  layout,
-  onSetLayout,
-  outputRatio,
-  onSetOutputRatio,
-  quality,
-  onSetQuality,
-  videoFps,
-  onSetVideoFps,
-  boomerangGif,
-  onToggleBoomerangGif,
-  mirrorFront,
-  onToggleMirrorFront,
-  volumeKeyAction,
-  onSetVolumeKeyAction,
-  stabilization,
-  onToggleStabilization,
-  captureSpeed,
-  onSetCaptureSpeed,
-  timerSeconds,
-  onSetTimerSeconds,
-  burstCount,
-  onSetBurstCount,
-  shutterSound,
-  onToggleShutterSound,
-  geotag,
-  onToggleGeotag,
-  watermark,
-  onToggleWatermark,
-  grid,
-  onToggleGrid,
-  level,
-  onToggleLevel,
-}: SettingsSheetProps): React.ReactElement {
+type Tab = 'general' | 'pro';
+
+/**
+ * Feuille inférieure Material 3 des réglages RAPIDES (contextuels au mode), en
+ * deux onglets Général / Pro. Les préférences réglées une fois vivent dans
+ * l'écran plein « Autres réglages » (bouton `…`).
+ */
+export function SettingsSheet(props: SettingsSheetProps): React.ReactElement {
+  const {
+    visible,
+    onClose,
+    onOpenMore,
+    mode,
+    torch,
+    torchSupported,
+    onToggleTorch,
+    secondaryPreview,
+    secondaryPreviewSupported,
+    onToggleSecondaryPreview,
+    layout,
+    onSetLayout,
+    timerSeconds,
+    onSetTimerSeconds,
+    burstCount,
+    onSetBurstCount,
+    boomerangGif,
+    onToggleBoomerangGif,
+    quality,
+    onSetQuality,
+    captureSpeed,
+    onSetCaptureSpeed,
+    outputRatio,
+    onSetOutputRatio,
+    photoSaveMode,
+    onSetPhotoSaveMode,
+    videoSaveMode,
+    onSetVideoSaveMode,
+    videoFps,
+    onSetVideoFps,
+  } = props;
+
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const [tab, setTab] = useState<Tab>('general');
 
-  // Bottom sheet draggable (sans reanimated) : translateY (0 = ouvert, SCREEN_H =
-  // fermé) piloté par le geste puis animé au relâchement. TOUT en JS-driven
-  // (useNativeDriver:false) : `Animated.event` natif n'est pas accepté par
-  // `onGestureEvent` de PanGestureHandler, et setValue depuis le geste ne doit
-  // pas cohabiter avec des animations natives sur la même valeur.
   const translateY = useRef(new Animated.Value(SCREEN_H)).current;
   const backdropOpacity = translateY.interpolate({
     inputRange: [0, SCREEN_H],
@@ -342,11 +192,11 @@ export function SettingsSheet({
 
   useEffect(() => {
     if (!visible) return;
+    setTab('general'); // repart sur Général à chaque ouverture (comme Google Camera)
     translateY.setValue(SCREEN_H);
     Animated.spring(translateY, { toValue: 0, useNativeDriver: false, bounciness: 3, speed: 14 }).start();
   }, [visible, translateY]);
 
-  // Suit le doigt vers le bas uniquement (clamp haut à 0).
   const onPanGesture = useCallback(
     (e: PanGestureHandlerGestureEvent) => {
       const ty = e.nativeEvent.translationY;
@@ -359,7 +209,6 @@ export function SettingsSheet({
     (e: PanGestureHandlerStateChangeEvent) => {
       if (e.nativeEvent.oldState !== State.ACTIVE) return;
       const { translationY, velocityY } = e.nativeEvent;
-      // Ferme si tiré suffisamment bas OU avec assez de vélocité ; sinon rebond.
       if (translationY > 120 || velocityY > 900) {
         dismiss();
       } else {
@@ -369,20 +218,195 @@ export function SettingsSheet({
     [dismiss, translateY],
   );
 
+  // --- Options localisées ---
   const saveOptions = SAVE_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
-  const flashOptions = FLASH_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
-  const qualityOptions = QUALITY_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey), caption: o.caption }));
-  const volumeKeyOptions: { value: VolumeKeyAction; label: string }[] = [
-    { value: 'volume', label: t('settings.volKeyVolume') },
-    { value: 'shutter', label: t('settings.volKeyShutter') },
-    { value: 'zoom', label: t('settings.volKeyZoom') },
-  ];
   const speedOptions = SPEED_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
   const timerOptions = TIMER_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
   const burstOptions = BURST_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
   const fpsOptions = FPS_OPTION_KEYS.map((o) => ({ value: o.value, label: o.label }));
   const layoutOptions = LAYOUT_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
   const ratioOptions = RATIO_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
+  const qualityOptions = QUALITY_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey), caption: o.caption }));
+
+  // --- Helpers de rendu (row switch / row segmented) ---
+  const rowSwitch = (
+    icon: IconName,
+    label: string,
+    value: boolean,
+    onValueChange: () => void,
+    disabled = false,
+  ): React.ReactElement => (
+    <View style={[styles.row, disabled && styles.dim]}>
+      <MaterialIcons name={icon} size={22} color={colors.onSurface} />
+      <Text style={styles.rowLabel}>{label}</Text>
+      <Switch
+        value={value}
+        disabled={disabled}
+        onValueChange={onValueChange}
+        trackColor={{ true: colors.primary, false: colors.outlineVariant }}
+        thumbColor={colors.onPrimary}
+      />
+    </View>
+  );
+
+  const rowSeg = (icon: IconName, label: string, seg: React.ReactNode, desc?: string): React.ReactElement => (
+    <View style={styles.rowCol}>
+      <View style={styles.rowHeader}>
+        <MaterialIcons name={icon} size={22} color={colors.onSurface} />
+        <Text style={styles.rowLabel}>{label}</Text>
+      </View>
+      {seg}
+      {desc != null && <Text style={styles.optDesc}>{desc}</Text>}
+    </View>
+  );
+
+  const torchRow = rowSwitch('flashlight-on', t('settings.torch'), torch, onToggleTorch, !torchSupported);
+  const previewRow = rowSwitch(
+    'picture-in-picture-alt',
+    t('settings.secondaryPreview'),
+    secondaryPreview,
+    onToggleSecondaryPreview,
+    !secondaryPreviewSupported,
+  );
+  const layoutRow = rowSeg(
+    'dashboard-customize',
+    t('settings.layout'),
+    <Segmented options={layoutOptions} value={layout} onChange={onSetLayout} />,
+  );
+
+  // --- Contenu Général selon le mode ---
+  const renderGeneral = (): React.ReactElement => {
+    if (mode === 'video') {
+      return (
+        <>
+          {torchRow}
+          {previewRow}
+          {layoutRow}
+        </>
+      );
+    }
+    if (mode === 'boomerang') {
+      return (
+        <>
+          {rowSeg(
+            'gif',
+            t('settings.boomerangFormat'),
+            <Segmented
+              options={BOOM_FORMAT_OPTIONS}
+              value={boomerangGif ? 'gif' : 'mp4'}
+              onChange={(v) => {
+                if ((v === 'gif') !== boomerangGif) onToggleBoomerangGif();
+              }}
+            />,
+          )}
+          {torchRow}
+          {previewRow}
+        </>
+      );
+    }
+    // photo
+    return (
+      <>
+        {rowSeg(
+          'timer',
+          t('settings.timer'),
+          <Segmented
+            options={timerOptions}
+            value={String(timerSeconds) as '0' | '3' | '10'}
+            onChange={(v) => onSetTimerSeconds(Number(v) as 0 | 3 | 10)}
+          />,
+        )}
+        {rowSeg(
+          'burst-mode',
+          t('settings.burst'),
+          <Segmented
+            options={burstOptions}
+            value={String(burstCount) as '1' | '3' | '5' | '10'}
+            onChange={(v) => onSetBurstCount(Number(v) as 1 | 3 | 5 | 10)}
+          />,
+          t('settings.burstDesc'),
+        )}
+        {torchRow}
+        {previewRow}
+        {layoutRow}
+      </>
+    );
+  };
+
+  // --- Contenu Pro selon le mode ---
+  const qualityRow = rowSeg(
+    'high-quality',
+    t('settings.quality'),
+    <Segmented options={qualityOptions} value={quality} onChange={onSetQuality} />,
+    t('settings.qualityHint'),
+  );
+  const ratioRow =
+    layout === 'pip'
+      ? rowSeg(
+          'aspect-ratio',
+          t('settings.outputRatio'),
+          <Segmented options={ratioOptions} value={outputRatio} onChange={onSetOutputRatio} />,
+          t('settings.outputRatioDesc'),
+        )
+      : null;
+
+  const renderPro = (): React.ReactElement => {
+    if (mode === 'video') {
+      return (
+        <>
+          {qualityRow}
+          {rowSeg(
+            '60fps-select',
+            t('settings.videoFps'),
+            <Segmented
+              options={fpsOptions}
+              value={String(videoFps) as '30' | '60'}
+              onChange={(v) => onSetVideoFps(Number(v) as VideoFps)}
+            />,
+            t('settings.videoFpsDesc'),
+          )}
+          {ratioRow}
+          {rowSeg(
+            'save',
+            t('settings.save'),
+            <Segmented options={saveOptions} value={videoSaveMode} onChange={onSetVideoSaveMode} />,
+            t(saveModeDescKey(videoSaveMode, 'video')),
+          )}
+        </>
+      );
+    }
+    if (mode === 'boomerang') {
+      return (
+        <>
+          {qualityRow}
+          {rowSeg(
+            'save',
+            t('settings.save'),
+            <Segmented options={saveOptions} value={videoSaveMode} onChange={onSetVideoSaveMode} />,
+            t(saveModeDescKey(videoSaveMode, 'video')),
+          )}
+        </>
+      );
+    }
+    // photo
+    return (
+      <>
+        {qualityRow}
+        {rowSeg(
+          'speed',
+          t('settings.captureSpeed'),
+          <Segmented options={speedOptions} value={captureSpeed} onChange={onSetCaptureSpeed} />,
+        )}
+        {ratioRow}
+        {rowSeg(
+          'save',
+          t('settings.save'),
+          <Segmented options={saveOptions} value={photoSaveMode} onChange={onSetPhotoSaveMode} />,
+          t(saveModeDescKey(photoSaveMode, 'photo')),
+        )}
+      </>
+    );
+  };
 
   return (
     <Modal visible={visible} transparent animationType="none" statusBarTranslucent onRequestClose={dismiss}>
@@ -397,244 +421,53 @@ export function SettingsSheet({
             { paddingBottom: Math.max(insets.bottom + 12, 28), transform: [{ translateY }] },
           ]}
         >
-          <PanGestureHandler
-            onGestureEvent={onPanGesture}
-            onHandlerStateChange={onPanStateChange}
-            activeOffsetY={[-8, 8]}
-          >
+          <PanGestureHandler onGestureEvent={onPanGesture} onHandlerStateChange={onPanStateChange} activeOffsetY={[-8, 8]}>
             <View style={styles.dragZone}>
               <View style={styles.handle} />
-              <Text style={styles.title}>{t('settings.title')}</Text>
             </View>
           </PanGestureHandler>
 
+          <View style={styles.headerRow}>
+            <Text style={styles.title}>{t('settings.title')}</Text>
+            <Pressable
+              onPress={() => {
+                haptics.selection();
+                onOpenMore();
+              }}
+              style={styles.moreBtn}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={t('settings.more')}
+            >
+              <MaterialIcons name="more-horiz" size={24} color={colors.onSurface} />
+            </Pressable>
+          </View>
+
+          {/* Onglets Général | Pro */}
+          <View style={styles.tabs}>
+            {(['general', 'pro'] as Tab[]).map((tb) => {
+              const active = tb === tab;
+              return (
+                <Pressable
+                  key={tb}
+                  onPress={() => {
+                    haptics.selection();
+                    setTab(tb);
+                  }}
+                  style={[styles.tab, active && styles.tabActive]}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                >
+                  <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
+                    {t(tb === 'general' ? 'settings.tabGeneral' : 'settings.tabPro')}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
           <ScrollView showsVerticalScrollIndicator={false}>
-          {/* Caméra */}
-          <Text style={styles.section}>{t('settings.sectionCamera')}</Text>
-          <Pressable
-            onPress={() => {
-              onSwap();
-              dismiss();
-            }}
-            disabled={!canSwap}
-            style={[styles.row, !canSwap && styles.dim]}
-          >
-            <MaterialIcons name="flip-camera-android" size={22} color={colors.onSurface} />
-            <Text style={styles.rowLabel}>{t('settings.swap')}</Text>
-          </Pressable>
-
-          <View style={[styles.row, !torchSupported && styles.dim]}>
-            <MaterialIcons name="flashlight-on" size={22} color={colors.onSurface} />
-            <Text style={styles.rowLabel}>{t('settings.torch')}</Text>
-            <Switch
-              value={torch}
-              disabled={!torchSupported}
-              onValueChange={onToggleTorch}
-              trackColor={{ true: colors.primary, false: colors.outlineVariant }}
-              thumbColor={colors.onPrimary}
-            />
-          </View>
-
-          <View style={[styles.row, !secondaryPreviewSupported && styles.dim]}>
-            <MaterialIcons name="picture-in-picture-alt" size={22} color={colors.onSurface} />
-            <Text style={styles.rowLabel}>{t('settings.secondaryPreview')}</Text>
-            <Switch
-              value={secondaryPreview}
-              disabled={!secondaryPreviewSupported}
-              onValueChange={onToggleSecondaryPreview}
-              trackColor={{ true: colors.primary, false: colors.outlineVariant }}
-              thumbColor={colors.onPrimary}
-            />
-          </View>
-
-          <View style={[styles.rowCol, !flashSupported && styles.dim]}>
-            <View style={styles.rowHeader}>
-              <MaterialIcons name="flash-on" size={22} color={colors.onSurface} />
-              <Text style={styles.rowLabel}>{t('settings.flashPhoto')}</Text>
-            </View>
-            <Segmented options={flashOptions} value={photoFlash} onChange={onSetPhotoFlash} disabled={!flashSupported} />
-          </View>
-
-          <View style={styles.rowCol}>
-            <View style={styles.rowHeader}>
-              <MaterialIcons name="volume-up" size={22} color={colors.onSurface} />
-              <Text style={styles.rowLabel}>{t('settings.volumeKeys')}</Text>
-            </View>
-            <Segmented options={volumeKeyOptions} value={volumeKeyAction} onChange={onSetVolumeKeyAction} />
-          </View>
-
-          {/* Capture : anti-flou, vitesse, retardateur */}
-          <Text style={styles.section}>{t('settings.sectionCapture')}</Text>
-          <View style={styles.row}>
-            <MaterialIcons name="blur-off" size={22} color={colors.onSurface} />
-            <Text style={styles.rowLabel}>{t('settings.stabilization')}</Text>
-            <Switch
-              value={stabilization}
-              onValueChange={onToggleStabilization}
-              trackColor={{ true: colors.primary, false: colors.outlineVariant }}
-              thumbColor={colors.onPrimary}
-            />
-          </View>
-          <Text style={styles.optDesc}>{t('settings.stabilizationDesc')}</Text>
-
-          <View style={styles.rowCol}>
-            <View style={styles.rowHeader}>
-              <MaterialIcons name="speed" size={22} color={colors.onSurface} />
-              <Text style={styles.rowLabel}>{t('settings.captureSpeed')}</Text>
-            </View>
-            <Segmented options={speedOptions} value={captureSpeed} onChange={onSetCaptureSpeed} />
-          </View>
-
-          <View style={styles.rowCol}>
-            <View style={styles.rowHeader}>
-              <MaterialIcons name="timer" size={22} color={colors.onSurface} />
-              <Text style={styles.rowLabel}>{t('settings.timer')}</Text>
-            </View>
-            <Segmented
-              options={timerOptions}
-              value={String(timerSeconds) as '0' | '3' | '10'}
-              onChange={(v) => onSetTimerSeconds(Number(v) as 0 | 3 | 10)}
-            />
-          </View>
-
-          <View style={styles.rowCol}>
-            <View style={styles.rowHeader}>
-              <MaterialIcons name="burst-mode" size={22} color={colors.onSurface} />
-              <Text style={styles.rowLabel}>{t('settings.burst')}</Text>
-            </View>
-            <Segmented
-              options={burstOptions}
-              value={String(burstCount) as '1' | '3' | '5' | '10'}
-              onChange={(v) => onSetBurstCount(Number(v) as 1 | 3 | 5 | 10)}
-            />
-            <Text style={styles.optDesc}>{t('settings.burstDesc')}</Text>
-          </View>
-
-          <View style={styles.row}>
-            <MaterialIcons name="volume-off" size={22} color={colors.onSurface} />
-            <Text style={styles.rowLabel}>{t('settings.shutterSound')}</Text>
-            <Switch
-              value={shutterSound}
-              onValueChange={onToggleShutterSound}
-              trackColor={{ true: colors.primary, false: colors.outlineVariant }}
-              thumbColor={colors.onPrimary}
-            />
-          </View>
-          <Text style={styles.optDesc}>{t('settings.shutterSoundDesc')}</Text>
-
-          <View style={styles.row}>
-            <MaterialIcons name="location-on" size={22} color={colors.onSurface} />
-            <Text style={styles.rowLabel}>{t('settings.geotag')}</Text>
-            <Switch
-              value={geotag}
-              onValueChange={onToggleGeotag}
-              trackColor={{ true: colors.primary, false: colors.outlineVariant }}
-              thumbColor={colors.onPrimary}
-            />
-          </View>
-          <Text style={styles.optDesc}>{t('settings.geotagDesc')}</Text>
-
-          <View style={styles.row}>
-            <MaterialIcons name="grid-on" size={22} color={colors.onSurface} />
-            <Text style={styles.rowLabel}>{t('settings.grid')}</Text>
-            <Switch
-              value={grid}
-              onValueChange={onToggleGrid}
-              trackColor={{ true: colors.primary, false: colors.outlineVariant }}
-              thumbColor={colors.onPrimary}
-            />
-          </View>
-
-          <View style={styles.row}>
-            <MaterialIcons name="straighten" size={22} color={colors.onSurface} />
-            <Text style={styles.rowLabel}>{t('settings.level')}</Text>
-            <Switch
-              value={level}
-              onValueChange={onToggleLevel}
-              trackColor={{ true: colors.primary, false: colors.outlineVariant }}
-              thumbColor={colors.onPrimary}
-            />
-          </View>
-          <Text style={styles.optDesc}>{t('settings.levelDesc')}</Text>
-
-          <View style={styles.row}>
-            <MaterialIcons name="flip" size={22} color={colors.onSurface} />
-            <Text style={styles.rowLabel}>{t('settings.mirrorFront')}</Text>
-            <Switch
-              value={mirrorFront}
-              onValueChange={onToggleMirrorFront}
-              trackColor={{ true: colors.primary, false: colors.outlineVariant }}
-              thumbColor={colors.onPrimary}
-            />
-          </View>
-          <Text style={styles.optDesc}>{t('settings.mirrorFrontDesc')}</Text>
-
-          <Text style={styles.section}>{t('settings.sectionLayout')}</Text>
-          <Segmented options={layoutOptions} value={layout} onChange={onSetLayout} />
-          {layout === 'pip' && (
-            <View style={styles.rowCol}>
-              <View style={styles.rowHeader}>
-                <MaterialIcons name="aspect-ratio" size={22} color={colors.onSurface} />
-                <Text style={styles.rowLabel}>{t('settings.outputRatio')}</Text>
-              </View>
-              <Segmented options={ratioOptions} value={outputRatio} onChange={onSetOutputRatio} />
-              <Text style={styles.optDesc}>{t('settings.outputRatioDesc')}</Text>
-              <Text style={styles.optDesc}>{t('settings.sectionPipCorner')}</Text>
-              <CornerPicker value={pipCorner} onChange={onSetPipCorner} />
-              <Text style={styles.optDesc}>{t('settings.pipDragHint')}</Text>
-            </View>
-          )}
-          <Text style={styles.hint}>{t('settings.layoutHint')}</Text>
-
-          <View style={styles.row}>
-            <MaterialIcons name="branding-watermark" size={22} color={colors.onSurface} />
-            <Text style={styles.rowLabel}>{t('settings.watermark')}</Text>
-            <Switch
-              value={watermark}
-              onValueChange={onToggleWatermark}
-              trackColor={{ true: colors.primary, false: colors.outlineVariant }}
-              thumbColor={colors.onPrimary}
-            />
-          </View>
-          <Text style={styles.optDesc}>{t('settings.watermarkDesc')}</Text>
-
-          {/* Enregistrement */}
-          <Text style={styles.section}>{t('settings.sectionRecPhoto')}</Text>
-          <Segmented options={saveOptions} value={photoSaveMode} onChange={onSetPhotoSaveMode} />
-          <Text style={styles.optDesc}>{t(saveModeDescKey(photoSaveMode, 'photo'))}</Text>
-
-          <Text style={styles.section}>{t('settings.sectionRecVideo')}</Text>
-          <Segmented options={saveOptions} value={videoSaveMode} onChange={onSetVideoSaveMode} />
-          <Text style={styles.optDesc}>{t(saveModeDescKey(videoSaveMode, 'video'))}</Text>
-
-          <View style={styles.rowCol}>
-            <View style={styles.rowHeader}>
-              <MaterialIcons name="60fps-select" size={22} color={colors.onSurface} />
-              <Text style={styles.rowLabel}>{t('settings.videoFps')}</Text>
-            </View>
-            <Segmented
-              options={fpsOptions}
-              value={String(videoFps) as '30' | '60'}
-              onChange={(v) => onSetVideoFps(Number(v) as VideoFps)}
-            />
-            <Text style={styles.optDesc}>{t('settings.videoFpsDesc')}</Text>
-          </View>
-
-          <View style={styles.row}>
-            <MaterialIcons name="gif" size={22} color={colors.onSurface} />
-            <Text style={styles.rowLabel}>{t('settings.boomerangGif')}</Text>
-            <Switch
-              value={boomerangGif}
-              onValueChange={onToggleBoomerangGif}
-              trackColor={{ true: colors.primary, false: colors.outlineVariant }}
-              thumbColor={colors.onPrimary}
-            />
-          </View>
-          <Text style={styles.optDesc}>{t('settings.boomerangGifDesc')}</Text>
-
-          <Text style={styles.section}>{t('settings.sectionQuality')}</Text>
-          <Segmented options={qualityOptions} value={quality} onChange={onSetQuality} />
-          <Text style={styles.hint}>{t('settings.qualityHint')}</Text>
+            {tab === 'general' ? renderGeneral() : renderPro()}
           </ScrollView>
         </Animated.View>
       </GestureHandlerRootView>
@@ -650,13 +483,9 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
     backgroundColor: colors.surfaceContainer,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    // overflow:hidden -> clippe le fond aux coins arrondis (sinon Android laisse
-    // apparaître des coins carrés opaques au-dessus de l'arrondi).
     overflow: 'hidden',
     paddingHorizontal: 20,
     paddingTop: 12,
-    // paddingBottom appliqué dynamiquement (safe-area) pour ne pas masquer les
-    // dernières options sous la barre système (navigation 3 boutons).
     maxHeight: '86%',
   },
   dragZone: { paddingBottom: 4 },
@@ -666,74 +495,34 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
     height: 4,
     borderRadius: 2,
     backgroundColor: colors.outline,
-    marginBottom: 14,
+    marginBottom: 10,
   },
-  title: { color: colors.onSurface, fontSize: 22, fontWeight: '700', marginBottom: 8 },
-  section: {
-    color: colors.primary,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-    marginTop: 18,
-    marginBottom: 8,
-  },
-  row: {
-    flexDirection: 'row',
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  title: { color: colors.onSurface, fontSize: 22, fontWeight: '700' },
+  moreBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.surfaceContainerHigh,
     alignItems: 'center',
-    gap: 14,
-    paddingVertical: 12,
+    justifyContent: 'center',
   },
+  tabs: {
+    flexDirection: 'row',
+    backgroundColor: colors.surfaceContainerHigh,
+    borderRadius: 20,
+    padding: 3,
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  tab: { flex: 1, paddingVertical: 9, borderRadius: 17, alignItems: 'center' },
+  tabActive: { backgroundColor: colors.primaryContainer },
+  tabLabel: { color: colors.onSurfaceVariant, fontSize: 14, fontWeight: '700' },
+  tabLabelActive: { color: colors.onPrimaryContainer },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12 },
   rowCol: { paddingVertical: 10, gap: 10 },
   rowHeader: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   rowLabel: { color: colors.onSurface, fontSize: 16, flex: 1 },
   dim: { opacity: 0.4 },
-  // Segmented (M3)
-  segGroup: {
-    flexDirection: 'row',
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    borderRadius: 18,
-    overflow: 'hidden',
-  },
-  segCell: {
-    flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 4,
-    minHeight: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  segDivider: { borderLeftWidth: 1, borderLeftColor: colors.outlineVariant },
-  segCellActive: { backgroundColor: colors.primaryContainer },
-  segLabelRow: { flexDirection: 'row', alignItems: 'center' },
-  segCheck: { marginRight: 4 },
-  segLabel: { color: colors.onSurfaceVariant, fontSize: 13, fontWeight: '600' },
-  segLabelActive: { color: colors.onPrimaryContainer },
-  segCaption: { color: colors.onSurfaceVariant, fontSize: 10.5, marginTop: 2, fontVariant: ['tabular-nums'] },
-  segCaptionActive: { color: colors.onPrimaryContainer },
   optDesc: { color: colors.onSurfaceVariant, fontSize: 11.5, marginTop: 7 },
-  hint: { color: colors.onSurfaceVariant, fontSize: 12, lineHeight: 17, marginTop: 8 },
-  // Corner picker (mini-téléphones)
-  cornerRow: { flexDirection: 'row', gap: 8 },
-  cornerCell: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'transparent',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cornerCellActive: { backgroundColor: colors.primaryContainer, borderColor: colors.primary },
-  phone: {
-    width: 22,
-    height: 32,
-    borderRadius: 5,
-    borderWidth: 1.5,
-    borderColor: colors.outline,
-  },
-  phoneActive: { borderColor: colors.primary },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.outline },
-  dotActive: { backgroundColor: colors.onPrimaryContainer },
 });
