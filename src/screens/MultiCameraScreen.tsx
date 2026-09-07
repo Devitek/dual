@@ -17,7 +17,6 @@ import { useIntro } from '../hooks/useIntro';
 import { MultiCamPreview } from '../components/MultiCamPreview';
 import { CameraGuides } from '../components/CameraGuides';
 import { RatioMask } from '../components/RatioMask';
-import { ExposureControl } from '../components/ExposureControl';
 import { CaptureControls } from '../components/CaptureControls';
 import type { CaptureMode } from '../components/ModeSwitch';
 import { CameraTopBar, type PhotoFlashMode } from '../components/CameraTopBar';
@@ -398,18 +397,6 @@ export function MultiCameraScreen(): React.ReactElement {
     [cam.controller, primarySlot, zoomBounds],
   );
 
-  // Bornes de compensation d'exposition (EV) de la caméra principale.
-  const exposureBounds = useMemo(
-    () => cam.controller.getExposureBounds(),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [cam.controller, cam.status],
-  );
-  const onSetExposure = useCallback(
-    (v: number) => {
-      void cam.controller.setExposureBias(v);
-    },
-    [cam.controller],
-  );
   const toggleAeLock = useCallback(() => {
     haptics.selection();
     void cam.controller.setAeLock(!cam.aeLocked);
@@ -740,15 +727,6 @@ export function MultiCameraScreen(): React.ReactElement {
 
             {cam.status === 'running' && cam.layout === 'pip' && <RatioMask ratio={cam.outputRatio} />}
             {cam.status === 'running' && <CameraGuides grid={grid} level={level} />}
-
-            {cam.status === 'running' && exposureBounds.supported && !settingsOpen && !moreOpen && !galleryOpen && (
-              <ExposureControl
-                min={exposureBounds.min}
-                max={exposureBounds.max}
-                value={cam.exposureBias}
-                onChange={onSetExposure}
-              />
-            )}
 
             <ZoomIndicator zoom={zoomDisplay} nonce={zoomNonce} />
 
