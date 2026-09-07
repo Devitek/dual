@@ -136,3 +136,4 @@ Contexte : un testeur (Samsung S24 Ultra / One UI) a signalé « les réglages r
 
 ## 9. Fichiers à tenir à jour quand tu changes le comportement
 - `AGENTS.md` (ce fichier), `RELEASE.md` (procédures/gotchas Play), `TODO.md` (état d'avancement), `CHANGELOG.md` (**auto** via release-please — ne pas éditer à la main).
+- **Décisions structurantes → `docs-dev/adr/`** (voir son README) : toute décision d'architecture non triviale (dépendance réseau, versioning, natif vs lib…) passe par un ADR. En particulier : **ADR 0007 (privacy = produit)** — aucune dépendance qui transmet des données hors device sans nouvel ADR.
