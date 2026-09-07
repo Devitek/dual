@@ -134,8 +134,29 @@ le workflow **Store Metadata**.
 > (phone|seveninch|teninch) pointant vers le bon dossier — il suffira de brancher
 > une tablette. Les mockups 7"/10" actuels restent en attendant.
 
+## Secrets & sauvegardes (SOPS + environment GitHub)
+
+- **Source de vérité des 5 secrets de release** (`ANDROID_KEYSTORE_BASE64`,
+  `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`,
+  `PLAY_SERVICE_ACCOUNT_JSON`) : gérés en **SOPS** (chiffrés, versionnés) dans le
+  dépôt d'infrastructure NixOS du mainteneur, répliqués sur plusieurs machines.
+  Le keystore d'upload y est sauvegardé : GitHub n'est qu'une copie de travail.
+- **Perte de l'upload key** (dernier recours) : Play App Signing détient la clé
+  d'app → demander la **réinitialisation de la clé d'upload** dans la Play
+  Console (Configuration → Signature de l'app), puis re-provisionner les secrets
+  depuis SOPS.
+- Le job `release-android.yml` s'exécute dans l'**environment GitHub
+  `play-internal`** (déploiements restreints à `main` + tags `v*`). Pour que les
+  secrets soient invisibles des autres workflows : les recréer au niveau de
+  l'environment (Settings → Environments → play-internal → *Environment
+  secrets*, valeurs depuis SOPS), puis supprimer les copies repo-level — les
+  secrets d'environment priment.
+- Pas de reviewer requis sur l'environment : **le merge de la release PR est
+  déjà la validation humaine** (une seule porte, assumé).
+
 ## Rappels
-- Chaque upload doit **augmenter le `versionCode`** → géré via le numéro de run CI.
+- Chaque upload doit **augmenter le `versionCode`** → `git rev-list --count HEAD`
+  (monotone tant qu'on ne réécrit jamais l'historique de `main` — cf. AGENTS.md §2.4).
 - `release_status: draft` = rien n'est diffusé tant que tu n'as pas cliqué *Rollout*.
 - Assets de la fiche : `fastlane/metadata/android/` · sources des captures :
   `store/screenshots/src/` (régénérables via Chrome headless).
