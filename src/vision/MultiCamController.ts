@@ -160,7 +160,7 @@ interface QualityConfig {
 // le multi-cam : permet de tester le repli (photo séquentielle + vidéo bloquée +
 // bulle d'info) en local, comme sur un Oppo Reno12 5G.
 // ⚠️ REPASSER À `false` AVANT MERGE. Sans effet en production (gardé par __DEV__).
-const DEV_FORCE_SEQUENTIAL = true;
+const DEV_FORCE_SEQUENTIAL = false;
 
 // NB : en multi-cam la bande passante ISP est partagée ; les vidéos restent ≤ 1080p.
 const QUALITY: Record<CaptureQuality, QualityConfig> = {
