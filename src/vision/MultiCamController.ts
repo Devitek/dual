@@ -264,6 +264,8 @@ export class MultiCamController {
 
   private primarySlot: CameraSlot = 'back';
   private disposed = false;
+  /** Un (seul) réessai automatique par épisode d'échec d'ouverture caméra. */
+  private autoRetryDone = false;
   /** Devices mémorisés pour la capture PHOTO séquentielle (mode `sequential`). */
   private sequentialBack: CameraDevice | undefined;
   private sequentialFront: CameraDevice | undefined;
@@ -469,6 +471,7 @@ export class MultiCamController {
 
       await this.session.start();
 
+      this.autoRetryDone = false; // session OK → réarme le réessai auto
       this.update({
         status: 'running',
         // `mode` a été déterminé plus haut (multi / sequential / single).
@@ -478,14 +481,32 @@ export class MultiCamController {
         hasTorch: this.backController?.device.hasTorch ?? false,
       });
     } catch (error) {
-      this.update({
-        status: 'error',
-        errorMessage: (error as Error)?.message ?? String(error),
-      });
+      const message = (error as Error)?.message ?? String(error);
+      recordError(message, { context: 'camera-open' });
+      this.update({ status: 'error', errorMessage: message });
+      // Kill + relance ÉCLAIR de l'app : le handle caméra du process précédent
+      // n'est pas toujours libéré par le HAL au moment où on rouvre (caméra
+      // « in use » → aperçu noir / échec). Un unique réessai différé suffit
+      // dans la grande majorité des cas ; sinon l'écran d'erreur (bouton
+      // Réessayer) et la reprise au foreground (setActive) prennent le relais.
+      if (!this.disposed && !this.autoRetryDone) {
+        this.autoRetryDone = true;
+        setTimeout(() => {
+          if (!this.disposed && this.snapshot.status === 'error') void this.retry();
+        }, 1500);
+      }
     }
   }
 
   async setActive(active: boolean): Promise<void> {
+    // Retour au premier plan avec une session en échec (ex. caméra volée par
+    // une autre app, ou échec d'ouverture au lancement) → reconstruction
+    // complète : plus besoin d'ouvrir l'app photo native pour « réveiller »
+    // les caméras.
+    if (active && this.snapshot.status === 'error' && !this.disposed) {
+      await this.retry();
+      return;
+    }
     const session = this.session;
     if (session == null) return;
     try {
