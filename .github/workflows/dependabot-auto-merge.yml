@@ -1,8 +1,10 @@
 name: Dependabot auto-merge
 
-# Active l'auto-merge (après passage de la CI) pour les mises à jour à faible
-# risque : patch npm + toutes les actions GitHub. Les minor/major restent en
-# revue manuelle.
+# Politique DURCIE (supply chain, ADR 0006) : auto-merge UNIQUEMENT pour les
+# patchs de devDependencies npm. Tout le reste passe en revue humaine :
+#   - deps npm de PRODUCTION (code embarqué dans l'app) : patch inclus ;
+#   - bumps d'actions GitHub : les workflows lisent des secrets, et les actions
+#     étant épinglées par SHA, chaque bump = un nouveau SHA à examiner.
 #
 # Prérequis repo : Settings → General → "Allow auto-merge" activé, et une
 # protection de branche exigeant la CI (sinon le merge n'attend pas les checks).
@@ -20,14 +22,15 @@ jobs:
     steps:
       - name: Dependabot metadata
         id: meta
-        uses: dependabot/fetch-metadata@v3
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Enable auto-merge (patch npm + github-actions)
+      - name: Enable auto-merge (patch devDependencies npm uniquement)
         if: >-
-          steps.meta.outputs.update-type == 'version-update:semver-patch' ||
-          steps.meta.outputs.package-ecosystem == 'github_actions'
+          steps.meta.outputs.package-ecosystem == 'npm_and_yarn' &&
+          steps.meta.outputs.update-type == 'version-update:semver-patch' &&
+          steps.meta.outputs.dependency-type == 'direct:development'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_URL: ${{ github.event.pull_request.html_url }}
