@@ -143,7 +143,13 @@
     "mirrorFrontDesc": "Salva i selfie speculari, come nell’anteprima. Off = orientamento reale (non speculare).",
     "pipDragHint": "Suggerimento: tieni premuta la miniatura e trascina per spostarla, pizzica per ridimensionarla.",
     "watermark": "Filigrana TwinLens",
-    "watermarkDesc": "Aggiunge una piccola scritta “TwinLens” nell’angolo delle foto combinate. Disattivata di default."
+    "watermarkDesc": "Aggiunge una piccola scritta “TwinLens” nell’angolo delle foto combinate. Disattivata di default.",
+    "errorJournal": "Registro errori",
+    "journalEmpty": "Nessun errore registrato — tutto ok.",
+    "journalEntries_one": "{{count}} voce registrata (solo locale, mai inviato)",
+    "journalEntries_other": "{{count}} voci registrate (solo locale, mai inviato)",
+    "copyJournal": "Copia registro",
+    "clearJournal": "Cancella"
   },
   "gallery": {
     "title": "Contenuti della sessione",

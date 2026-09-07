@@ -143,7 +143,13 @@
     "mirrorFrontDesc": "Save selfies mirrored, as shown in the preview. Off keeps the true (un-mirrored) orientation.",
     "pipDragHint": "Tip: long-press the thumbnail then drag to move it, pinch to resize.",
     "watermark": "TwinLens watermark",
-    "watermarkDesc": "Add a small “TwinLens” tag in the corner of merged photos. Off by default."
+    "watermarkDesc": "Add a small “TwinLens” tag in the corner of merged photos. Off by default.",
+    "errorJournal": "Error journal",
+    "journalEmpty": "No errors recorded — all good.",
+    "journalEntries_one": "{{count}} entry recorded (local only, never sent)",
+    "journalEntries_other": "{{count}} entries recorded (local only, never sent)",
+    "copyJournal": "Copy journal",
+    "clearJournal": "Clear"
   },
   "gallery": {
     "title": "Session media",
