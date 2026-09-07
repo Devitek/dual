@@ -30,6 +30,19 @@ updates:
       # Toolchain Babel : on suit l'écosystème Expo, pas de majeur aveugle.
       - dependency-name: '@babel/core'
         update-types: ['version-update:semver-major']
+      # Toolchain qualité : majeurs gelés tant que l'écosystème ne suit pas.
+      # - typescript 7 : refusé par typescript-eslint (ADR 0004, revisite à 7.1)
+      # - eslint 10 : API retirée encore requise par eslint-plugin-react
+      # - jest/@types/jest 30 : jest-expo (SDK 57) attend jest 29
+      # - @react-native/jest-preset : suit la version de react-native (0.86.x)
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'eslint'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'jest'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@types/jest'
+        update-types: ['version-update:semver-major']
 
   # Actions GitHub des workflows
   - package-ecosystem: github-actions
