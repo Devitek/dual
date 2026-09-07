@@ -129,6 +129,7 @@ Contexte : un testeur (Samsung S24 Ultra / One UI) a signalé « les réglages r
   2. l'**appliquer au montage** dans `applyPersisted(...)` de `MultiCameraScreen` (contrôleur ou state) ;
   3. appeler `saveSetting('<clé>', value)` dans son setter.
 - **Garde-fou** : `loadPersistedSettings()` relit **toutes** les clés de `SETTINGS_KEYS` en un passage → impossible d'écrire une clé sans la relire (bug historique : la disposition était écrite mais jamais restaurée).
+- **MIGRATIONS (impératif)** : si la **sémantique** d'un réglage persisté change (plage, coordonnées, signification, composant qui le consomme), un ancien état rejoué tel quel casse l'UI après mise à jour (vécu 1.19→1.22 : cadre PiP fantôme, réglages incohérents). Dans ce cas : **incrémenter `SETTINGS_SCHEMA_VERSION`**, ajouter la migration dans `migratePersistedSettings()` (settings.ts) **et** un test « maj depuis version antérieure » dans `settings.test.ts`. Interdit de supposer « ça passera » : tout testeur vient d'une vieille version.
 - **Exceptions volontairement NON persistées** : la **torche** (sécurité — pas de lampe rallumée au lancement), le **hint PiP** (`tl_seen_pip_hint`, one-shot), le **géotag** (dans `useGeotag`, conditionné à la permission), `primarySlot` (risque en mono-caméra).
 - **Test de non-régression** : forcer l'arrêt de l'app (paramètres → forcer l'arrêt, ou swipe des récents) puis relancer → **tous** les réglages doivent tenir.
 
