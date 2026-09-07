@@ -154,6 +154,18 @@ le workflow **Store Metadata**.
 - Pas de reviewer requis sur l'environment : **le merge de la release PR est
   déjà la validation humaine** (une seule porte, assumé).
 
+## Promotion des pistes & rollback
+
+- **Promotion** (interne → fermé → production) : workflow **Play Promote**
+  (`workflow_dispatch`) → lane `fastlane android promote`. Aucun rebuild : la
+  version déjà uploadée change de piste. Production = **rollout progressif**
+  (défaut 10 %) ; augmenter ensuite depuis la console (ou relancer le workflow
+  avec une fraction plus grande).
+- **Rollback binaire** (pas d'OTA — ADR 0001) :
+  1. Play Console → Production → **Arrêter le déploiement** de la version fautive ;
+  2. release patch (`fix:` → merge → merge release PR) → nouvelle version ;
+  3. issue 🚨 « Incident de release » (cause racine en clôture).
+
 ## Rappels
 - Chaque upload doit **augmenter le `versionCode`** → `git rev-list --count HEAD`
   (monotone tant qu'on ne réécrit jamais l'historique de `main` — cf. AGENTS.md §2.4).

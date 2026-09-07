@@ -9,5 +9,9 @@ fastlane/metadata/
 CHANGELOG.md
 package-lock.json
 Gemfile.lock
+# app.json : release-please y écrit $.expo.version (extra-files) avec SON
+# sérialiseur JSON (arrays dépliés ≠ prettier) → sans cette exclusion, chaque
+# release PR serait rouge sur le check Prettier.
+app.json
 # Markdown : style manuel conservé (AGENTS.md, RELEASE.md…)
 *.md

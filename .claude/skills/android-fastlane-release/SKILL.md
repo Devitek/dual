@@ -18,7 +18,9 @@ event release → release-android.yml (environment: play-internal)
   expo prebuild → gradlew bundleRelease (upload key, secrets via env)
   → AAB attaché à la Release + artifact
   → bundle exec fastlane android internal (track interne, completed → testeurs servis)
-Promotion fermé/production : HUMAIN, dans la Play Console (12 testeurs/14 j requis).
+Promotion fermé/production : HUMAINE via le workflow « Play Promote »
+(`fastlane android promote`, sans rebuild ; production = rollout progressif).
+Prérequis compte personnel : 12 testeurs/14 j en fermé avant la production.
 ```
 
 ## Ce qu'un agent PEUT faire
@@ -49,7 +51,7 @@ Promotion fermé/production : HUMAIN, dans la Play Console (12 testeurs/14 j req
 
 ## Rollback (pas d'OTA — ADR 0001)
 
-1. Play Console → halte du staged rollout de la version fautive.
+1. Play Console → Production → « Arrêter le déploiement » (halte du rollout).
 2. Release patch : PR `fix:` → merge → merge release PR → nouvelle version interne.
 3. Issue 🚨 « Incident de release » remplie (cause racine en clôture).
 
