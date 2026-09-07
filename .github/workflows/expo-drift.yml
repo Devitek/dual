@@ -1,0 +1,61 @@
+name: Expo drift check
+
+# Détection PROACTIVE de la dérive des patches Expo SDK (le mal récurrent qui a
+# déjà cassé la CI de toutes les PRs : cf. #103, #109, #118…). Expo publie des
+# patches SDK ; `expo-doctor` se met alors à échouer sur main et bloque tout le
+# monde. Ce cron le détecte le lundi matin (avant les PRs dependabot) et ouvre /
+# met à jour une issue au lieu de laisser pourrir.
+#
+# Remède quand l'issue s'ouvre : PR `chore(deps): realign Expo SDK patches`
+# avec `npx expo install --fix` (voir CONTRIBUTING.md).
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # lundi 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  drift:
+    name: expo install --check · doctor · prebuild
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      - name: Expo SDK patch drift (expo install --check)
+        run: npx expo install --check
+
+      - name: expo-doctor
+        run: npx expo-doctor
+
+      - name: Prebuild dry-run (Android)
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Open / update drift issue on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          TITLE="Dérive Expo SDK détectée (expo install --check / doctor)"
+          EXISTING=$(gh issue list --state open --label expo --search "$TITLE in:title" --json number --jq '.[0].number // empty')
+          BODY=$(printf '%s\n\n**Run** : %s\n\n%s' \
+            "Le cron hebdo a détecté une dérive (patches Expo SDK, doctor ou prebuild en échec)." \
+            "$RUN_URL" \
+            "**Remède** : PR \`chore(deps): realign Expo SDK patches\` avec \`npx expo install --fix\`, puis \`npx expo-doctor\` (21/21) — cf. CONTRIBUTING.md. Sans ça, la prochaine PR venue verra sa CI échouer.")
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body "Toujours en dérive — nouveau run : $RUN_URL"
+          else
+            gh issue create --title "$TITLE" --label expo --label ci --body "$BODY"
+          fi
