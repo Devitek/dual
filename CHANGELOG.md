@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.21.0](https://github.com/Devitek/dual/compare/v1.20.0...v1.21.0) (2026-09-07)
+
+
+### Features
+
+* settings redesign, gallery viewer & camera UX polish ([#116](https://github.com/Devitek/dual/issues/116)) ([6dcefbe](https://github.com/Devitek/dual/commit/6dcefbe1274d1dcc982d1d4ccacc62feec0f8947))
+
 ## [1.20.0](https://github.com/Devitek/dual/compare/v1.19.1...v1.20.0) (2026-09-07)
 
 
