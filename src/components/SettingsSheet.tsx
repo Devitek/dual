@@ -2,12 +2,14 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
+  LayoutAnimation,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
-  Switch,
   Text,
+  UIManager,
   View,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -29,8 +31,14 @@ import type { CaptureQuality, CaptureSpeed, SaveMode, VideoFps } from '../vision
 import type { CompositionLayout, OutputRatio } from '../services/pipComposer';
 import type { CaptureMode } from './ModeSwitch';
 import { Segmented, type SegmentedOption } from './Segmented';
+import { M3Switch } from './M3Switch';
 
 type IconName = React.ComponentProps<typeof MaterialIcons>['name'];
+
+// Anime les changements de hauteur du sheet (bascule Général/Pro) — no-op sur Fabric.
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 // --- Options (libellés techniques universels non traduits, sinon clés i18n) ---
 const SAVE_OPTION_KEYS: { value: SaveMode; labelKey: string }[] = [
@@ -251,13 +259,7 @@ export function SettingsSheet(props: SettingsSheetProps): React.ReactElement {
     <View style={[styles.row, disabled && styles.dim]}>
       <MaterialIcons name={icon} size={22} color={colors.onSurface} />
       <Text style={styles.rowLabel}>{label}</Text>
-      <Switch
-        value={value}
-        disabled={disabled}
-        onValueChange={onValueChange}
-        trackColor={{ true: colors.primary, false: colors.outlineVariant }}
-        thumbColor={colors.onPrimary}
-      />
+      <M3Switch value={value} disabled={disabled} onValueChange={onValueChange} accessibilityLabel={label} />
     </View>
   );
 
@@ -483,6 +485,13 @@ export function SettingsSheet(props: SettingsSheetProps): React.ReactElement {
                   key={tb}
                   onPress={() => {
                     haptics.selection();
+                    // Anime la hauteur du sheet quand le contenu de l'onglet change.
+                    LayoutAnimation.configureNext({
+                      duration: 240,
+                      update: { type: LayoutAnimation.Types.easeInEaseOut },
+                      create: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
+                      delete: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
+                    });
                     setTab(tb);
                   }}
                   style={styles.tab}
