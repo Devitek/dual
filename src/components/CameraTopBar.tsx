@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -18,8 +18,6 @@ const FLASH_ICON: Record<PhotoFlashMode, IconName> = {
 };
 
 interface CameraTopBarProps {
-  modeLabel: string;
-  torchOn: boolean;
   photoFlash: PhotoFlashMode;
   flashSupported: boolean;
   onCyclePhotoFlash: () => void;
@@ -32,8 +30,6 @@ interface CameraTopBarProps {
  * gauche ; à droite, cycle de flash photo (off / auto / on) + accès Paramètres.
  */
 export function CameraTopBar({
-  modeLabel,
-  torchOn,
   photoFlash,
   flashSupported,
   onCyclePhotoFlash,
@@ -54,11 +50,6 @@ export function CameraTopBar({
 
   return (
     <View style={[styles.container, { top }]} pointerEvents="box-none">
-      <View style={styles.modePill}>
-        {torchOn && <MaterialIcons name="flashlight-on" size={14} color={colors.warning} />}
-        <Text style={styles.modeText}>{modeLabel}</Text>
-      </View>
-
       <View style={styles.actions}>
         <Pressable
           onPress={onToggleAeLock}
@@ -106,18 +97,8 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
     right: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
   },
-  modePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    height: 34,
-    paddingHorizontal: 14,
-    borderRadius: 17,
-    backgroundColor: colors.overlayStrong,
-  },
-  modeText: { color: colors.onSurface, fontSize: 13, fontWeight: '700' },
   actions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   iconBtn: {
     width: 40,

@@ -700,7 +700,6 @@ export function MultiCameraScreen(): React.ReactElement {
     return Gesture.Simultaneous(tap, pinch);
   }, [cam.controller, primarySlot, width, height]);
 
-  const modeLabel = cam.mode === 'multi' ? t('mode.dual') : cam.mode === 'single' ? t('mode.single') : '—';
 
   return (
     <PermissionGate permissions={permissions}>
@@ -731,8 +730,6 @@ export function MultiCameraScreen(): React.ReactElement {
             <ZoomIndicator zoom={zoomDisplay} nonce={zoomNonce} />
 
             <CameraTopBar
-              modeLabel={modeLabel}
-              torchOn={torchOn}
               photoFlash={photoFlash}
               flashSupported={cam.hasTorch}
               onCyclePhotoFlash={cyclePhotoFlash}
