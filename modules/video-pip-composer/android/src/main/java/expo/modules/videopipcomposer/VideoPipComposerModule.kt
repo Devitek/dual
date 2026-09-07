@@ -3,6 +3,7 @@ package expo.modules.videopipcomposer
 import android.Manifest
 import android.app.StatusBarManager
 import android.appwidget.AppWidgetManager
+import android.content.ClipData
 import android.content.ComponentName
 import android.content.Intent
 import android.graphics.Bitmap
@@ -133,12 +134,19 @@ class VideoPipComposerModule : Module(), PipComposerBus.Listener {
       }
       try {
         val parsed = Uri.parse(uri)
+        // MIME EXACT du média (ex. video/mp4, image/gif) via le ContentResolver
+        // pour les URI content:// — un type générique (video/*) fait souvent
+        // échouer le compositeur de feed Instagram.
+        val realType =
+          if (parsed.scheme == "content") activity.contentResolver.getType(parsed) ?: mimeType else mimeType
         var launched = false
         for (pkg in packages) {
           val intent = Intent(Intent.ACTION_SEND).apply {
             setPackage(pkg)
-            type = mimeType
+            type = realType
             putExtra(Intent.EXTRA_STREAM, parsed)
+            // ClipData + grant : garantit le droit de lecture de l'URI à l'app cible.
+            clipData = ClipData.newRawUri("media", parsed)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
           }
@@ -166,9 +174,13 @@ class VideoPipComposerModule : Module(), PipComposerBus.Listener {
         return@AsyncFunction
       }
       try {
+        val parsed = Uri.parse(uri)
+        val realType =
+          if (parsed.scheme == "content") activity.contentResolver.getType(parsed) ?: mimeType else mimeType
         val send = Intent(Intent.ACTION_SEND).apply {
-          type = mimeType
-          putExtra(Intent.EXTRA_STREAM, Uri.parse(uri))
+          type = realType
+          putExtra(Intent.EXTRA_STREAM, parsed)
+          clipData = ClipData.newRawUri("media", parsed)
           addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         val chooser = Intent.createChooser(send, null).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
