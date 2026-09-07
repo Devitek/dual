@@ -166,7 +166,8 @@
     "infoSize": "Size",
     "infoDual": "Dual (PiP)",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "infoDuration": "Duration"
   },
   "error": {
     "title": "Cameras unavailable",

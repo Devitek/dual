@@ -166,7 +166,8 @@
     "infoSize": "Tamaño",
     "infoDual": "Doble (PiP)",
     "yes": "Sí",
-    "no": "No"
+    "no": "No",
+    "infoDuration": "Duración"
   },
   "error": {
     "title": "Cámaras no disponibles",

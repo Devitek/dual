@@ -166,7 +166,8 @@
     "infoSize": "Dimensione",
     "infoDual": "Doppia (PiP)",
     "yes": "Sì",
-    "no": "No"
+    "no": "No",
+    "infoDuration": "Durata"
   },
   "error": {
     "title": "Fotocamere non disponibili",

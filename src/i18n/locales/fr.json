@@ -166,7 +166,8 @@
     "infoSize": "Taille",
     "infoDual": "Double (PiP)",
     "yes": "Oui",
-    "no": "Non"
+    "no": "Non",
+    "infoDuration": "Durée"
   },
   "error": {
     "title": "Caméras indisponibles",
