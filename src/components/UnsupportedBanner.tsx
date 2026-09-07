@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { MaterialIcons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 
 import { useThemedStyles, type Palette } from '../theme/theme';
@@ -9,8 +10,13 @@ import { haptics } from '../utils/haptics';
 import type { MultiCamDiagnostics } from '../vision/MultiCamController';
 
 interface UnsupportedBannerProps {
-  /** true si l'appareil n'a tout simplement pas les deux capteurs. */
-  missingSensor?: boolean;
+  /**
+   * Mode caméra dégradé courant :
+   *  - `single`     : un seul capteur exploitable (aucun dual possible) ;
+   *  - `sequential` : les deux capteurs existent mais pas de capture simultanée
+   *    (photo double prise en deux temps, vidéo indisponible).
+   */
+  mode: 'single' | 'sequential';
   /** Diagnostic de détection multi-caméra (pour le bloc « détails techniques »). */
   diagnostics?: MultiCamDiagnostics | null;
 }
@@ -53,7 +59,7 @@ function buildReport(diagnostics?: MultiCamDiagnostics | null): string {
  * `FEATURE_CAMERA_CONCURRENT`, pas d'un bug de l'app).
  */
 export function UnsupportedBanner({
-  missingSensor = false,
+  mode,
   diagnostics = null,
 }: UnsupportedBannerProps): React.ReactElement {
   const [expanded, setExpanded] = useState(false);
@@ -62,6 +68,9 @@ export function UnsupportedBanner({
   const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation();
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // `single` = un seul capteur (dual impossible) ; `sequential` = photo double
+  // en deux temps possible, mais vidéo simultanée non → on propose le « Pourquoi ? ».
+  const sequential = mode === 'sequential';
 
   useEffect(
     () => () => {
@@ -80,10 +89,10 @@ export function UnsupportedBanner({
 
   return (
     <View style={[styles.container, { top: Math.max(insets.top + 52, 92) }]} pointerEvents="box-none">
-      <Text style={styles.title}>{t('unsupported.title')}</Text>
-      <Text style={styles.text}>{t(missingSensor ? 'unsupported.textMissing' : 'unsupported.textUnsupported')}</Text>
+      <Text style={styles.title}>{t(sequential ? 'sequential.title' : 'unsupported.title')}</Text>
+      <Text style={styles.text}>{t(sequential ? 'sequential.text' : 'unsupported.textMissing')}</Text>
 
-      {!missingSensor && (
+      {sequential && (
         <>
           <Pressable
             onPress={() => {
@@ -94,6 +103,7 @@ export function UnsupportedBanner({
             hitSlop={8}
             accessibilityRole="button"
           >
+            <MaterialIcons name="help-outline" size={14} color={styles.linkText.color as string} />
             <Text style={styles.linkText}>{expanded ? t('unsupported.hide') : t('unsupported.why')}</Text>
           </Pressable>
 
@@ -149,7 +159,14 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
     lineHeight: 17,
     textAlign: 'center',
   },
-  link: { marginTop: 6, paddingVertical: 2, paddingHorizontal: 6 },
+  link: {
+    marginTop: 6,
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
   linkText: { color: colors.primary, fontSize: 12, fontWeight: '700' },
   explain: {
     color: colors.onSurfaceVariant,

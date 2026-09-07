@@ -18,6 +18,10 @@ const RING_C = 2 * Math.PI * RING_R;
 interface CaptureControlsProps {
   mode: CaptureMode;
   onSetMode: (mode: CaptureMode) => void;
+  /** Modes indisponibles (grisés) — ex. vidéo/boomerang en mode séquentiel. */
+  blockedModes?: CaptureMode[];
+  /** Appelé au tap d'un mode bloqué (message explicatif). */
+  onBlockedMode?: (mode: CaptureMode) => void;
   isRecording: boolean;
   isBusy: boolean;
   onPhoto: () => void;
@@ -58,6 +62,8 @@ function formatDuration(seconds: number): string {
 export function CaptureControls({
   mode,
   onSetMode,
+  blockedModes,
+  onBlockedMode,
   isRecording,
   isBusy,
   onPhoto,
@@ -165,7 +171,13 @@ export function CaptureControls({
       <View style={styles.stack}>
         <ZoomControl min={zoomMin} max={zoomMax} presets={zoomLevels} value={currentZoom} onZoom={onZoom} />
 
-        <ModeSwitch mode={mode} onChange={onSetMode} disabled={isRecording} />
+        <ModeSwitch
+          mode={mode}
+          onChange={onSetMode}
+          disabled={isRecording}
+          blockedModes={blockedModes}
+          onBlocked={onBlockedMode}
+        />
 
         <View style={styles.bar}>
           {/* Gauche : miniature de la dernière capture (+ indicateur de traitement) */}

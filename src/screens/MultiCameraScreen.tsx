@@ -63,6 +63,9 @@ const BOOMERANG_MIN_MS = 700;
 const BOOMERANG_MAX_MS = 3000;
 /** Durée fixe d'un boomerang déclenché par une touche de volume (pas d'appui long). */
 const BOOMERANG_KEY_MS = 1500;
+/** Modes indisponibles en repli séquentiel (vidéo simultanée impossible). Référence
+ *  stable pour éviter les re-rendus de CaptureControls. */
+const SEQUENTIAL_BLOCKED_MODES: CaptureMode[] = ['video', 'boomerang'];
 
 // Réexport pour compat (le type vit désormais dans services/settings).
 export type { TimerSeconds };
@@ -248,6 +251,14 @@ export function MultiCameraScreen(): React.ReactElement {
   useEffect(() => {
     cam.controller.setBoomerangMode(mode === 'boomerang');
   }, [mode, cam.controller]);
+
+  // Repli séquentiel : la vidéo (et le boomerang) sont impossibles faute de flux
+  // simultané. Si un mode vidéo était sélectionné (persisté / deep-link), on
+  // revient à la photo. On NE persiste PAS (la préférence revient sur un appareil
+  // capable de multi-cam).
+  useEffect(() => {
+    if (cam.mode === 'sequential' && mode !== 'photo') setMode('photo');
+  }, [cam.mode, mode]);
 
   // Widget d'accueil : miniature de la dernière capture (best-effort).
   useEffect(() => {
@@ -766,13 +777,15 @@ export function MultiCameraScreen(): React.ReactElement {
                 un loader (hors charte + non alignée). Réactivable selon retours. */}
             {/* <ProcessingIndicator count={cam.processingCount} progress={videoProgress} /> */}
 
-            {cam.mode === 'single' && cam.status === 'running' && (
-              <UnsupportedBanner diagnostics={cam.diagnostics} />
+            {(cam.mode === 'single' || cam.mode === 'sequential') && cam.status === 'running' && (
+              <UnsupportedBanner mode={cam.mode} diagnostics={cam.diagnostics} />
             )}
 
             <CaptureControls
               mode={mode}
               onSetMode={onSetMode}
+              blockedModes={cam.mode === 'sequential' ? SEQUENTIAL_BLOCKED_MODES : undefined}
+              onBlockedMode={() => cam.controller.showNotice('error', t('sequential.videoBlocked'))}
               isRecording={cam.isRecording}
               isBusy={cam.isBusy}
               onPhoto={onPhoto}
@@ -814,6 +827,27 @@ export function MultiCameraScreen(): React.ReactElement {
 
             {cam.mode === 'multi' && cam.showSecondaryPreview && (
               <PipHint visible={pipHintVisible} corner={cam.pipCorner} onDismiss={dismissPipHint} />
+            )}
+
+            {/* Repli séquentiel : indique l'étape en cours (arrière → avant). */}
+            {cam.sequentialStep > 0 && (
+              <View
+                pointerEvents="none"
+                style={{
+                  position: 'absolute',
+                  top: '46%',
+                  alignSelf: 'center',
+                  maxWidth: '82%',
+                  backgroundColor: 'rgba(0,0,0,0.72)',
+                  paddingHorizontal: 18,
+                  paddingVertical: 12,
+                  borderRadius: 20,
+                }}
+              >
+                <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700', textAlign: 'center' }}>
+                  {t('sequential.capturing', { step: cam.sequentialStep })}
+                </Text>
+              </View>
             )}
 
             {/* Flash d'obturateur (feedback instantané, blanc) */}

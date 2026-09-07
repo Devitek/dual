@@ -150,6 +150,13 @@
     "retry": "Retry",
     "openSettings": "Open app settings"
   },
+  "sequential": {
+    "title": "Sequential dual photo",
+    "text": "This device can't use both cameras at once, so TwinLens takes the two photos one right after the other. Simultaneous video isn't available.",
+    "videoBlocked": "Video needs both cameras at once, which this device doesn't support. Photo works in sequential mode.",
+    "capturing": "Hold still — capturing both ({{step}}/2)",
+    "frontFailed": "Front camera didn't respond — kept the back photo only."
+  },
   "unsupported": {
     "title": "Single camera mode",
     "textUnsupported": "This device doesn’t support simultaneous front + back capture. Automatically switching to a single camera.",
