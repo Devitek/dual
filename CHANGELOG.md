@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.22.1](https://github.com/Devitek/dual/compare/v1.22.0...v1.22.1) (2026-09-07)
+
+
+### Bug Fixes
+
+* **camera:** auto-retry failed camera open + rebuild on foreground return ([#141](https://github.com/Devitek/dual/issues/141)) ([dfac04d](https://github.com/Devitek/dual/commit/dfac04d932d1589fde23009a23e7c47a6d1beffd))
+* **settings:** schema versioning + v2 migration (stale 1.19 layout state broke 1.22 UI) ([#140](https://github.com/Devitek/dual/issues/140)) ([0382a83](https://github.com/Devitek/dual/commit/0382a83944c06f3dd86f4cc8f89129cce1643e56))
+* **widget:** deep-link mode no longer overwritten by persisted-settings restore ([#138](https://github.com/Devitek/dual/issues/138)) ([1dec414](https://github.com/Devitek/dual/commit/1dec414f4cd4b9342a2fa706bbbc84d8d394d9c4))
+
 ## [1.22.0](https://github.com/Devitek/dual/compare/v1.21.0...v1.22.0) (2026-09-07)
 
 
