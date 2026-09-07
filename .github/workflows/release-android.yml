@@ -49,6 +49,12 @@ jobs:
   release:
     name: Build signed AAB (+ optional Play upload)
     runs-on: ubuntu-latest
+    # Environment protégé : seuls `main` et les tags `v*` peuvent déployer, et
+    # les secrets sensibles (keystore, Play SA) peuvent être scoppés à cet
+    # environment (inaccessibles aux autres workflows). Pas de reviewer requis :
+    # le merge de la release PR est déjà LA validation humaine (pas de double
+    # porte). Voir RELEASE.md §Secrets.
+    environment: play-internal
     steps:
       - uses: actions/checkout@v7
         with:
