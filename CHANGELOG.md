@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.20.0](https://github.com/Devitek/dual/compare/v1.19.1...v1.20.0) (2026-09-07)
+
+
+### Features
+
+* **sequential:** dual-photo fallback on devices without concurrent cameras ([#113](https://github.com/Devitek/dual/issues/113)) ([27721e9](https://github.com/Devitek/dual/commit/27721e92c0273703b04fe839f57158271ac56f9d))
+* **unsupported:** device diagnostics + copy in single-camera banner ([#111](https://github.com/Devitek/dual/issues/111)) ([883bb1b](https://github.com/Devitek/dual/commit/883bb1b934845fc05f1de83ba4ffbe89391a72b9))
+
 ## [1.19.1](https://github.com/Devitek/dual/compare/v1.19.0...v1.19.1) (2026-08-09)
 
 
