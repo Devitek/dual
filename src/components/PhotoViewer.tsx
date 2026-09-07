@@ -27,7 +27,8 @@ import type { CapturedMedia } from '../vision/MultiCamController';
 const { width: W, height: H } = Dimensions.get('window');
 const DISMISS_Y = 140; // seuil de fermeture (glisser vers le bas)
 const INFO_Y = 90; // seuil d'ouverture des infos (glisser vers le haut)
-const NAV_X = W / 4; // seuil de navigation gauche/droite
+const NAV_X = W / 4; // seuil de navigation
+const NAV_V = 700; // vélocité de flick pour naviguer
 
 interface PhotoViewerProps {
   photos: CapturedMedia[];
@@ -47,7 +48,7 @@ function formatBytes(n: number | null): string {
  * Visionneuse photo plein écran, gestes façon Google Photos :
  *  - glisser vers le BAS : fermer ;
  *  - glisser vers le HAUT : afficher les détails (métadonnées) ;
- *  - glisser GAUCHE/DROITE : photo suivante / précédente ;
+ *  - glisser GAUCHE/DROITE : photo précédente / suivante (carrousel continu) ;
  *  - toucher : afficher/masquer les commandes (bouton Partager).
  */
 export function PhotoViewer({ photos, index, onIndexChange, onClose, onShare }: PhotoViewerProps): React.ReactElement | null {
@@ -56,15 +57,18 @@ export function PhotoViewer({ photos, index, onIndexChange, onClose, onShare }: 
   const { t, i18n } = useTranslation();
   const insets = useSafeAreaInsets();
 
+  const [cur, setCur] = useState(index);
   const [chrome, setChrome] = useState(true);
   const [info, setInfo] = useState(false);
   const [dims, setDims] = useState<{ w: number; h: number } | null>(null);
 
-  const tx = useRef(new Animated.Value(0)).current;
+  const curRef = useRef(index);
+  // Décalage horizontal de la bande (source de vérité de la position).
+  const offsetX = useRef(new Animated.Value(-index * W)).current;
   const ty = useRef(new Animated.Value(0)).current;
   const axis = useRef<null | 'x' | 'y'>(null);
 
-  const item = photos[index] ?? null;
+  const item = photos[cur] ?? null;
 
   // Dimensions réelles de la photo courante (pour l'écran d'infos).
   useEffect(() => {
@@ -89,33 +93,61 @@ export function PhotoViewer({ photos, index, onIndexChange, onClose, onShare }: 
     extrapolate: 'clamp',
   });
 
-  const reset = useCallback(() => {
-    Animated.spring(tx, { toValue: 0, useNativeDriver: false, bounciness: 0, speed: 18 }).start();
+  const goTo = useCallback(
+    (target: number) => {
+      curRef.current = target;
+      setCur(target);
+      onIndexChange(target);
+      Animated.spring(offsetX, {
+        toValue: -target * W,
+        useNativeDriver: false,
+        bounciness: 0,
+        speed: 18,
+      }).start();
+    },
+    [offsetX, onIndexChange],
+  );
+
+  const resetY = useCallback(() => {
     Animated.spring(ty, { toValue: 0, useNativeDriver: false, bounciness: 0, speed: 18 }).start();
-  }, [tx, ty]);
+  }, [ty]);
 
   const onGesture = useCallback(
     (e: PanGestureHandlerGestureEvent) => {
       const { translationX, translationY } = e.nativeEvent;
       if (axis.current == null) {
-        if (Math.abs(translationX) > 8 || Math.abs(translationY) > 8) {
+        if (Math.abs(translationX) > 6 || Math.abs(translationY) > 6) {
           axis.current = Math.abs(translationX) > Math.abs(translationY) ? 'x' : 'y';
         } else {
           return;
         }
       }
-      if (axis.current === 'x') tx.setValue(translationX);
-      else ty.setValue(translationY);
+      if (axis.current === 'x') {
+        // Résistance aux extrémités (pas de photo au-delà).
+        let dx = translationX;
+        const atStart = curRef.current === 0 && dx > 0;
+        const atEnd = curRef.current === photos.length - 1 && dx < 0;
+        if (atStart || atEnd) dx *= 0.35;
+        offsetX.setValue(-curRef.current * W + dx);
+      } else {
+        ty.setValue(translationY);
+      }
     },
-    [tx, ty],
+    [offsetX, ty, photos.length],
   );
 
   const onState = useCallback(
     (e: PanGestureHandlerStateChangeEvent) => {
       if (e.nativeEvent.oldState !== State.ACTIVE) return;
-      const { translationX, translationY, velocityY } = e.nativeEvent;
+      const { translationX, translationY, velocityX, velocityY } = e.nativeEvent;
       const a = axis.current;
       axis.current = null;
+
+      if (a == null) {
+        // Simple tap → bascule les commandes.
+        setChrome((c) => !c);
+        return;
+      }
 
       if (a === 'y') {
         if (translationY > DISMISS_Y || velocityY > 1000) {
@@ -126,31 +158,18 @@ export function PhotoViewer({ photos, index, onIndexChange, onClose, onShare }: 
           haptics.selection();
           setInfo(true);
         }
-        reset();
+        resetY();
         return;
       }
 
-      if (a === 'x') {
-        const hasNext = index < photos.length - 1;
-        const hasPrev = index > 0;
-        if (translationX < -NAV_X && hasNext) {
-          Animated.timing(tx, { toValue: -W, duration: 160, useNativeDriver: false }).start(() => {
-            onIndexChange(index + 1);
-            tx.setValue(0);
-          });
-          return;
-        }
-        if (translationX > NAV_X && hasPrev) {
-          Animated.timing(tx, { toValue: W, duration: 160, useNativeDriver: false }).start(() => {
-            onIndexChange(index - 1);
-            tx.setValue(0);
-          });
-          return;
-        }
-      }
-      reset();
+      // Horizontal : décide la cible selon distance OU vélocité.
+      const i = curRef.current;
+      let target = i;
+      if ((translationX < -NAV_X || velocityX < -NAV_V) && i < photos.length - 1) target = i + 1;
+      else if ((translationX > NAV_X || velocityX > NAV_V) && i > 0) target = i - 1;
+      goTo(target);
     },
-    [index, photos.length, onClose, onIndexChange, reset, tx, ty],
+    [goTo, onClose, photos.length, resetY, ty],
   );
 
   if (item == null) return null;
@@ -162,25 +181,28 @@ export function PhotoViewer({ photos, index, onIndexChange, onClose, onShare }: 
       <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]} />
 
       <PanGestureHandler onGestureEvent={onGesture} onHandlerStateChange={onState}>
-        <Animated.View style={[styles.stage, { transform: [{ translateX: tx }, { translateY: ty }] }]}>
-          <Pressable style={styles.imgPress} onPress={() => setChrome((c) => !c)}>
-            <Image source={{ uri: item.primaryUri }} style={styles.img} resizeMode="contain" />
-          </Pressable>
+        <Animated.View
+          style={[
+            styles.strip,
+            { width: photos.length * W, transform: [{ translateX: offsetX }, { translateY: ty }] },
+          ]}
+        >
+          {photos.map((p) => (
+            <View key={`${p.kind}-${p.createdAt}`} style={styles.page}>
+              <Image source={{ uri: p.primaryUri }} style={styles.img} resizeMode="contain" />
+            </View>
+          ))}
         </Animated.View>
       </PanGestureHandler>
 
-      {/* Compteur + hint infos (chrome) */}
-      {chrome && (
+      {chrome && photos.length > 1 && (
         <View style={[styles.topBar, { top: Math.max(insets.top + 8, 40) }]} pointerEvents="none">
-          {photos.length > 1 && (
-            <Text style={styles.counter}>
-              {index + 1} / {photos.length}
-            </Text>
-          )}
+          <Text style={styles.counter}>
+            {cur + 1} / {photos.length}
+          </Text>
         </View>
       )}
 
-      {/* Bouton Partager (chrome) */}
       {chrome && (
         <Pressable
           style={[styles.shareFab, { bottom: Math.max(insets.bottom + 20, 36) }]}
@@ -193,7 +215,6 @@ export function PhotoViewer({ photos, index, onIndexChange, onClose, onShare }: 
         </Pressable>
       )}
 
-      {/* Écran d'infos (glisser vers le haut) */}
       {info && (
         <>
           <Pressable style={styles.infoScrim} onPress={() => setInfo(false)} />
@@ -256,9 +277,9 @@ const FILL = { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 } as c
 const makeStyles = (colors: Palette) => StyleSheet.create({
   root: { ...FILL },
   backdrop: { ...FILL, backgroundColor: '#000' },
-  stage: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  imgPress: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
-  img: { width: '100%', height: '86%' },
+  strip: { flexDirection: 'row', height: '100%' },
+  page: { width: W, height: '100%', alignItems: 'center', justifyContent: 'center' },
+  img: { width: W, height: '86%' },
   topBar: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
   counter: {
     color: '#fff',
