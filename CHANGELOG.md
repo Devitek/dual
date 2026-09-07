@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.22.0](https://github.com/Devitek/dual/compare/v1.21.0...v1.22.0) (2026-09-07)
+
+
+### Features
+
+* **android:** enable R8 minification and ship the mapping to Play & releases ([#132](https://github.com/Devitek/dual/issues/132)) ([31a7397](https://github.com/Devitek/dual/commit/31a73978681edd7bbeb5c09914bf4d324facde45))
+* **diagnostics:** local, never-transmitted crash journal (ADR 0007) ([#134](https://github.com/Devitek/dual/issues/134)) ([ab2c925](https://github.com/Devitek/dual/commit/ab2c9257b502cd89e7d54b4e9ce25c28b16eaac8))
+
 ## [1.21.0](https://github.com/Devitek/dual/compare/v1.20.0...v1.21.0) (2026-09-07)
 
 
