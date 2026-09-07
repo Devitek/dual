@@ -1,0 +1,30 @@
+name: ✨ Feature
+description: Proposition de fonctionnalité ou d'amélioration
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problème / besoin
+      description: Quel usage réel est mal servi aujourd'hui ?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposition
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Contraintes projet à vérifier
+      value: |
+        - [ ] Compatible « privacy = produit » (zéro réseau applicatif, pas de tracking)
+        - [ ] Pas de nouvelle permission sensible Play (AGENTS.md §3) — sinon justifier
+        - [ ] Comportement en mode mono/séquentiel (appareils sans concurrent-camera) défini
+        - [ ] i18n ×6 locales
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives envisagées / écartées

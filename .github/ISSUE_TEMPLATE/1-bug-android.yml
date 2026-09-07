@@ -1,0 +1,45 @@
+name: 🐛 Bug Android
+description: Un comportement incorrect dans l'app
+labels: [android]
+body:
+  - type: input
+    id: device
+    attributes:
+      label: Appareil & Android
+      description: Modèle + version (visible dans Réglages → … → Aide & diagnostic)
+      placeholder: "Oppo Reno12 5G · Android 16"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version TwinLens
+      placeholder: "1.21.0 (interne) / dev build"
+    validations:
+      required: true
+  - type: textarea
+    id: report
+    attributes:
+      label: Rapport appareil (recommandé)
+      description: "Dans l'app : réglages `…` → Aide & diagnostic → Copier le rapport (ou bandeau mono/séquentiel → Pourquoi ?)."
+      render: text
+  - type: textarea
+    id: steps
+    attributes:
+      label: Étapes de reproduction
+      placeholder: |
+        1. Ouvrir …
+        2. Toucher …
+        3. Constater …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Attendu vs constaté
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Contexte (mode multi/séquentiel/mono, capture/vidéo/boomerang, logs adb…)

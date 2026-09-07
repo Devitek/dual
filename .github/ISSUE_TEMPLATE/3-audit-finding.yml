@@ -1,0 +1,35 @@
+name: 🔍 Finding d'audit
+description: Constat issu d'un audit (technique, sécu, perf, process)
+labels: [audit]
+body:
+  - type: input
+    id: fid
+    attributes:
+      label: ID / référence
+      placeholder: "F-12 (rapport phase plan 2026-09)"
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Sévérité
+      options: [P0, P1, P2, P3]
+    validations:
+      required: true
+  - type: textarea
+    id: finding
+    attributes:
+      label: Constat + preuve
+      description: Fichier(s) + symbole(s), commande de vérification
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact & risque si on ne fait rien
+    validations:
+      required: true
+  - type: textarea
+    id: reco
+    attributes:
+      label: Recommandation (+ effort S/M/L/XL, dépendances)
+    validations:
+      required: true
