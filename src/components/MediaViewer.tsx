@@ -2,7 +2,9 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
+  type DimensionValue,
   Image,
+  PanResponder,
   Pressable,
   StyleSheet,
   Text,
@@ -19,6 +21,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useVideoPlayer, VideoView } from 'expo-video';
+import { useEvent } from 'expo';
 
 import { useColors, useThemedStyles, type Palette } from '../theme/theme';
 import { haptics } from '../utils/haptics';
@@ -49,19 +52,19 @@ function formatBytes(n: number | null): string {
   return `${(n / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function formatDuration(ms?: number): string {
-  if (ms == null || ms <= 0) return '—';
-  const total = Math.round(ms / 1000);
-  const m = Math.floor(total / 60);
-  const s = total % 60;
+function fmtTime(sec: number): string {
+  if (!Number.isFinite(sec) || sec < 0) sec = 0;
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
 /**
  * Visionneuse média plein écran (photos, vidéos, boomerangs), gestes façon
  * Google Photos : bas = fermer, haut = détails, gauche/droite = naviguer. La
- * vidéo se lit en ligne (sans contrôles natifs, pour laisser passer les gestes) ;
- * un toucher met en pause / reprend.
+ * vidéo se lit en ligne avec des contrôles custom (play/pause + barre de
+ * progression seekable) qui n'interceptent pas les gestes ; un toucher affiche/
+ * masque les contrôles.
  */
 export function MediaViewer({ media, index, onIndexChange, onClose, onShare, posters }: MediaViewerProps): React.ReactElement | null {
   const colors = useColors();
@@ -71,7 +74,7 @@ export function MediaViewer({ media, index, onIndexChange, onClose, onShare, pos
 
   const [cur, setCur] = useState(index);
   const [info, setInfo] = useState(false);
-  const [paused, setPaused] = useState(false);
+  const [chrome, setChrome] = useState(true);
   const [dims, setDims] = useState<{ w: number; h: number } | null>(null);
 
   const curRef = useRef(index);
@@ -84,11 +87,17 @@ export function MediaViewer({ media, index, onIndexChange, onClose, onShare, pos
 
   const player = useVideoPlayer(null, (p) => {
     p.loop = false;
+    p.timeUpdateEventInterval = 0.25;
   });
+
+  const timeEvent = useEvent(player, 'timeUpdate');
+  const playEvent = useEvent(player, 'playingChange', { isPlaying: false, oldIsPlaying: false });
+  const isPlaying = playEvent.isPlaying;
+  const pos = timeEvent?.currentTime ?? 0;
+  const dur = player.duration || 0;
 
   // Charge/lit la vidéo courante ; met en pause quand la page courante est une photo.
   useEffect(() => {
-    setPaused(false);
     if (item != null && item.kind === 'video') {
       player.loop = item.boomerang === true;
       player.replaceAsync(item.primaryUri).then(() => player.play()).catch(() => {});
@@ -135,14 +144,27 @@ export function MediaViewer({ media, index, onIndexChange, onClose, onShare, pos
   }, [ty]);
 
   const togglePlay = useCallback(() => {
-    if (player.playing) {
-      player.pause();
-      setPaused(true);
-    } else {
-      player.play();
-      setPaused(false);
-    }
+    if (player.playing) player.pause();
+    else player.play();
   }, [player]);
+
+  // Barre de progression seekable (overlay hors du PanGestureHandler → pas de
+  // conflit avec les gestes de navigation).
+  const trackW = useRef(1);
+  const scrubPan = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (e) => {
+        const d = player.duration;
+        if (d > 0) player.currentTime = Math.min(1, Math.max(0, e.nativeEvent.locationX / trackW.current)) * d;
+      },
+      onPanResponderMove: (e) => {
+        const d = player.duration;
+        if (d > 0) player.currentTime = Math.min(1, Math.max(0, e.nativeEvent.locationX / trackW.current)) * d;
+      },
+    }),
+  ).current;
 
   const onGesture = useCallback(
     (e: PanGestureHandlerGestureEvent) => {
@@ -175,8 +197,7 @@ export function MediaViewer({ media, index, onIndexChange, onClose, onShare, pos
       axis.current = null;
 
       if (a == null) {
-        // Tap : lecture/pause sur une vidéo.
-        if (media[curRef.current]?.kind === 'video') togglePlay();
+        setChrome((c) => !c); // tap → affiche/masque les contrôles
         return;
       }
 
@@ -199,12 +220,13 @@ export function MediaViewer({ media, index, onIndexChange, onClose, onShare, pos
       else if ((translationX > NAV_X || velocityX > NAV_V) && i > 0) target = i - 1;
       goTo(target);
     },
-    [goTo, media, onClose, resetY, togglePlay, ty],
+    [goTo, media.length, onClose, resetY, ty],
   );
 
   if (item == null) return null;
 
   const dateStr = new Date(item.createdAt).toLocaleString(i18n.language);
+  const progressPct: DimensionValue = dur > 0 ? `${Math.min(100, (pos / dur) * 100)}%` : '0%';
 
   return (
     <GestureHandlerRootView style={styles.root}>
@@ -240,30 +262,52 @@ export function MediaViewer({ media, index, onIndexChange, onClose, onShare, pos
         </Animated.View>
       </PanGestureHandler>
 
-      {/* Icône lecture au centre quand la vidéo courante est en pause. */}
-      {isVideo && paused && (
-        <View style={styles.centerPlay} pointerEvents="none">
-          <MaterialIcons name="play-arrow" size={44} color="#fff" />
+      {/* Barre du haut : compteur (centre) + partager (droite). */}
+      {chrome && (
+        <View style={[styles.topBar, { top: Math.max(insets.top + 8, 40) }]}>
+          <View style={styles.topSide} />
+          {media.length > 1 ? (
+            <Text style={styles.counter}>
+              {cur + 1} / {media.length}
+            </Text>
+          ) : (
+            <View />
+          )}
+          <View style={styles.topSide}>
+            <Pressable
+              onPress={() => onShare(item)}
+              style={styles.iconBtn}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={t('gallery.share')}
+            >
+              <MaterialIcons name="share" size={22} color="#fff" />
+            </Pressable>
+          </View>
         </View>
       )}
 
-      {media.length > 1 && (
-        <View style={[styles.topBar, { top: Math.max(insets.top + 8, 40) }]} pointerEvents="none">
-          <Text style={styles.counter}>
-            {cur + 1} / {media.length}
+      {/* Contrôles vidéo : play/pause + barre de progression seekable. */}
+      {chrome && isVideo && (
+        <View style={[styles.controls, { bottom: Math.max(insets.bottom + 16, 30) }]}>
+          <Pressable onPress={togglePlay} style={styles.playBtn} hitSlop={8} accessibilityRole="button">
+            <MaterialIcons name={isPlaying ? 'pause' : 'play-arrow'} size={26} color="#fff" />
+          </Pressable>
+          <View
+            style={styles.track}
+            onLayout={(e) => {
+              trackW.current = e.nativeEvent.layout.width || 1;
+            }}
+            {...scrubPan.panHandlers}
+          >
+            <View style={styles.trackBg} />
+            <View style={[styles.trackFill, { width: progressPct }]} />
+          </View>
+          <Text style={styles.time}>
+            {fmtTime(pos)} / {fmtTime(dur)}
           </Text>
         </View>
       )}
-
-      <Pressable
-        style={[styles.shareFab, { bottom: Math.max(insets.bottom + 20, 36) }]}
-        onPress={() => onShare(item)}
-        accessibilityRole="button"
-        accessibilityLabel={t('gallery.share')}
-      >
-        <MaterialIcons name="share" size={20} color={colors.onPrimary} />
-        <Text style={styles.shareFabText}>{t('gallery.share')}</Text>
-      </Pressable>
 
       {info && (
         <>
@@ -273,13 +317,7 @@ export function MediaViewer({ media, index, onIndexChange, onClose, onShare, pos
             <Text style={styles.infoTitle}>{t('gallery.infoTitle')}</Text>
             <InfoRow icon="event" label={t('gallery.infoDate')} value={dateStr} styles={styles} colors={colors} />
             {item.kind === 'video' ? (
-              <InfoRow
-                icon="schedule"
-                label={t('gallery.infoDuration')}
-                value={formatDuration(item.durationMs)}
-                styles={styles}
-                colors={colors}
-              />
+              <InfoRow icon="schedule" label={t('gallery.infoDuration')} value={fmtTime((item.durationMs ?? 0) / 1000)} styles={styles} colors={colors} />
             ) : (
               <InfoRow
                 icon="aspect-ratio"
@@ -289,13 +327,7 @@ export function MediaViewer({ media, index, onIndexChange, onClose, onShare, pos
                 colors={colors}
               />
             )}
-            <InfoRow
-              icon="sd-storage"
-              label={t('gallery.infoSize')}
-              value={formatBytes(getFileSize(item.primaryUri))}
-              styles={styles}
-              colors={colors}
-            />
+            <InfoRow icon="sd-storage" label={t('gallery.infoSize')} value={formatBytes(getFileSize(item.primaryUri))} styles={styles} colors={colors} />
             <InfoRow
               icon="picture-in-picture-alt"
               label={t('gallery.infoDual')}
@@ -350,19 +382,15 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  centerPlay: {
+  topBar: {
     position: 'absolute',
-    top: '50%',
-    alignSelf: 'center',
-    marginTop: -34,
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    left: 12,
+    right: 12,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
   },
-  topBar: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
+  topSide: { minWidth: 44, alignItems: 'flex-end' },
   counter: {
     color: '#fff',
     fontSize: 13,
@@ -373,18 +401,31 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
     borderRadius: 14,
     overflow: 'hidden',
   },
-  shareFab: {
+  iconBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  controls: {
     position: 'absolute',
-    alignSelf: 'center',
+    left: 16,
+    right: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 22,
-    borderRadius: 26,
-    backgroundColor: colors.primary,
+    gap: 12,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 24,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
   },
-  shareFabText: { color: colors.onPrimary, fontSize: 15, fontWeight: '700' },
+  playBtn: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center' },
+  track: { flex: 1, height: 34, justifyContent: 'center' },
+  trackBg: { height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.35)' },
+  trackFill: { position: 'absolute', left: 0, height: 4, borderRadius: 2, backgroundColor: colors.primary },
+  time: { color: '#fff', fontSize: 12, fontVariant: ['tabular-nums'], minWidth: 74, textAlign: 'right' },
   infoScrim: { ...FILL, backgroundColor: 'rgba(0,0,0,0.35)' },
   infoSheet: {
     position: 'absolute',
