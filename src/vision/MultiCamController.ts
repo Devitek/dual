@@ -155,6 +155,13 @@ interface QualityConfig {
   pipCanvas: number;
 }
 
+// ⚠️ DEV UNIQUEMENT — SIMULATEUR « appareil sans concurrent-camera ».
+// Mets `true` pour FORCER le mode séquentiel sur un téléphone qui, lui, supporte
+// le multi-cam : permet de tester le repli (photo séquentielle + vidéo bloquée +
+// bulle d'info) en local, comme sur un Oppo Reno12 5G.
+// ⚠️ REPASSER À `false` AVANT MERGE. Sans effet en production (gardé par __DEV__).
+const DEV_FORCE_SEQUENTIAL = true;
+
 // NB : en multi-cam la bande passante ISP est partagée ; les vidéos restent ≤ 1080p.
 const QUALITY: Record<CaptureQuality, QualityConfig> = {
   standard: { photoRes: { width: 1920, height: 1080 }, videoRes: { width: 1280, height: 720 }, videoBitrate: 10_000_000, pipCanvas: 1080 },
@@ -337,11 +344,17 @@ export class MultiCamController {
       let backDevice: CameraDevice | undefined;
       let frontDevice: CameraDevice | undefined;
 
+      // DEV : simule un appareil sans concurrent-camera (test du repli séquentiel).
+      const forceSequential = __DEV__ && DEV_FORCE_SEQUENTIAL;
+      if (forceSequential) {
+        console.warn('[multicam] DEV_FORCE_SEQUENTIAL actif — multi-cam simulé indisponible.');
+      }
+
       // Détection multi-cam : les deux portes ci-dessous sont purement
       // DÉCLARATIVES côté OEM (FEATURE_CAMERA_CONCURRENT puis
       // getConcurrentCameraIds via CameraX). On mémorise le résultat pour le
       // diagnostic utilisateur ; une app tierce ne peut rien forcer.
-      const concurrentFeature = VisionCamera.supportsMultiCamSessions;
+      const concurrentFeature = !forceSequential && VisionCamera.supportsMultiCamSessions;
       let comboCount = 0;
 
       if (concurrentFeature) {
