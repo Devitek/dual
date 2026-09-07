@@ -33,6 +33,33 @@ platform :android do
     )
   end
 
+  # Promotion d'une version DÉJÀ uploadée entre pistes (sans rebuild) :
+  # internal → alpha (test fermé) → production (rollout progressif).
+  # ENV : PROMOTE_FROM (déf. internal), PROMOTE_TO (déf. alpha),
+  #       PROMOTE_ROLLOUT (fraction 0..1, production uniquement — déf. 0.1).
+  # NB : la production reste soumise à l'examen Google + au prérequis compte
+  # personnel (12 testeurs / 14 jours en test fermé) — voir RELEASE.md.
+  desc "Promeut la dernière version d'une piste vers une autre. ENV: PROMOTE_FROM, PROMOTE_TO, PROMOTE_ROLLOUT"
+  lane :promote do
+    to = ENV["PROMOTE_TO"] || "alpha"
+    args = {
+      track: ENV["PROMOTE_FROM"] || "internal",
+      track_promote_to: to,
+      skip_upload_aab: true,
+      skip_upload_apk: true,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      skip_upload_changelogs: true,
+    }
+    if to == "production"
+      rollout = ENV["PROMOTE_ROLLOUT"] || "0.1"
+      args[:rollout] = rollout
+      UI.important("Production avec rollout progressif : #{(rollout.to_f * 100).round}%")
+    end
+    upload_to_play_store(**args)
+  end
+
   # NB : la FICHE (titres/descriptions/images/captures) n'est PLUS poussée par
   # fastlane supply — supply veut rattacher des notes de version à un versionCode
   # même en « fiche seule », ce qui casse sur une app neuve. Elle est poussée via

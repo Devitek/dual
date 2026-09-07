@@ -1,0 +1,60 @@
+name: Play Promote (tracks)
+
+# Promotion HUMAINE d'une version déjà sur Play (aucun rebuild) :
+#   internal → alpha (test fermé) → production (rollout progressif).
+# Ne touche ni au binaire ni à la fiche — uniquement le déplacement de piste.
+#
+# Rollback (pas d'OTA — ADR 0001) : la HALTE d'un rollout se fait dans la Play
+# Console (Production → Arrêter le déploiement), puis release patch. Voir
+# RELEASE.md §Rollback.
+
+on:
+  workflow_dispatch:
+    inputs:
+      from_track:
+        description: 'Piste source'
+        type: choice
+        options: [internal, alpha, beta]
+        default: internal
+      to_track:
+        description: 'Piste cible (alpha = test fermé)'
+        type: choice
+        options: [alpha, beta, production]
+        default: alpha
+      rollout:
+        description: 'Rollout production (fraction 0..1 — ignoré hors production)'
+        type: string
+        default: '0.1'
+
+concurrency:
+  group: play-promote
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  promote:
+    name: Promote ${{ inputs.from_track }} → ${{ inputs.to_track }}
+    runs-on: ubuntu-latest
+    environment: play-internal
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+
+      - name: Write Play service account key
+        env:
+          PLAY_SA_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: printf '%s' "$PLAY_SA_JSON" > "$RUNNER_TEMP/play.json"
+
+      - name: Promote
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON_PATH: ${{ runner.temp }}/play.json
+          PROMOTE_FROM: ${{ inputs.from_track }}
+          PROMOTE_TO: ${{ inputs.to_track }}
+          PROMOTE_ROLLOUT: ${{ inputs.rollout }}
+        run: bundle exec fastlane android promote
