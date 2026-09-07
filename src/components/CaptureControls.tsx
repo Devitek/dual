@@ -183,7 +183,18 @@ export function CaptureControls({
         />
 
         <View style={styles.bar}>
-          {/* Gauche : miniature de la dernière capture (+ indicateur de traitement) */}
+          {/* Extrême gauche : réglages (façon appareil photo Android). */}
+          <Pressable
+            onPress={onOpenSettings}
+            style={styles.sideBtn}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t('topBar.settingsA11y')}
+          >
+            <MaterialIcons name="tune" size={24} color={colors.onSurface} />
+          </Pressable>
+
+          {/* Miniature de la dernière capture (+ indicateur de traitement) */}
           <View style={styles.zone}>
             {lastCapture != null ? (
               <Animated.View style={{ transform: [{ scale: thumbScale }] }}>
@@ -280,34 +291,20 @@ export function CaptureControls({
               <MaterialIcons name="cameraswitch" size={24} color={colors.onSurface} />
             </Pressable>
           </View>
+
+          {/* Extrême droite : espace invisible pour équilibrer le bouton réglages
+              (obturateur parfaitement centré, marges symétriques). */}
+          <View style={styles.sideBtn} pointerEvents="none" />
         </View>
       </View>
-
-      {/* Réglages : bouton en bas à gauche (façon appareil photo Android). */}
-      <Pressable
-        onPress={onOpenSettings}
-        style={[styles.settingsFab, { bottom: Math.max(insets.bottom + 8, 34) + 12 }]}
-        hitSlop={8}
-        accessibilityRole="button"
-        accessibilityLabel={t('topBar.settingsA11y')}
-      >
-        <MaterialIcons name="tune" size={24} color={colors.onSurface} />
-      </Pressable>
     </View>
   );
 }
 
 const makeStyles = (colors: Palette) => StyleSheet.create({
-  settingsFab: {
-    position: 'absolute',
-    left: 10,
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: colors.overlayStrong,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  // Bouton latéral (réglages) + espace symétrique à droite : même gabarit que la
+  // zone d'inversion, pour des marges équilibrées autour de l'obturateur.
+  sideBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   wrapper: {
     position: 'absolute',
     left: 0,
@@ -334,7 +331,8 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
   bar: {
     flexDirection: 'row',
     alignItems: 'center',
-    width: '86%',
+    width: '100%',
+    paddingHorizontal: 18,
   },
   zone: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   shutterOuter: {
