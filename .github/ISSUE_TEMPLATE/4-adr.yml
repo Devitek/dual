@@ -1,0 +1,35 @@
+name: 📐 Proposition d'ADR
+description: Décision d'architecture à discuter puis tracer dans docs-dev/adr/
+labels: [adr]
+body:
+  - type: input
+    id: title
+    attributes:
+      label: Décision proposée (une phrase)
+      placeholder: "Ex. : rester sans OTA (pas d'expo-updates)"
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexte
+      description: Pourquoi cette décision doit être prise maintenant.
+    validations:
+      required: true
+  - type: textarea
+    id: options
+    attributes:
+      label: Options considérées (avec trade-offs)
+      placeholder: |
+        A. … (+ / −)
+        B. … (+ / −)
+    validations:
+      required: true
+  - type: textarea
+    id: consequences
+    attributes:
+      label: Conséquences & écueils connus
+  - type: markdown
+    attributes:
+      value: |
+        ➡️ Une fois tranchée : PR ajoutant `docs-dev/adr/NNNN-titre.md` (statut, contexte, décision, conséquences), issue fermée par la PR.

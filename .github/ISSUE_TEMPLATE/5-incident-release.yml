@@ -1,0 +1,40 @@
+name: 🚨 Incident de release
+description: Release cassée, upload Play rejeté, crash en production
+labels: [incident, play-store]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Version / tag concerné
+      placeholder: "v1.21.0 · versionCode 197 · piste interne"
+    validations:
+      required: true
+  - type: dropdown
+    id: stage
+    attributes:
+      label: Étape en échec
+      options:
+        - Build CI (release-android.yml)
+        - Upload Play (fastlane supply)
+        - Examen / déclaration Play
+        - Crash / régression chez les utilisateurs
+        - Autre
+    validations:
+      required: true
+  - type: textarea
+    id: facts
+    attributes:
+      label: Faits (logs, message d'erreur, lien run)
+    validations:
+      required: true
+  - type: textarea
+    id: mitigation
+    attributes:
+      label: Mitigation immédiate
+      description: |
+        Rappels : halte du staged rollout dans la Play Console ; pas d'OTA → le
+        correctif passe par une release patch (fix: → merge → release PR).
+  - type: textarea
+    id: postmortem
+    attributes:
+      label: Cause racine & action préventive (à remplir en clôture)
