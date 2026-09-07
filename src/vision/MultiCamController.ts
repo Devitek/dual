@@ -20,6 +20,7 @@ import { saveToLibraryAsync } from 'expo-media-library/legacy';
 import * as MediaLibrary from 'expo-media-library';
 
 import { getFileSize, toFileUri } from '../utils/fileSystem';
+import { recordError } from '../utils/crashJournal';
 import type {
   CompositionLayout,
   OutputRatio,
@@ -311,6 +312,9 @@ export class MultiCamController {
   }
 
   private notify(kind: 'success' | 'error', text: string): void {
+    // Toute erreur montrée à l'utilisateur est journalisée LOCALEMENT (ADR 0007)
+    // → copiable depuis Aide & diagnostic pour le support.
+    if (kind === 'error') recordError(text, { context: 'notice' });
     this.update({ notice: { id: Date.now(), kind, text } });
   }
 

@@ -143,7 +143,13 @@
     "mirrorFrontDesc": "Guarda los selfies en espejo, como en la vista previa. Desactivado = orientación real (sin espejo).",
     "pipDragHint": "Consejo: mantén pulsada la miniatura y arrástrala para moverla, pellizca para redimensionarla.",
     "watermark": "Marca de agua TwinLens",
-    "watermarkDesc": "Añade una pequeña marca «TwinLens» en la esquina de las fotos combinadas. Desactivada por defecto."
+    "watermarkDesc": "Añade una pequeña marca «TwinLens» en la esquina de las fotos combinadas. Desactivada por defecto.",
+    "errorJournal": "Registro de errores",
+    "journalEmpty": "Sin errores registrados — todo bien.",
+    "journalEntries_one": "{{count}} entrada registrada (solo local, nunca se envía)",
+    "journalEntries_other": "{{count}} entradas registradas (solo local, nunca se envía)",
+    "copyJournal": "Copiar registro",
+    "clearJournal": "Borrar"
   },
   "gallery": {
     "title": "Medios de la sesión",

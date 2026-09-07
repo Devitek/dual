@@ -143,7 +143,13 @@
     "mirrorFrontDesc": "Selfies gespiegelt speichern, wie in der Vorschau. Aus = echte (ungespiegelte) Ausrichtung.",
     "pipDragHint": "Tipp: Miniatur lange gedrückt halten und ziehen zum Verschieben, Pinch zum Skalieren.",
     "watermark": "TwinLens-Wasserzeichen",
-    "watermarkDesc": "Fügt ein kleines „TwinLens“ in die Ecke zusammengeführter Fotos ein. Standardmäßig aus."
+    "watermarkDesc": "Fügt ein kleines „TwinLens“ in die Ecke zusammengeführter Fotos ein. Standardmäßig aus.",
+    "errorJournal": "Fehlerprotokoll",
+    "journalEmpty": "Keine Fehler aufgezeichnet — alles gut.",
+    "journalEntries_one": "{{count}} Eintrag aufgezeichnet (nur lokal, wird nie gesendet)",
+    "journalEntries_other": "{{count}} Einträge aufgezeichnet (nur lokal, wird nie gesendet)",
+    "copyJournal": "Protokoll kopieren",
+    "clearJournal": "Löschen"
   },
   "gallery": {
     "title": "Sitzungsmedien",

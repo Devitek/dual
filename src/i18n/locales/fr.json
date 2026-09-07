@@ -143,7 +143,13 @@
     "mirrorFrontDesc": "Enregistre les selfies en miroir, comme dans l’aperçu. Désactivé = orientation réelle (non inversée).",
     "pipDragHint": "Astuce : appui long sur la vignette puis glissez pour la déplacer, pincez pour la redimensionner.",
     "watermark": "Filigrane TwinLens",
-    "watermarkDesc": "Ajoute une petite mention « TwinLens » dans le coin des photos fusionnées. Désactivé par défaut."
+    "watermarkDesc": "Ajoute une petite mention « TwinLens » dans le coin des photos fusionnées. Désactivé par défaut.",
+    "errorJournal": "Journal d'erreurs",
+    "journalEmpty": "Aucune erreur enregistrée — tout va bien.",
+    "journalEntries_one": "{{count}} entrée enregistrée (local uniquement, jamais envoyé)",
+    "journalEntries_other": "{{count}} entrées enregistrées (local uniquement, jamais envoyé)",
+    "copyJournal": "Copier le journal",
+    "clearJournal": "Effacer"
   },
   "gallery": {
     "title": "Médias de la session",

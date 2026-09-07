@@ -10,6 +10,7 @@ import { haptics } from '../utils/haptics';
 import { Segmented } from './Segmented';
 import { M3Switch } from './M3Switch';
 import { buildDeviceReport } from '../utils/deviceReport';
+import { clearCrashJournal, formatCrashJournal, readCrashJournal, type CrashEntry } from '../utils/crashJournal';
 import type { MultiCamDiagnostics } from '../vision/MultiCamController';
 import type { VolumeKeyAction } from '../native/volumeKeys';
 import appJson from '../../app.json';
@@ -77,14 +78,44 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const [copied, setCopied] = useState(false);
+  const [journal, setJournal] = useState<CrashEntry[]>([]);
+  const [journalCopied, setJournalCopied] = useState(false);
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const journalTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Charge le journal d'erreurs local à chaque ouverture de l'écran.
+  useEffect(() => {
+    if (!visible) return;
+    let active = true;
+    void readCrashJournal().then((entries) => {
+      if (active) setJournal(entries);
+    });
+    return () => {
+      active = false;
+    };
+  }, [visible]);
 
   useEffect(
     () => () => {
       if (resetTimer.current != null) clearTimeout(resetTimer.current);
+      if (journalTimer.current != null) clearTimeout(journalTimer.current);
     },
     [],
   );
+
+  const onCopyJournal = useCallback(() => {
+    haptics.selection();
+    void Clipboard.setStringAsync(formatCrashJournal(journal));
+    setJournalCopied(true);
+    if (journalTimer.current != null) clearTimeout(journalTimer.current);
+    journalTimer.current = setTimeout(() => setJournalCopied(false), 1800);
+  }, [journal]);
+
+  const onClearJournal = useCallback(() => {
+    haptics.selection();
+    void clearCrashJournal();
+    setJournal([]);
+  }, []);
 
   const onCopy = useCallback(() => {
     haptics.selection();
@@ -162,6 +193,37 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
     </View>
   );
 
+  const journalRow = (
+    <View style={styles.cardRowCol}>
+      <View style={styles.rowHeader}>
+        <MaterialIcons name="report-problem" size={22} color={colors.onSurfaceVariant} />
+        <View style={styles.rowTexts}>
+          <Text style={styles.rowLabel}>{t('settings.errorJournal')}</Text>
+          <Text style={styles.desc}>
+            {journal.length === 0
+              ? t('settings.journalEmpty')
+              : t('settings.journalEntries', { count: journal.length })}
+          </Text>
+        </View>
+      </View>
+      {journal.length > 0 && (
+        <View style={styles.journalActions}>
+          <Pressable onPress={onCopyJournal} style={styles.copyBtn} hitSlop={8} accessibilityRole="button">
+            <MaterialIcons
+              name={journalCopied ? 'check' : 'content-copy'}
+              size={16}
+              color={colors.onSecondaryContainer}
+            />
+            <Text style={styles.copyText}>{journalCopied ? t('settings.copied') : t('settings.copyJournal')}</Text>
+          </Pressable>
+          <Pressable onPress={onClearJournal} style={styles.clearBtn} hitSlop={8} accessibilityRole="button">
+            <Text style={styles.clearText}>{t('settings.clearJournal')}</Text>
+          </Pressable>
+        </View>
+      )}
+    </View>
+  );
+
   return (
     <Modal visible={visible} animationType="slide" statusBarTranslucent onRequestClose={onClose}>
       <View style={[styles.screen, { paddingTop: insets.top }]}>
@@ -229,7 +291,7 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
           ])}
 
           <Text style={styles.section}>{t('settings.catHelp')}</Text>
-          {card([reportRow])}
+          {card([reportRow, journalRow])}
 
           <Text style={styles.version}>
             {t('settings.version')} {APP_VERSION}
@@ -290,5 +352,8 @@ const makeStyles = (colors: Palette) =>
       backgroundColor: colors.secondaryContainer,
     },
     copyText: { color: colors.onSecondaryContainer, fontSize: 13, fontWeight: '700' },
+    journalActions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    clearBtn: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20 },
+    clearText: { color: colors.danger, fontSize: 13, fontWeight: '700' },
     version: { color: colors.onSurfaceVariant, fontSize: 12, marginTop: 24, textAlign: 'center' },
   });
