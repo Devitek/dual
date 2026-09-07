@@ -164,9 +164,24 @@ const DEV_FORCE_SEQUENTIAL = false;
 
 // NB : en multi-cam la bande passante ISP est partagée ; les vidéos restent ≤ 1080p.
 const QUALITY: Record<CaptureQuality, QualityConfig> = {
-  standard: { photoRes: { width: 1920, height: 1080 }, videoRes: { width: 1280, height: 720 }, videoBitrate: 10_000_000, pipCanvas: 1080 },
-  high: { photoRes: { width: 1920, height: 1080 }, videoRes: { width: 1920, height: 1080 }, videoBitrate: 20_000_000, pipCanvas: 1440 },
-  max: { photoRes: { width: 3840, height: 2160 }, videoRes: { width: 1920, height: 1080 }, videoBitrate: 30_000_000, pipCanvas: 1920 },
+  standard: {
+    photoRes: { width: 1920, height: 1080 },
+    videoRes: { width: 1280, height: 720 },
+    videoBitrate: 10_000_000,
+    pipCanvas: 1080,
+  },
+  high: {
+    photoRes: { width: 1920, height: 1080 },
+    videoRes: { width: 1920, height: 1080 },
+    videoBitrate: 20_000_000,
+    pipCanvas: 1440,
+  },
+  max: {
+    photoRes: { width: 3840, height: 2160 },
+    videoRes: { width: 1920, height: 1080 },
+    videoBitrate: 30_000_000,
+    pipCanvas: 1920,
+  },
 };
 
 function photoOptions(res: Size, speed: CaptureSpeed): PhotoOutputOptions {
@@ -260,12 +275,10 @@ export class MultiCamController {
   private pipComposer: ((primaryUri: string, secondaryUri: string) => Promise<string>) | null = null;
   /** Fonction de composition PiP VIDÉO injectée depuis React (Foreground Service). */
   private videoComposer:
-    | ((primaryUri: string, secondaryUri: string, opts: VideoComposeOptions) => Promise<string>)
-    | null = null;
+    ((primaryUri: string, secondaryUri: string, opts: VideoComposeOptions) => Promise<string>) | null = null;
   /** Composeur PiP PHOTO natif (Foreground Service). Prioritaire sur pipComposer (view-shot). */
   private photoComposer:
-    | ((primaryUri: string, secondaryUri: string, opts: PhotoComposeOptions) => Promise<string>)
-    | null = null;
+    ((primaryUri: string, secondaryUri: string, opts: PhotoComposeOptions) => Promise<string>) | null = null;
   /** File sérialisant les traitements de fond (composition/sauvegarde). */
   private queue: Promise<void> = Promise.resolve();
   /** Fournisseur de position (cache) injecté depuis React (géotag opt-in). */
@@ -361,9 +374,7 @@ export class MultiCamController {
         const combos = factory.supportedMultiCamDeviceCombinations;
         comboCount = combos.length;
         const combo = combos.find(
-          (devices) =>
-            devices.some((d) => d.position === 'back') &&
-            devices.some((d) => d.position === 'front'),
+          (devices) => devices.some((d) => d.position === 'back') && devices.some((d) => d.position === 'front'),
         );
         if (combo != null) {
           backDevice = combo.find((d) => d.position === 'back');
@@ -597,17 +608,13 @@ export class MultiCamController {
   }
 
   setVideoComposer(
-    fn:
-      | ((primaryUri: string, secondaryUri: string, opts: VideoComposeOptions) => Promise<string>)
-      | null,
+    fn: ((primaryUri: string, secondaryUri: string, opts: VideoComposeOptions) => Promise<string>) | null,
   ): void {
     this.videoComposer = fn;
   }
 
   setPhotoComposer(
-    fn:
-      | ((primaryUri: string, secondaryUri: string, opts: PhotoComposeOptions) => Promise<string>)
-      | null,
+    fn: ((primaryUri: string, secondaryUri: string, opts: PhotoComposeOptions) => Promise<string>) | null,
   ): void {
     this.photoComposer = fn;
   }
@@ -689,7 +696,7 @@ export class MultiCamController {
     const lastCapture =
       this.snapshot.lastCapture === capture
         ? remaining.length > 0
-          ? remaining[remaining.length - 1] ?? null
+          ? (remaining[remaining.length - 1] ?? null)
           : null
         : this.snapshot.lastCapture;
     this.update({ sessionCaptures: remaining, lastCapture });
@@ -732,7 +739,7 @@ export class MultiCamController {
     let primaryPath: string;
     let secondaryPath: string | null = null;
     try {
-      const primaryOutput = this.primarySlot === 'back' ? this.backPhoto : this.frontPhoto ?? this.backPhoto;
+      const primaryOutput = this.primarySlot === 'back' ? this.backPhoto : (this.frontPhoto ?? this.backPhoto);
       const secondaryOutput = this.primarySlot === 'back' ? this.frontPhoto : this.backPhoto;
       // En mode « rapide », on coupe la fusion multi-frames : moins de latence et
       // moins de « fantômes » sur un sujet qui bouge (levier anti-flou direct).
@@ -740,7 +747,10 @@ export class MultiCamController {
       // Son d'obturateur : uniquement sur la principale (jamais de double clic),
       // et selon le réglage utilisateur.
       const [primaryFile, secondaryFile] = await Promise.all([
-        primaryOutput.capturePhotoToFile({ flashMode: flash, enableShutterSound: this.snapshot.shutterSound, ...fast }, {}),
+        primaryOutput.capturePhotoToFile(
+          { flashMode: flash, enableShutterSound: this.snapshot.shutterSound, ...fast },
+          {},
+        ),
         secondaryOutput != null
           ? secondaryOutput.capturePhotoToFile({ flashMode: 'off', enableShutterSound: false, ...fast }, {})
           : Promise.resolve(null),
@@ -852,10 +862,7 @@ export class MultiCamController {
     // Aperçu AVANT visible pendant l'étape 2/2 (surface active + cadrage selfie).
     this.update({ backPreview: preview });
     await new Promise((resolve) => setTimeout(resolve, 350)); // stabilisation AF/AE
-    const file = await frontPhoto.capturePhotoToFile(
-      { flashMode: 'off', enableShutterSound: false, ...fast },
-      {},
-    );
+    const file = await frontPhoto.capturePhotoToFile({ flashMode: 'off', enableShutterSound: false, ...fast }, {});
     return file.filePath;
   }
 
@@ -873,7 +880,7 @@ export class MultiCamController {
     // Géotag : résolu MAINTENANT (position en cache). Force le chemin JS (le natif
     // sauvegarde en interne, on ne pourrait pas y injecter l'EXIF GPS).
     const geotag = this.snapshot.geotag;
-    const coords = geotag ? this.locationProvider?.() ?? null : null;
+    const coords = geotag ? (this.locationProvider?.() ?? null) : null;
     const pipInset = this.snapshot.pipInset;
     const watermark = this.snapshot.watermark;
     const outputRatio = this.snapshot.outputRatio;
@@ -905,8 +912,7 @@ export class MultiCamController {
 
       // Repli view-shot (in-process) / originaux.
       const canPipJs = secondaryPath != null && this.pipComposer != null;
-      const wantOriginals =
-        mode === 'originals' || mode === 'pip_plus_originals' || (wantPip && !canPipJs);
+      const wantOriginals = mode === 'originals' || mode === 'pip_plus_originals' || (wantPip && !canPipJs);
       let pipUri: string | null = null;
       if (wantPip && canPipJs) {
         const composedPath = await this.pipComposer!(toFileUri(primaryPath), toFileUri(secondaryPath!));

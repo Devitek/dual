@@ -60,21 +60,22 @@ export function PipHint({ visible, corner, onDismiss }: PipHintProps): React.Rea
   );
 }
 
-const makeStyles = (colors: Palette) => StyleSheet.create({
-  wrap: { position: 'absolute', maxWidth: 210 },
-  bubble: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: colors.primaryContainer,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 14,
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
-  },
-  text: { flex: 1, color: colors.onPrimaryContainer, fontSize: 12, fontWeight: '600', lineHeight: 16 },
-});
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
+    wrap: { position: 'absolute', maxWidth: 210 },
+    bubble: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: colors.primaryContainer,
+      paddingVertical: 10,
+      paddingHorizontal: 12,
+      borderRadius: 14,
+      elevation: 6,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.35,
+      shadowRadius: 6,
+    },
+    text: { flex: 1, color: colors.onPrimaryContainer, fontSize: 12, fontWeight: '600', lineHeight: 16 },
+  });

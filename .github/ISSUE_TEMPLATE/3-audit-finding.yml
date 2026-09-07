@@ -6,7 +6,7 @@ body:
     id: fid
     attributes:
       label: ID / référence
-      placeholder: "F-12 (rapport phase plan 2026-09)"
+      placeholder: 'F-12 (rapport phase plan 2026-09)'
   - type: dropdown
     id: severity
     attributes:

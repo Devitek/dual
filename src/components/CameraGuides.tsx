@@ -62,7 +62,10 @@ export function CameraGuides({ grid, level }: CameraGuidesProps): React.ReactEle
           <View
             style={[
               styles.levelLine,
-              { transform: [{ rotate: `${-tilt}deg` }], backgroundColor: isLevel ? LEVEL_GREEN : 'rgba(255,255,255,0.85)' },
+              {
+                transform: [{ rotate: `${-tilt}deg` }],
+                backgroundColor: isLevel ? LEVEL_GREEN : 'rgba(255,255,255,0.85)',
+              },
             ]}
           />
           {isLevel && <View style={styles.levelDot} />}
@@ -75,7 +78,15 @@ export function CameraGuides({ grid, level }: CameraGuidesProps): React.ReactEle
 const styles = StyleSheet.create({
   vLine: { position: 'absolute', top: 0, bottom: 0, width: StyleSheet.hairlineWidth, backgroundColor: LINE },
   hLine: { position: 'absolute', left: 0, right: 0, height: StyleSheet.hairlineWidth, backgroundColor: LINE },
-  levelWrap: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
+  levelWrap: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   levelLine: { width: 160, height: 2, borderRadius: 1 },
   levelDot: {
     position: 'absolute',

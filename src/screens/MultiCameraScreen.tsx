@@ -23,7 +23,6 @@ import { CameraTopBar, type PhotoFlashMode } from '../components/CameraTopBar';
 import { SettingsSheet } from '../components/SettingsSheet';
 import { MoreSettingsModal } from '../components/MoreSettingsModal';
 import { ZoomIndicator } from '../components/ZoomIndicator';
-import { ProcessingIndicator } from '../components/ProcessingIndicator';
 import { UnsupportedBanner } from '../components/UnsupportedBanner';
 import { CameraErrorView } from '../components/CameraErrorView';
 import { SessionGallery } from '../components/SessionGallery';
@@ -36,14 +35,13 @@ import {
   composePipVideo,
   isVideoPipComposerAvailable,
   requestVideoPipNotificationsPermission,
-  subscribeVideoPipProgress,
   updateCaptureWidget,
 } from '../native/videoPip';
 import { haptics } from '../utils/haptics';
 import type { FocusPoint } from '../components/FocusIndicator';
 import { pipCanvasForQuality } from '../vision/MultiCamController';
 import type { CameraSlot, CaptureQuality, CaptureSpeed, SaveMode, VideoFps } from '../vision/MultiCamController';
-import type { CompositionLayout, OutputRatio, PipCorner, PipInset } from '../services/pipComposer';
+import type { CompositionLayout, OutputRatio, PipInset } from '../services/pipComposer';
 import type { VolumeKeyAction } from '../native/volumeKeys';
 import {
   loadPersistedSettings,
@@ -112,7 +110,6 @@ export function MultiCameraScreen(): React.ReactElement {
   const [zoomDisplay, setZoomDisplay] = useState<number | null>(null);
   const [zoomNonce, setZoomNonce] = useState(0);
   const [currentZoom, setCurrentZoom] = useState(1);
-  const [videoProgress, setVideoProgress] = useState<number | null>(null);
   const [pipHintVisible, setPipHintVisible] = useState(false);
   const [boomHint, setBoomHint] = useState(false);
   const [volumeKeyAction, setVolumeKeyActionState] = useState<VolumeKeyAction>('volume');
@@ -148,11 +145,9 @@ export function MultiCameraScreen(): React.ReactElement {
     if (!isVideoPipComposerAvailable) return;
     cam.controller.setVideoComposer((primary, secondary, opts) => composePipVideo(primary, secondary, opts));
     cam.controller.setPhotoComposer((primary, secondary, opts) => composePipPhoto(primary, secondary, opts));
-    const sub = subscribeVideoPipProgress((p) => setVideoProgress(p));
     return () => {
       cam.controller.setVideoComposer(null);
       cam.controller.setPhotoComposer(null);
-      sub.remove();
     };
   }, [cam.controller]);
 
@@ -164,11 +159,6 @@ export function MultiCameraScreen(): React.ReactElement {
     if (!isVideoPipComposerAvailable || !permissions.allGranted) return;
     requestVideoPipNotificationsPermission();
   }, [permissions.allGranted]);
-
-  // Réinitialise la progression quand plus aucun traitement n'est en cours.
-  useEffect(() => {
-    if (cam.processingCount === 0) setVideoProgress(null);
-  }, [cam.processingCount]);
 
   // Géotag : reflète l'état actif dans le contrôleur et lui fournit la position.
   useEffect(() => {
@@ -380,10 +370,7 @@ export function MultiCameraScreen(): React.ReactElement {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [cam.controller, primarySlot, cam.status],
   );
-  const zoomLevels = useMemo(
-    () => buildZoomLevels(zoomBounds.min, zoomBounds.max),
-    [zoomBounds],
-  );
+  const zoomLevels = useMemo(() => buildZoomLevels(zoomBounds.min, zoomBounds.max), [zoomBounds]);
   // Zoom continu (slider) : applique + met à jour l'état (le tick haptique
   // d'accroche est géré dans le ZoomControl).
   const onZoom = useCallback(
@@ -650,8 +637,7 @@ export function MultiCameraScreen(): React.ReactElement {
   // caméra est prête et qu'aucun sheet/galerie n'est ouvert (sinon volume normal).
   useVolumeShutter({
     action: volumeKeyAction,
-    enabled:
-      cam.status === 'running' && permissions.allGranted && !settingsOpen && !moreOpen && !galleryOpen,
+    enabled: cam.status === 'running' && permissions.allGranted && !settingsOpen && !moreOpen && !galleryOpen,
     onShutter: () => {
       if (mode === 'photo') onPhoto();
       else if (mode === 'boomerang') {
@@ -700,7 +686,6 @@ export function MultiCameraScreen(): React.ReactElement {
     return Gesture.Simultaneous(tap, pinch);
   }, [cam.controller, primarySlot, width, height]);
 
-
   return (
     <PermissionGate permissions={permissions}>
       <View style={styles.root}>
@@ -737,13 +722,7 @@ export function MultiCameraScreen(): React.ReactElement {
               onToggleAeLock={toggleAeLock}
             />
 
-            {update.updateAvailable && (
-              <UpdateBanner onUpdate={update.startUpdate} onDismiss={update.snooze} />
-            )}
-
-            {/* Pill de progression masquée pour l'instant : la miniature affiche déjà
-                un loader (hors charte + non alignée). Réactivable selon retours. */}
-            {/* <ProcessingIndicator count={cam.processingCount} progress={videoProgress} /> */}
+            {update.updateAvailable && <UpdateBanner onUpdate={update.startUpdate} onDismiss={update.snooze} />}
 
             {(cam.mode === 'single' || cam.mode === 'sequential') && cam.status === 'running' && (
               <UnsupportedBanner mode={cam.mode} diagnostics={cam.diagnostics} />
@@ -926,30 +905,31 @@ export function MultiCameraScreen(): React.ReactElement {
   );
 }
 
-const makeStyles = (colors: Palette) => StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
-  flash: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#fff' },
-  holdStill: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.82)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  holdStillText: { color: '#fff', fontSize: 22, fontWeight: '700', letterSpacing: 0.5 },
-  countdown: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  countdownText: { color: '#fff', fontSize: 120, fontWeight: '200', fontVariant: ['tabular-nums'] },
-  countdownHint: { color: 'rgba(255,255,255,0.85)', fontSize: 15, marginTop: 8 },
-});
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
+    root: { flex: 1, backgroundColor: colors.background },
+    flash: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#fff' },
+    holdStill: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0,0,0,0.82)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    holdStillText: { color: '#fff', fontSize: 22, fontWeight: '700', letterSpacing: 0.5 },
+    countdown: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0,0,0,0.55)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    countdownText: { color: '#fff', fontSize: 120, fontWeight: '200', fontVariant: ['tabular-nums'] },
+    countdownHint: { color: 'rgba(255,255,255,0.85)', fontSize: 15, marginTop: 8 },
+  });

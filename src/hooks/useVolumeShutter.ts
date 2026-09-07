@@ -1,11 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-import {
-  setVolumeKeyMode,
-  subscribeVolumeKey,
-  type VolumeKeyAction,
-  type VolumeKeyMode,
-} from '../native/volumeKeys';
+import { setVolumeKeyMode, subscribeVolumeKey, type VolumeKeyAction, type VolumeKeyMode } from '../native/volumeKeys';
 
 interface UseVolumeShutterOptions {
   /** Réglage utilisateur : 'volume' (défaut, système) | 'shutter' | 'zoom'. */

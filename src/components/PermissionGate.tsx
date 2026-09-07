@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  ActivityIndicator,
-  Linking,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
@@ -40,10 +33,7 @@ interface PermissionGateProps {
  * Sinon, présente un écran d'onboarding clair avec un bouton d'action
  * (redemander, ou ouvrir les Réglages si refus définitif).
  */
-export function PermissionGate({
-  permissions,
-  children,
-}: PermissionGateProps): React.ReactElement {
+export function PermissionGate({ permissions, children }: PermissionGateProps): React.ReactElement {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation();
@@ -96,64 +86,65 @@ export function PermissionGate({
   );
 }
 
-const makeStyles = (colors: Palette) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    paddingHorizontal: 28,
-    justifyContent: 'center',
-  },
-  title: {
-    color: colors.text,
-    fontSize: 26,
-    fontWeight: '700',
-    marginBottom: 12,
-  },
-  subtitle: {
-    color: colors.textMuted,
-    fontSize: 15,
-    lineHeight: 22,
-    marginBottom: 28,
-  },
-  rows: { marginBottom: 32, gap: 14 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  badge: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  badgeOk: { backgroundColor: colors.success },
-  badgeKo: { backgroundColor: colors.warning },
-  badgeText: { color: colors.background, fontWeight: '800', fontSize: 14 },
-  rowLabel: { color: colors.text, fontSize: 16 },
-  button: {
-    flexDirection: 'row',
-    gap: 10,
-    backgroundColor: colors.primary,
-    paddingVertical: 16,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonDim: { opacity: 0.7 },
-  buttonPressed: { opacity: 0.85 },
-  buttonText: { color: colors.onPrimary, fontSize: 17, fontWeight: '600' },
-  settingsBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginTop: 14,
-    paddingVertical: 12,
-  },
-  settingsText: { color: colors.primary, fontSize: 15, fontWeight: '600' },
-  hint: {
-    color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 19,
-    marginTop: 18,
-    textAlign: 'center',
-  },
-});
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+      paddingHorizontal: 28,
+      justifyContent: 'center',
+    },
+    title: {
+      color: colors.text,
+      fontSize: 26,
+      fontWeight: '700',
+      marginBottom: 12,
+    },
+    subtitle: {
+      color: colors.textMuted,
+      fontSize: 15,
+      lineHeight: 22,
+      marginBottom: 28,
+    },
+    rows: { marginBottom: 32, gap: 14 },
+    row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    badge: {
+      width: 26,
+      height: 26,
+      borderRadius: 13,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    badgeOk: { backgroundColor: colors.success },
+    badgeKo: { backgroundColor: colors.warning },
+    badgeText: { color: colors.background, fontWeight: '800', fontSize: 14 },
+    rowLabel: { color: colors.text, fontSize: 16 },
+    button: {
+      flexDirection: 'row',
+      gap: 10,
+      backgroundColor: colors.primary,
+      paddingVertical: 16,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    buttonDim: { opacity: 0.7 },
+    buttonPressed: { opacity: 0.85 },
+    buttonText: { color: colors.onPrimary, fontSize: 17, fontWeight: '600' },
+    settingsBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      marginTop: 14,
+      paddingVertical: 12,
+    },
+    settingsText: { color: colors.primary, fontSize: 15, fontWeight: '600' },
+    hint: {
+      color: colors.textMuted,
+      fontSize: 13,
+      lineHeight: 19,
+      marginTop: 18,
+      textAlign: 'center',
+    },
+  });

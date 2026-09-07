@@ -6,7 +6,7 @@ body:
     id: version
     attributes:
       label: Version / tag concerné
-      placeholder: "v1.21.0 · versionCode 197 · piste interne"
+      placeholder: 'v1.21.0 · versionCode 197 · piste interne'
     validations:
       required: true
   - type: dropdown

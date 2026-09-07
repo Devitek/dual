@@ -11,7 +11,7 @@ name: Expo drift check
 
 on:
   schedule:
-    - cron: "0 6 * * 1" # lundi 06:00 UTC
+    - cron: '0 6 * * 1' # lundi 06:00 UTC
   workflow_dispatch:
 
 permissions:

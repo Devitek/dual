@@ -7,14 +7,14 @@ body:
     attributes:
       label: Appareil & Android
       description: Modèle + version (visible dans Réglages → … → Aide & diagnostic)
-      placeholder: "Oppo Reno12 5G · Android 16"
+      placeholder: 'Oppo Reno12 5G · Android 16'
     validations:
       required: true
   - type: input
     id: version
     attributes:
       label: Version TwinLens
-      placeholder: "1.21.0 (interne) / dev build"
+      placeholder: '1.21.0 (interne) / dev build'
     validations:
       required: true
   - type: textarea

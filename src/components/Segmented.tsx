@@ -68,29 +68,30 @@ export function Segmented<T extends string>({
   );
 }
 
-const makeStyles = (colors: Palette) => StyleSheet.create({
-  segGroup: {
-    flexDirection: 'row',
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    borderRadius: 18,
-    overflow: 'hidden',
-  },
-  dim: { opacity: 0.4 },
-  segCell: {
-    flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 4,
-    minHeight: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  segDivider: { borderLeftWidth: 1, borderLeftColor: colors.outlineVariant },
-  segCellActive: { backgroundColor: colors.primaryContainer },
-  segLabelRow: { flexDirection: 'row', alignItems: 'center' },
-  segCheck: { marginRight: 4 },
-  segLabel: { color: colors.onSurfaceVariant, fontSize: 13, fontWeight: '600' },
-  segLabelActive: { color: colors.onPrimaryContainer },
-  segCaption: { color: colors.onSurfaceVariant, fontSize: 10.5, marginTop: 2, fontVariant: ['tabular-nums'] },
-  segCaptionActive: { color: colors.onPrimaryContainer },
-});
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
+    segGroup: {
+      flexDirection: 'row',
+      borderWidth: 1,
+      borderColor: colors.outlineVariant,
+      borderRadius: 18,
+      overflow: 'hidden',
+    },
+    dim: { opacity: 0.4 },
+    segCell: {
+      flex: 1,
+      paddingVertical: 10,
+      paddingHorizontal: 4,
+      minHeight: 48,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    segDivider: { borderLeftWidth: 1, borderLeftColor: colors.outlineVariant },
+    segCellActive: { backgroundColor: colors.primaryContainer },
+    segLabelRow: { flexDirection: 'row', alignItems: 'center' },
+    segCheck: { marginRight: 4 },
+    segLabel: { color: colors.onSurfaceVariant, fontSize: 13, fontWeight: '600' },
+    segLabelActive: { color: colors.onPrimaryContainer },
+    segCaption: { color: colors.onSurfaceVariant, fontSize: 10.5, marginTop: 2, fontVariant: ['tabular-nums'] },
+    segCaptionActive: { color: colors.onPrimaryContainer },
+  });

@@ -1,0 +1,13 @@
+# Généré / hors périmètre code
+android/
+ios/
+dist/
+node_modules/
+docs/
+store/screenshots/
+fastlane/metadata/
+CHANGELOG.md
+package-lock.json
+Gemfile.lock
+# Markdown : style manuel conservé (AGENTS.md, RELEASE.md…)
+*.md

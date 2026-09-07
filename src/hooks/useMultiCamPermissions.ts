@@ -1,8 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  useCameraPermission,
-  useMicrophonePermission,
-} from 'react-native-vision-camera';
+import { useCameraPermission, useMicrophonePermission } from 'react-native-vision-camera';
 import * as MediaLibrary from 'expo-media-library';
 
 export interface MultiCamPermissionsState {
@@ -21,10 +18,8 @@ export interface MultiCamPermissionsState {
  * Demande séquentielle unique au montage.
  */
 export function useMultiCamPermissions(): MultiCamPermissionsState {
-  const { hasPermission: hasCameraPermission, requestPermission: requestCamera } =
-    useCameraPermission();
-  const { hasPermission: hasMicrophonePermission, requestPermission: requestMic } =
-    useMicrophonePermission();
+  const { hasPermission: hasCameraPermission, requestPermission: requestCamera } = useCameraPermission();
+  const { hasPermission: hasMicrophonePermission, requestPermission: requestMic } = useMicrophonePermission();
   // Permission galerie en ÉCRITURE SEULE (`writeOnly`). L'app n'a jamais besoin
   // de LIRE la pellicule de l'utilisateur : elle ne fait qu'ENREGISTRER ses
   // propres captures (sauvegarde native scoped via MediaStore + repli

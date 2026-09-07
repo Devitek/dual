@@ -42,11 +42,7 @@ export function CameraTopBar({
   const insets = useSafeAreaInsets();
   // Plancher : jamais au-dessus de la valeur d'origine (statusbar masquée => insets.top peut valoir 0).
   const top = Math.max(insets.top + 8, 48);
-  const flashColor = !flashSupported
-    ? colors.outlineVariant
-    : photoFlash === 'off'
-      ? colors.onSurface
-      : colors.warning;
+  const flashColor = !flashSupported ? colors.outlineVariant : photoFlash === 'off' ? colors.onSurface : colors.warning;
 
   return (
     <View style={[styles.container, { top }]} pointerEvents="box-none">
@@ -89,25 +85,26 @@ export function CameraTopBar({
   );
 }
 
-const makeStyles = (colors: Palette) => StyleSheet.create({
-  container: {
-    position: 'absolute',
-    top: 48,
-    left: 16,
-    right: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  actions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  iconBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.overlayStrong,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconBtnActive: { borderWidth: 1.5, borderColor: colors.warning },
-  pressed: { opacity: 0.8 },
-});
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
+    container: {
+      position: 'absolute',
+      top: 48,
+      left: 16,
+      right: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+    },
+    actions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    iconBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.overlayStrong,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    iconBtnActive: { borderWidth: 1.5, borderColor: colors.warning },
+    pressed: { opacity: 0.8 },
+  });

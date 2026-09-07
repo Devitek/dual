@@ -54,13 +54,14 @@ export function FocusIndicator({ point }: { point: FocusPoint | null }): React.R
   );
 }
 
-const makeStyles = (colors: Palette) => StyleSheet.create({
-  box: {
-    position: 'absolute',
-    width: SIZE,
-    height: SIZE,
-    borderRadius: 6,
-    borderWidth: 1.5,
-    borderColor: colors.warning,
-  },
-});
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
+    box: {
+      position: 'absolute',
+      width: SIZE,
+      height: SIZE,
+      borderRadius: 6,
+      borderWidth: 1.5,
+      borderColor: colors.warning,
+    },
+  });

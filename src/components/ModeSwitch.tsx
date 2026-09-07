@@ -71,11 +71,7 @@ export function ModeSwitch({
             accessibilityLabel={t(m.a11yKey)}
           >
             {m.icon != null ? (
-              <MaterialIcons
-                name={m.icon}
-                size={19}
-                color={active ? '#fff' : 'rgba(255,255,255,0.62)'}
-              />
+              <MaterialIcons name={m.icon} size={19} color={active ? '#fff' : 'rgba(255,255,255,0.62)'} />
             ) : (
               <Text
                 style={[
@@ -93,25 +89,26 @@ export function ModeSwitch({
   );
 }
 
-const makeStyles = (colors: Palette) => StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    gap: 2,
-    padding: 3,
-    borderRadius: 18,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-  },
-  disabled: { opacity: 0.5 },
-  segment: {
-    paddingVertical: 6,
-    paddingHorizontal: 16,
-    borderRadius: 15,
-  },
-  segmentBlocked: { opacity: 0.35 },
-  segmentActivePhoto: { backgroundColor: 'rgba(255,255,255,0.2)' },
-  segmentActiveVideo: { backgroundColor: 'rgba(255,180,171,0.22)' },
-  label: { fontSize: 12.5, fontWeight: '700', letterSpacing: 0.5 },
-  labelInactive: { color: 'rgba(255,255,255,0.62)' },
-  labelActive: { color: '#fff' },
-  labelActiveVideo: { color: colors.danger },
-});
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      gap: 2,
+      padding: 3,
+      borderRadius: 18,
+      backgroundColor: 'rgba(0,0,0,0.4)',
+    },
+    disabled: { opacity: 0.5 },
+    segment: {
+      paddingVertical: 6,
+      paddingHorizontal: 16,
+      borderRadius: 15,
+    },
+    segmentBlocked: { opacity: 0.35 },
+    segmentActivePhoto: { backgroundColor: 'rgba(255,255,255,0.2)' },
+    segmentActiveVideo: { backgroundColor: 'rgba(255,180,171,0.22)' },
+    label: { fontSize: 12.5, fontWeight: '700', letterSpacing: 0.5 },
+    labelInactive: { color: 'rgba(255,255,255,0.62)' },
+    labelActive: { color: '#fff' },
+    labelActiveVideo: { color: colors.danger },
+  });

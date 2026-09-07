@@ -34,6 +34,7 @@ function detectDeviceLanguage(): keyof typeof resources {
   }
 }
 
+// eslint-disable-next-line import/no-named-as-default-member -- API i18next canonique (i18n.use)
 void i18n.use(initReactI18next).init({
   resources,
   lng: detectDeviceLanguage(),

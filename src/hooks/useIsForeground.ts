@@ -12,9 +12,7 @@ import { AppState, type AppStateStatus } from 'react-native';
  * `@react-navigation/native`, à combiner avec ce hook.
  */
 export function useIsForeground(): boolean {
-  const [isForeground, setIsForeground] = useState<boolean>(
-    AppState.currentState === 'active',
-  );
+  const [isForeground, setIsForeground] = useState<boolean>(AppState.currentState === 'active');
 
   useEffect(() => {
     const onChange = (state: AppStateStatus): void => {
