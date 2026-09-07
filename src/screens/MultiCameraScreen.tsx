@@ -758,7 +758,6 @@ export function MultiCameraScreen(): React.ReactElement {
               photoFlash={photoFlash}
               flashSupported={cam.hasTorch}
               onCyclePhotoFlash={cyclePhotoFlash}
-              onOpenSettings={() => setSettingsOpen(true)}
               aeLocked={cam.aeLocked}
               onToggleAeLock={toggleAeLock}
             />
@@ -778,6 +777,7 @@ export function MultiCameraScreen(): React.ReactElement {
             <CaptureControls
               mode={mode}
               onSetMode={onSetMode}
+              onOpenSettings={() => setSettingsOpen(true)}
               blockedModes={cam.mode === 'sequential' ? SEQUENTIAL_BLOCKED_MODES : undefined}
               onBlockedMode={() => cam.controller.showNotice('error', t('sequential.videoBlocked'))}
               isRecording={cam.isRecording}

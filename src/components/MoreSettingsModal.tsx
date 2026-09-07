@@ -93,6 +93,7 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
     resetTimer.current = setTimeout(() => setCopied(false), 1800);
   }, [diagnostics]);
 
+  // Ligne « switch » dans une carte : icône + (libellé + description) + interrupteur.
   const rowSwitch = (
     icon: IconName,
     label: string,
@@ -100,20 +101,35 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
     onValueChange: () => void,
     desc?: string,
   ): React.ReactElement => (
-    <View style={styles.item}>
-      <View style={styles.row}>
-        <MaterialIcons name={icon} size={22} color={colors.onSurface} />
+    <View style={styles.cardRow}>
+      <MaterialIcons name={icon} size={22} color={colors.onSurfaceVariant} />
+      <View style={styles.rowTexts}>
         <Text style={styles.rowLabel}>{label}</Text>
-        <Switch
-          value={value}
-          onValueChange={onValueChange}
-          trackColor={{ true: colors.primary, false: colors.outlineVariant }}
-          thumbColor={colors.onPrimary}
-        />
+        {desc != null && <Text style={styles.desc}>{desc}</Text>}
       </View>
-      {desc != null && <Text style={styles.desc}>{desc}</Text>}
+      <Switch
+        value={value}
+        onValueChange={onValueChange}
+        trackColor={{ true: colors.primary, false: colors.surfaceContainerHighest }}
+        thumbColor={value ? colors.onPrimary : colors.outline}
+      />
     </View>
   );
+
+  // Regroupe des lignes dans une carte M3 arrondie, séparées par des dividers.
+  const card = (rows: React.ReactNode[]): React.ReactElement => {
+    const items = rows.filter((r) => r != null);
+    return (
+      <View style={styles.card}>
+        {items.map((r, i) => (
+          <React.Fragment key={i}>
+            {i > 0 && <View style={styles.divider} />}
+            {r}
+          </React.Fragment>
+        ))}
+      </View>
+    );
+  };
 
   const volumeKeyOptions: { value: VolumeKeyAction; label: string }[] = [
     { value: 'volume', label: t('settings.volKeyVolume') },
@@ -121,16 +137,44 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
     { value: 'zoom', label: t('settings.volKeyZoom') },
   ];
 
+  const volumeRow = (
+    <View style={styles.cardRowCol}>
+      <View style={styles.rowHeader}>
+        <MaterialIcons name="volume-up" size={22} color={colors.onSurfaceVariant} />
+        <Text style={styles.rowLabel}>{t('settings.volumeKeys')}</Text>
+      </View>
+      <Segmented options={volumeKeyOptions} value={volumeKeyAction} onChange={onSetVolumeKeyAction} />
+    </View>
+  );
+
+  const reportRow = (
+    <View style={styles.cardRowCol}>
+      <View style={styles.rowHeader}>
+        <MaterialIcons name="info-outline" size={22} color={colors.onSurfaceVariant} />
+        <Text style={styles.rowLabel}>{t('settings.deviceReport')}</Text>
+      </View>
+      <Text style={styles.report} selectable>
+        {buildDeviceReport(diagnostics)}
+      </Text>
+      <Pressable onPress={onCopy} style={styles.copyBtn} hitSlop={8} accessibilityRole="button">
+        <MaterialIcons name={copied ? 'check' : 'content-copy'} size={16} color={colors.onSecondaryContainer} />
+        <Text style={styles.copyText}>{copied ? t('settings.copied') : t('settings.copyReport')}</Text>
+      </Pressable>
+    </View>
+  );
+
   return (
     <Modal visible={visible} animationType="slide" statusBarTranslucent onRequestClose={onClose}>
       <View style={[styles.screen, { paddingTop: insets.top }]}>
-        <View style={styles.header}>
+        {/* Top app bar M3 */}
+        <View style={styles.appbar}>
           <Pressable
             onPress={() => {
               haptics.selection();
               onClose();
             }}
-            style={styles.backBtn}
+            android_ripple={{ color: colors.onSurfaceVariant, borderless: true, radius: 24 }}
+            style={({ pressed }) => [styles.backBtn, pressed && styles.pressed]}
             hitSlop={8}
             accessibilityRole="button"
             accessibilityLabel={t('settings.back')}
@@ -140,54 +184,33 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
           <Text style={styles.title}>{t('settings.moreTitle')}</Text>
         </View>
 
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: Math.max(insets.bottom + 24, 40) }}
-        >
-          {/* Général */}
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
           <Text style={styles.section}>{t('settings.catGeneral')}</Text>
-          {rowSwitch('volume-off', t('settings.shutterSound'), shutterSound, onToggleShutterSound, t('settings.shutterSoundDesc'))}
-          <View style={styles.item}>
-            <View style={styles.rowHeader}>
-              <MaterialIcons name="volume-up" size={22} color={colors.onSurface} />
-              <Text style={styles.rowLabel}>{t('settings.volumeKeys')}</Text>
-            </View>
-            <Segmented options={volumeKeyOptions} value={volumeKeyAction} onChange={onSetVolumeKeyAction} />
-          </View>
-          {rowSwitch('location-on', t('settings.geotag'), geotag, onToggleGeotag, t('settings.geotagDesc'))}
+          {card([
+            rowSwitch('volume-off', t('settings.shutterSound'), shutterSound, onToggleShutterSound, t('settings.shutterSoundDesc')),
+            volumeRow,
+            rowSwitch('location-on', t('settings.geotag'), geotag, onToggleGeotag, t('settings.geotagDesc')),
+          ])}
 
-          {/* Composition */}
           <Text style={styles.section}>{t('settings.catComposition')}</Text>
-          {rowSwitch('grid-on', t('settings.grid'), grid, onToggleGrid)}
-          {rowSwitch('straighten', t('settings.level'), level, onToggleLevel, t('settings.levelDesc'))}
-          {rowSwitch('flip', t('settings.mirrorFront'), mirrorFront, onToggleMirrorFront, t('settings.mirrorFrontDesc'))}
-          {rowSwitch('branding-watermark', t('settings.watermark'), watermark, onToggleWatermark, t('settings.watermarkDesc'))}
+          {card([
+            rowSwitch('grid-on', t('settings.grid'), grid, onToggleGrid),
+            rowSwitch('straighten', t('settings.level'), level, onToggleLevel, t('settings.levelDesc')),
+            rowSwitch('flip', t('settings.mirrorFront'), mirrorFront, onToggleMirrorFront, t('settings.mirrorFrontDesc')),
+            rowSwitch('branding-watermark', t('settings.watermark'), watermark, onToggleWatermark, t('settings.watermarkDesc')),
+          ])}
 
-          {/* Capture */}
           <Text style={styles.section}>{t('settings.catCapture')}</Text>
-          {rowSwitch('blur-off', t('settings.stabilization'), stabilization, onToggleStabilization, t('settings.stabilizationDesc'))}
+          {card([
+            rowSwitch('blur-off', t('settings.stabilization'), stabilization, onToggleStabilization, t('settings.stabilizationDesc')),
+          ])}
 
-          {/* Aide & diagnostic */}
           <Text style={styles.section}>{t('settings.catHelp')}</Text>
-          <View style={styles.item}>
-            <View style={styles.rowHeader}>
-              <MaterialIcons name="info-outline" size={22} color={colors.onSurface} />
-              <Text style={styles.rowLabel}>{t('settings.deviceReport')}</Text>
-            </View>
-            <Text style={styles.report} selectable>
-              {buildDeviceReport(diagnostics)}
-            </Text>
-            <Pressable onPress={onCopy} style={styles.copyBtn} hitSlop={8} accessibilityRole="button">
-              <MaterialIcons
-                name={copied ? 'check' : 'content-copy'}
-                size={16}
-                color={colors.onSecondaryContainer}
-              />
-              <Text style={styles.copyText}>{copied ? t('settings.copied') : t('settings.copyReport')}</Text>
-            </Pressable>
-          </View>
+          {card([reportRow])}
 
-          <Text style={styles.version}>{t('settings.version')} {APP_VERSION}</Text>
+          <Text style={styles.version}>
+            {t('settings.version')} {APP_VERSION}
+          </Text>
         </ScrollView>
       </View>
     </Modal>
@@ -195,31 +218,30 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
 }
 
 const makeStyles = (colors: Palette) => StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.surface, paddingHorizontal: 20 },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surfaceContainerHigh,
-  },
+  screen: { flex: 1, backgroundColor: colors.surface },
+  // Top app bar M3.
+  appbar: { flexDirection: 'row', alignItems: 'center', gap: 8, height: 64, paddingHorizontal: 8 },
+  backBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  pressed: { opacity: 0.7 },
   title: { color: colors.onSurface, fontSize: 22, fontWeight: '700' },
+  scrollContent: { paddingHorizontal: 16, paddingBottom: 40 },
   section: {
     color: colors.primary,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-    marginTop: 20,
-    marginBottom: 4,
+    fontSize: 13,
+    fontWeight: '700',
+    marginTop: 22,
+    marginBottom: 8,
+    marginLeft: 12,
   },
-  item: { paddingVertical: 8, gap: 10 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  rowHeader: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  rowLabel: { color: colors.onSurface, fontSize: 16, flex: 1 },
-  desc: { color: colors.onSurfaceVariant, fontSize: 11.5, lineHeight: 16 },
+  // Carte M3 arrondie groupant des lignes.
+  card: { backgroundColor: colors.surfaceContainerHigh, borderRadius: 20, overflow: 'hidden' },
+  cardRow: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingHorizontal: 16, paddingVertical: 14 },
+  cardRowCol: { paddingHorizontal: 16, paddingVertical: 14, gap: 12 },
+  rowHeader: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  rowTexts: { flex: 1, gap: 2 },
+  rowLabel: { color: colors.onSurface, fontSize: 16 },
+  desc: { color: colors.onSurfaceVariant, fontSize: 12, lineHeight: 16 },
+  divider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.outlineVariant, marginLeft: 54 },
   report: {
     color: colors.onSurfaceVariant,
     fontSize: 12,
@@ -233,7 +255,7 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
     alignSelf: 'flex-start',
     paddingVertical: 8,
     paddingHorizontal: 14,
-    borderRadius: 10,
+    borderRadius: 20,
     backgroundColor: colors.secondaryContainer,
   },
   copyText: { color: colors.onSecondaryContainer, fontSize: 13, fontWeight: '700' },

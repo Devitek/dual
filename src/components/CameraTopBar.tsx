@@ -23,7 +23,6 @@ interface CameraTopBarProps {
   photoFlash: PhotoFlashMode;
   flashSupported: boolean;
   onCyclePhotoFlash: () => void;
-  onOpenSettings: () => void;
   aeLocked: boolean;
   onToggleAeLock: () => void;
 }
@@ -38,7 +37,6 @@ export function CameraTopBar({
   photoFlash,
   flashSupported,
   onCyclePhotoFlash,
-  onOpenSettings,
   aeLocked,
   onToggleAeLock,
 }: CameraTopBarProps): React.ReactElement {
@@ -95,16 +93,6 @@ export function CameraTopBar({
         >
           <MaterialIcons name={FLASH_ICON[photoFlash]} size={21} color={flashColor} />
         </Pressable>
-
-        <Pressable
-          onPress={onOpenSettings}
-          android_ripple={{ color: colors.onSurfaceVariant, borderless: true, radius: 26 }}
-          style={({ pressed }) => [styles.settingsBtn, pressed && styles.pressed]}
-          accessibilityRole="button"
-          accessibilityLabel={t('topBar.settingsA11y')}
-        >
-          <MaterialIcons name="tune" size={24} color={colors.onSurface} />
-        </Pressable>
       </View>
     </View>
   );
@@ -140,13 +128,5 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
     justifyContent: 'center',
   },
   iconBtnActive: { borderWidth: 1.5, borderColor: colors.warning },
-  settingsBtn: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: colors.overlayStrong,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   pressed: { opacity: 0.8 },
 });

@@ -18,6 +18,8 @@ const RING_C = 2 * Math.PI * RING_R;
 interface CaptureControlsProps {
   mode: CaptureMode;
   onSetMode: (mode: CaptureMode) => void;
+  /** Ouvre le sheet de réglages rapides (bouton en bas à gauche, façon Google Camera). */
+  onOpenSettings: () => void;
   /** Modes indisponibles (grisés) — ex. vidéo/boomerang en mode séquentiel. */
   blockedModes?: CaptureMode[];
   /** Appelé au tap d'un mode bloqué (message explicatif). */
@@ -62,6 +64,7 @@ function formatDuration(seconds: number): string {
 export function CaptureControls({
   mode,
   onSetMode,
+  onOpenSettings,
   blockedModes,
   onBlockedMode,
   isRecording,
@@ -279,11 +282,32 @@ export function CaptureControls({
           </View>
         </View>
       </View>
+
+      {/* Réglages : bouton en bas à gauche (façon appareil photo Android). */}
+      <Pressable
+        onPress={onOpenSettings}
+        style={[styles.settingsFab, { bottom: Math.max(insets.bottom + 8, 34) + 12 }]}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityLabel={t('topBar.settingsA11y')}
+      >
+        <MaterialIcons name="tune" size={24} color={colors.onSurface} />
+      </Pressable>
     </View>
   );
 }
 
 const makeStyles = (colors: Palette) => StyleSheet.create({
+  settingsFab: {
+    position: 'absolute',
+    left: 10,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: colors.overlayStrong,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   wrapper: {
     position: 'absolute',
     left: 0,

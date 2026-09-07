@@ -176,6 +176,18 @@ export function SettingsSheet(props: SettingsSheetProps): React.ReactElement {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const [tab, setTab] = useState<Tab>('general');
+  // Indicateur d'onglet glissant (0 = Général, 1 = Pro) — ressort, façon native.
+  const [tabsW, setTabsW] = useState(0);
+  const indicator = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.spring(indicator, {
+      toValue: tab === 'general' ? 0 : 1,
+      useNativeDriver: true,
+      bounciness: 4,
+      speed: 18,
+    }).start();
+  }, [tab, indicator]);
+  const indicatorHalf = (tabsW - 6) / 2; // 6 = padding gauche+droite du conteneur (3+3)
 
   const translateY = useRef(new Animated.Value(SCREEN_H)).current;
   const backdropOpacity = translateY.interpolate({
@@ -443,8 +455,27 @@ export function SettingsSheet(props: SettingsSheetProps): React.ReactElement {
             </Pressable>
           </View>
 
-          {/* Onglets Général | Pro */}
-          <View style={styles.tabs}>
+          {/* Onglets Général | Pro (indicateur glissant animé) */}
+          <View style={styles.tabs} onLayout={(e) => setTabsW(e.nativeEvent.layout.width)}>
+            {tabsW > 0 && (
+              <Animated.View
+                pointerEvents="none"
+                style={[
+                  styles.tabIndicator,
+                  {
+                    width: indicatorHalf,
+                    transform: [
+                      {
+                        translateX: indicator.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0, indicatorHalf],
+                        }),
+                      },
+                    ],
+                  },
+                ]}
+              />
+            )}
             {(['general', 'pro'] as Tab[]).map((tb) => {
               const active = tb === tab;
               return (
@@ -454,7 +485,7 @@ export function SettingsSheet(props: SettingsSheetProps): React.ReactElement {
                     haptics.selection();
                     setTab(tb);
                   }}
-                  style={[styles.tab, active && styles.tabActive]}
+                  style={styles.tab}
                   accessibilityRole="button"
                   accessibilityState={{ selected: active }}
                 >
@@ -514,9 +545,18 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
     padding: 3,
     marginTop: 12,
     marginBottom: 4,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  tabIndicator: {
+    position: 'absolute',
+    top: 3,
+    bottom: 3,
+    left: 3,
+    borderRadius: 17,
+    backgroundColor: colors.primaryContainer,
   },
   tab: { flex: 1, paddingVertical: 9, borderRadius: 17, alignItems: 'center' },
-  tabActive: { backgroundColor: colors.primaryContainer },
   tabLabel: { color: colors.onSurfaceVariant, fontSize: 14, fontWeight: '700' },
   tabLabelActive: { color: colors.onPrimaryContainer },
   row: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12 },
