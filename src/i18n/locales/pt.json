@@ -159,7 +159,14 @@
     "closePhotoHint": "Toque para fechar",
     "closeA11y": "Fechar",
     "cancelSelectionA11y": "Cancelar seleção",
-    "closeVideoA11y": "Fechar reprodução"
+    "closeVideoA11y": "Fechar reprodução",
+    "infoTitle": "Detalhes",
+    "infoDate": "Data",
+    "infoResolution": "Resolução",
+    "infoSize": "Tamanho",
+    "infoDual": "Dupla (PiP)",
+    "yes": "Sim",
+    "no": "Não"
   },
   "error": {
     "title": "Câmeras indisponíveis",

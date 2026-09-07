@@ -159,7 +159,14 @@
     "closePhotoHint": "Tocca per chiudere",
     "closeA11y": "Chiudi",
     "cancelSelectionA11y": "Annulla selezione",
-    "closeVideoA11y": "Chiudi riproduzione"
+    "closeVideoA11y": "Chiudi riproduzione",
+    "infoTitle": "Dettagli",
+    "infoDate": "Data",
+    "infoResolution": "Risoluzione",
+    "infoSize": "Dimensione",
+    "infoDual": "Doppia (PiP)",
+    "yes": "Sì",
+    "no": "No"
   },
   "error": {
     "title": "Fotocamere non disponibili",

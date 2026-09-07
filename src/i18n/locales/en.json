@@ -159,7 +159,14 @@
     "closePhotoHint": "Tap to close",
     "closeA11y": "Close",
     "cancelSelectionA11y": "Cancel selection",
-    "closeVideoA11y": "Close playback"
+    "closeVideoA11y": "Close playback",
+    "infoTitle": "Details",
+    "infoDate": "Date",
+    "infoResolution": "Resolution",
+    "infoSize": "Size",
+    "infoDual": "Dual (PiP)",
+    "yes": "Yes",
+    "no": "No"
   },
   "error": {
     "title": "Cameras unavailable",

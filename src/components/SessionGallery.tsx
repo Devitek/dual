@@ -22,6 +22,7 @@ import { useVideoPlayer, VideoView } from 'expo-video';
 
 import { useColors, useThemedStyles, type Palette } from '../theme/theme';
 import { haptics } from '../utils/haptics';
+import { PhotoViewer } from './PhotoViewer';
 import type { CapturedMedia } from '../vision/MultiCamController';
 
 interface SessionGalleryProps {
@@ -56,13 +57,14 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
   const { t, i18n } = useTranslation();
-  const [preview, setPreview] = useState<CapturedMedia | null>(null);
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
   const [playing, setPlaying] = useState<CapturedMedia | null>(null);
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [posters, setPosters] = useState<Record<string, string>>({});
 
   const data = [...captures].reverse(); // plus récent d'abord
+  const photos = data.filter((i) => i.kind === 'photo'); // pour la visionneuse (navigation)
   const cellSize = (width - PADDING * 2 - GAP * (COLS - 1)) / COLS;
 
   const player = useVideoPlayer(playing?.primaryUri ?? null, (p) => {
@@ -76,7 +78,7 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
   // Réinitialise l'état transitoire à la fermeture de la galerie.
   useEffect(() => {
     if (visible) return;
-    setPreview(null);
+    setPreviewIndex(null);
     setPlaying(null);
     setSelectMode(false);
     setSelected(new Set());
@@ -127,10 +129,10 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
         toggleSelect(item);
         return;
       }
-      if (item.kind === 'photo') setPreview(item);
+      if (item.kind === 'photo') setPreviewIndex(photos.findIndex((p) => keyOf(p) === keyOf(item)));
       else setPlaying(item);
     },
-    [selectMode, toggleSelect],
+    [selectMode, toggleSelect, photos],
   );
 
   const onCellLongPress = useCallback(
@@ -337,21 +339,16 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
         )}
       </View>
 
-      {/* Aperçu photo plein écran (tap = fermer ; le bouton Partager capture son tap) */}
-      {preview != null && (
-        <Pressable style={styles.fullscreen} onPress={() => setPreview(null)}>
-          <Image source={{ uri: preview.primaryUri }} style={styles.fullImg} resizeMode="contain" />
-          <Pressable
-            style={styles.shareFab}
-            onPress={() => shareItem(preview)}
-            accessibilityRole="button"
-            accessibilityLabel={t('gallery.share')}
-          >
-            <MaterialIcons name="share" size={20} color={colors.onPrimary} />
-            <Text style={styles.shareFabText}>{t('gallery.share')}</Text>
-          </Pressable>
-          <Text style={styles.tapHint}>{t('gallery.closePhotoHint')}</Text>
-        </Pressable>
+      {/* Aperçu photo plein écran — gestes Google Photos (bas = fermer, haut =
+          infos, gauche/droite = naviguer). */}
+      {previewIndex != null && (
+        <PhotoViewer
+          photos={photos}
+          index={previewIndex}
+          onIndexChange={setPreviewIndex}
+          onClose={() => setPreviewIndex(null)}
+          onShare={shareItem}
+        />
       )}
 
       {/* Lecture vidéo plein écran */}
