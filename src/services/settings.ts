@@ -135,8 +135,13 @@ export async function loadPersistedSettings(): Promise<Partial<PersistedSettings
   if (g('stabilization') != null) out.stabilization = g('stabilization') === '1';
   const speed = inSet(g('captureSpeed'), ['speed', 'balanced', 'quality'] as const);
   if (speed) out.captureSpeed = speed;
-  const timer = Number(g('timerSeconds'));
-  if (timer === 0 || timer === 3 || timer === 10) out.timerSeconds = timer;
+  // NB : garde `!= null` AVANT Number() — sinon Number(null) === 0 ferait
+  // apparaître un timerSeconds « persisté » fantôme sur stockage vide.
+  const timerRaw = g('timerSeconds');
+  if (timerRaw != null) {
+    const timer = Number(timerRaw);
+    if (TIMER_VALUES.includes(timer as TimerSeconds)) out.timerSeconds = timer as TimerSeconds;
+  }
   if (g('shutterSound') != null) out.shutterSound = g('shutterSound') === '1';
   const layout = inSet(g('layout'), ['pip', 'sideBySide', 'topBottom'] as const);
   if (layout) out.layout = layout;

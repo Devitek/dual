@@ -36,6 +36,7 @@ npm start               # Metro ; les changements JS rechargent à chaud
 npm run typecheck    # tsc --noEmit — DOIT être vert
 npm run lint         # ESLint (0 nouvelle warning — ratchet)
 npm run format:check # Prettier
+npm test             # Jest
 npx expo-doctor  # DOIT afficher 21/21
 # Si tu as touché aux permissions ou au natif :
 npx expo prebuild --platform android --no-install --clean
@@ -69,7 +70,7 @@ grep -o 'android:name="android.permission.[^"]*"' android/app/src/main/AndroidMa
 
 ## Definition of Done (reprise dans le template de PR)
 
-- [ ] `npm run typecheck` + `npm run lint` + `npm run format:check` + `npx expo-doctor` verts (CI verte)
+- [ ] `npm run typecheck` + `npm run lint` + `npm run format:check` + `npm test` + `npx expo-doctor` verts (CI verte)
 - [ ] Aucune édition de `CHANGELOG.md` / versions / tags
 - [ ] Permissions ou natif touchés → sortie du `grep` manifest collée dans la PR
 - [ ] Réglage ajouté → checklist §8 + test force-stop
