@@ -66,7 +66,14 @@ function fmtTime(sec: number): string {
  * progression seekable) qui n'interceptent pas les gestes ; un toucher affiche/
  * masque les contrôles.
  */
-export function MediaViewer({ media, index, onIndexChange, onClose, onShare, posters }: MediaViewerProps): React.ReactElement | null {
+export function MediaViewer({
+  media,
+  index,
+  onIndexChange,
+  onClose,
+  onShare,
+  posters,
+}: MediaViewerProps): React.ReactElement | null {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
   const { t, i18n } = useTranslation();
@@ -100,7 +107,10 @@ export function MediaViewer({ media, index, onIndexChange, onClose, onShare, pos
   useEffect(() => {
     if (item != null && item.kind === 'video') {
       player.loop = item.boomerang === true;
-      player.replaceAsync(item.primaryUri).then(() => player.play()).catch(() => {});
+      player
+        .replaceAsync(item.primaryUri)
+        .then(() => player.play())
+        .catch(() => {});
     } else {
       player.pause();
     }
@@ -317,7 +327,13 @@ export function MediaViewer({ media, index, onIndexChange, onClose, onShare, pos
             <Text style={styles.infoTitle}>{t('gallery.infoTitle')}</Text>
             <InfoRow icon="event" label={t('gallery.infoDate')} value={dateStr} styles={styles} colors={colors} />
             {item.kind === 'video' ? (
-              <InfoRow icon="schedule" label={t('gallery.infoDuration')} value={fmtTime((item.durationMs ?? 0) / 1000)} styles={styles} colors={colors} />
+              <InfoRow
+                icon="schedule"
+                label={t('gallery.infoDuration')}
+                value={fmtTime((item.durationMs ?? 0) / 1000)}
+                styles={styles}
+                colors={colors}
+              />
             ) : (
               <InfoRow
                 icon="aspect-ratio"
@@ -327,7 +343,13 @@ export function MediaViewer({ media, index, onIndexChange, onClose, onShare, pos
                 colors={colors}
               />
             )}
-            <InfoRow icon="sd-storage" label={t('gallery.infoSize')} value={formatBytes(getFileSize(item.primaryUri))} styles={styles} colors={colors} />
+            <InfoRow
+              icon="sd-storage"
+              label={t('gallery.infoSize')}
+              value={formatBytes(getFileSize(item.primaryUri))}
+              styles={styles}
+              colors={colors}
+            />
             <InfoRow
               icon="picture-in-picture-alt"
               label={t('gallery.infoDual')}
@@ -366,81 +388,89 @@ function InfoRow({
 
 const FILL = { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 } as const;
 
-const makeStyles = (colors: Palette) => StyleSheet.create({
-  root: { ...FILL },
-  backdrop: { ...FILL, backgroundColor: '#000' },
-  strip: { flexDirection: 'row', height: '100%' },
-  page: { width: W, height: '100%', alignItems: 'center', justifyContent: 'center' },
-  media: { width: W, height: '86%' },
-  videoPlaceholder: { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceContainer },
-  playBadge: {
-    position: 'absolute',
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  topBar: {
-    position: 'absolute',
-    left: 12,
-    right: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  topSide: { minWidth: 44, alignItems: 'flex-end' },
-  counter: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '700',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 14,
-    overflow: 'hidden',
-  },
-  iconBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  controls: {
-    position: 'absolute',
-    left: 16,
-    right: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: 24,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  playBtn: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center' },
-  track: { flex: 1, height: 34, justifyContent: 'center' },
-  trackBg: { height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.35)' },
-  trackFill: { position: 'absolute', left: 0, height: 4, borderRadius: 2, backgroundColor: colors.primary },
-  time: { color: '#fff', fontSize: 12, fontVariant: ['tabular-nums'], minWidth: 74, textAlign: 'right' },
-  infoScrim: { ...FILL, backgroundColor: 'rgba(0,0,0,0.35)' },
-  infoSheet: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: colors.surfaceContainer,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: 22,
-    paddingTop: 10,
-  },
-  infoHandle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: colors.outline, marginBottom: 12 },
-  infoTitle: { color: colors.onSurface, fontSize: 18, fontWeight: '700', marginBottom: 10 },
-  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 11 },
-  infoLabel: { color: colors.onSurfaceVariant, fontSize: 14, flex: 1 },
-  infoValue: { color: colors.onSurface, fontSize: 14, fontWeight: '600' },
-});
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
+    root: { ...FILL },
+    backdrop: { ...FILL, backgroundColor: '#000' },
+    strip: { flexDirection: 'row', height: '100%' },
+    page: { width: W, height: '100%', alignItems: 'center', justifyContent: 'center' },
+    media: { width: W, height: '86%' },
+    videoPlaceholder: { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceContainer },
+    playBadge: {
+      position: 'absolute',
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    topBar: {
+      position: 'absolute',
+      left: 12,
+      right: 12,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    topSide: { minWidth: 44, alignItems: 'flex-end' },
+    counter: {
+      color: '#fff',
+      fontSize: 13,
+      fontWeight: '700',
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      paddingHorizontal: 12,
+      paddingVertical: 5,
+      borderRadius: 14,
+      overflow: 'hidden',
+    },
+    iconBtn: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: 'rgba(0,0,0,0.45)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    controls: {
+      position: 'absolute',
+      left: 16,
+      right: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      borderRadius: 24,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+    },
+    playBtn: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center' },
+    track: { flex: 1, height: 34, justifyContent: 'center' },
+    trackBg: { height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.35)' },
+    trackFill: { position: 'absolute', left: 0, height: 4, borderRadius: 2, backgroundColor: colors.primary },
+    time: { color: '#fff', fontSize: 12, fontVariant: ['tabular-nums'], minWidth: 74, textAlign: 'right' },
+    infoScrim: { ...FILL, backgroundColor: 'rgba(0,0,0,0.35)' },
+    infoSheet: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: colors.surfaceContainer,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      paddingHorizontal: 22,
+      paddingTop: 10,
+    },
+    infoHandle: {
+      alignSelf: 'center',
+      width: 40,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: colors.outline,
+      marginBottom: 12,
+    },
+    infoTitle: { color: colors.onSurface, fontSize: 18, fontWeight: '700', marginBottom: 10 },
+    infoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 11 },
+    infoLabel: { color: colors.onSurfaceVariant, fontSize: 14, flex: 1 },
+    infoValue: { color: colors.onSurface, fontSize: 14, fontWeight: '600' },
+  });

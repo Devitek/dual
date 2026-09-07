@@ -30,10 +30,7 @@ interface UnsupportedBannerProps {
  * support : la plupart de ces cas viennent d'un OEM qui n'expose pas la capacité
  * `FEATURE_CAMERA_CONCURRENT`, pas d'un bug de l'app).
  */
-export function UnsupportedBanner({
-  mode,
-  diagnostics = null,
-}: UnsupportedBannerProps): React.ReactElement {
+export function UnsupportedBanner({ mode, diagnostics = null }: UnsupportedBannerProps): React.ReactElement {
   // Réduit par défaut (peu intrusif) → dépliable au tap.
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -78,7 +75,9 @@ export function UnsupportedBanner({
           accessibilityLabel={title}
         >
           <MaterialIcons name="info-outline" size={15} color={accent} />
-          <Text style={styles.compactTitle} numberOfLines={1}>{title}</Text>
+          <Text style={styles.compactTitle} numberOfLines={1}>
+            {title}
+          </Text>
           <MaterialIcons name="expand-more" size={16} color={styles.compactTitle.color as string} />
         </Pressable>
       </View>
@@ -123,91 +122,92 @@ export function UnsupportedBanner({
   );
 }
 
-const makeStyles = (colors: Palette) => StyleSheet.create({
-  // Conteneur de positionnement (transparent) — partagé réduit/déplié.
-  wrap: {
-    position: 'absolute',
-    top: 92,
-    alignSelf: 'center',
-    maxWidth: '88%',
-    alignItems: 'center',
-  },
-  // Mode réduit : pastille compacte (une ligne).
-  compact: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    maxWidth: '100%',
-    backgroundColor: colors.surfaceContainerHigh,
-    borderRadius: 20,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.outlineVariant,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-  },
-  compactTitle: {
-    color: colors.primary,
-    fontWeight: '700',
-    fontSize: 12.5,
-    flexShrink: 1,
-  },
-  // Mode déplié : carte complète.
-  card: {
-    backgroundColor: colors.surfaceContainerHigh,
-    borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.outlineVariant,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginBottom: 2,
-  },
-  title: {
-    color: colors.primary,
-    fontWeight: '700',
-    fontSize: 13,
-    textAlign: 'center',
-  },
-  text: {
-    color: colors.onSurfaceVariant,
-    fontSize: 12,
-    lineHeight: 17,
-    textAlign: 'center',
-  },
-  explain: {
-    color: colors.onSurfaceVariant,
-    fontSize: 11.5,
-    lineHeight: 16,
-    textAlign: 'center',
-    marginTop: 6,
-  },
-  detailsLabel: {
-    color: colors.onSurfaceVariant,
-    fontSize: 10.5,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginTop: 10,
-    marginBottom: 4,
-  },
-  report: {
-    color: colors.onSurfaceVariant,
-    fontSize: 11,
-    lineHeight: 15,
-    textAlign: 'center',
-    fontFamily: Platform.select({ android: 'monospace', default: undefined }),
-  },
-  copyBtn: {
-    marginTop: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: 8,
-    backgroundColor: colors.secondaryContainer,
-  },
-  copyText: { color: colors.onSecondaryContainer, fontSize: 12, fontWeight: '700' },
-});
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
+    // Conteneur de positionnement (transparent) — partagé réduit/déplié.
+    wrap: {
+      position: 'absolute',
+      top: 92,
+      alignSelf: 'center',
+      maxWidth: '88%',
+      alignItems: 'center',
+    },
+    // Mode réduit : pastille compacte (une ligne).
+    compact: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      maxWidth: '100%',
+      backgroundColor: colors.surfaceContainerHigh,
+      borderRadius: 20,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.outlineVariant,
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+    },
+    compactTitle: {
+      color: colors.primary,
+      fontWeight: '700',
+      fontSize: 12.5,
+      flexShrink: 1,
+    },
+    // Mode déplié : carte complète.
+    card: {
+      backgroundColor: colors.surfaceContainerHigh,
+      borderRadius: 12,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.outlineVariant,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      alignItems: 'center',
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      marginBottom: 2,
+    },
+    title: {
+      color: colors.primary,
+      fontWeight: '700',
+      fontSize: 13,
+      textAlign: 'center',
+    },
+    text: {
+      color: colors.onSurfaceVariant,
+      fontSize: 12,
+      lineHeight: 17,
+      textAlign: 'center',
+    },
+    explain: {
+      color: colors.onSurfaceVariant,
+      fontSize: 11.5,
+      lineHeight: 16,
+      textAlign: 'center',
+      marginTop: 6,
+    },
+    detailsLabel: {
+      color: colors.onSurfaceVariant,
+      fontSize: 10.5,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      marginTop: 10,
+      marginBottom: 4,
+    },
+    report: {
+      color: colors.onSurfaceVariant,
+      fontSize: 11,
+      lineHeight: 15,
+      textAlign: 'center',
+      fontFamily: Platform.select({ android: 'monospace', default: undefined }),
+    },
+    copyBtn: {
+      marginTop: 8,
+      paddingVertical: 6,
+      paddingHorizontal: 14,
+      borderRadius: 8,
+      backgroundColor: colors.secondaryContainer,
+    },
+    copyText: { color: colors.onSecondaryContainer, fontSize: 12, fontWeight: '700' },
+  });

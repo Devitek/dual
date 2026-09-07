@@ -10,7 +10,7 @@
 3. **Jamais** créer un tag/release à la main, ni bumper une version à la main. **release-please** possède `package.json`, `app.json` (`$.expo.version`), `CHANGELOG.md` et `.release-please-manifest.json`.
 4. **Média = écriture seule.** Ne **JAMAIS** réintroduire `READ_MEDIA_IMAGES/VIDEO/AUDIO` ni `ACCESS_MEDIA_LOCATION`.
 5. **`android/` et `ios/` sont générés** (CNG, gitignorés). Ne les édite pas : modifie `app.json` / config plugins / le module natif local.
-6. **Avant de livrer** : `npm run lint` (tsc) vert, `npx expo-doctor` OK, et si tu touches aux permissions → `expo prebuild` + vérif du manifest.
+6. **Avant de livrer** : `npm run typecheck` (tsc) + `npm run lint` (ESLint, ratchet 0 nouvelle warning) + `npm run format:check` verts, `npx expo-doctor` OK, et si tu touches aux permissions → `expo prebuild` + vérif du manifest.
 7. **Réglages utilisateur = TOUT persister** via la source unique `src/services/settings.ts`. Un réglage non persisté « repart au défaut » à chaque mort du process (fréquent sur Samsung). Voir §8.
 
 ---
@@ -91,7 +91,9 @@ Toute permission « sensible » déclenche une **déclaration obligatoire** dans
 
 ## 5. Vérifications avant de livrer
 ```bash
-npm run lint        # tsc --noEmit — DOIT être vert
+npm run typecheck   # tsc --noEmit — DOIT être vert
+npm run lint        # ESLint (ratchet --max-warnings : interdit d'AJOUTER une warning)
+npm run format:check # Prettier
 npx expo-doctor     # DOIT être OK
 # si tu as touché aux permissions / config native :
 npx expo prebuild --platform android --no-install --clean   # + grep du manifest

@@ -1,15 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  FlatList,
-  Image,
-  Linking,
-  Modal,
-  Pressable,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { FlatList, Image, Linking, Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { MaterialIcons, FontAwesome6 } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -122,14 +112,11 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
     [selectMode, toggleSelect, data],
   );
 
-  const onCellLongPress = useCallback(
-    (item: CapturedMedia) => {
-      haptics.medium();
-      setSelectMode(true);
-      setSelected((prev) => new Set(prev).add(keyOf(item)));
-    },
-    [],
-  );
+  const onCellLongPress = useCallback((item: CapturedMedia) => {
+    haptics.medium();
+    setSelectMode(true);
+    setSelected((prev) => new Set(prev).add(keyOf(item)));
+  }, []);
 
   const selectedItems = data.filter((i) => selected.has(keyOf(i)));
   const firstSelected = selectedItems[0];
@@ -138,11 +125,7 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
     async (item: CapturedMedia | null | undefined) => {
       if (item == null) return;
       haptics.selection();
-      const label = item.boomerang
-        ? t('share.boomerang')
-        : item.kind === 'video'
-          ? t('share.video')
-          : t('share.photo');
+      const label = item.boomerang ? t('share.boomerang') : item.kind === 'video' ? t('share.video') : t('share.photo');
       await shareCapture(item, label, i18n.language);
     },
     [t, i18n.language],
@@ -191,7 +174,11 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
         <View style={[styles.header, { paddingTop: Math.max(insets.top + 16, 54) }]}>
           {selectMode ? (
             <>
-              <Pressable onPress={exitSelect} style={styles.closeIcon} accessibilityLabel={t('gallery.cancelSelectionA11y')}>
+              <Pressable
+                onPress={exitSelect}
+                style={styles.closeIcon}
+                accessibilityLabel={t('gallery.cancelSelectionA11y')}
+              >
                 <MaterialIcons name="close" size={24} color={colors.onSurface} />
               </Pressable>
               <Text style={styles.title}>{t('gallery.selected', { count: selected.size })}</Text>
@@ -342,152 +329,153 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
   );
 }
 
-const makeStyles = (colors: Palette) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: PADDING,
-    paddingTop: 54,
-    paddingBottom: 12,
-  },
-  title: { color: colors.onSurface, fontSize: 20, fontWeight: '700' },
-  count: {
-    minWidth: 26,
-    height: 22,
-    paddingHorizontal: 8,
-    borderRadius: 11,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  countText: { color: colors.onPrimary, fontSize: 12, fontWeight: '800' },
-  spacer: { flex: 1 },
-  closeIcon: { padding: 4 },
-  savedChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: 6,
-    marginHorizontal: PADDING,
-    marginBottom: 6,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    backgroundColor: 'rgba(125,217,143,0.14)',
-  },
-  savedChipText: { color: colors.success, fontSize: 11.5, fontWeight: '600' },
-  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  emptyText: { color: colors.onSurfaceVariant, fontSize: 15 },
-  list: { padding: PADDING, gap: GAP },
-  rowGap: { gap: GAP },
-  cell: {
-    borderRadius: 12,
-    overflow: 'hidden',
-    backgroundColor: colors.surfaceContainer,
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  cellSelected: { borderColor: colors.primary },
-  cellImg: { width: '100%', height: '100%' },
-  videoCell: { alignItems: 'center', justifyContent: 'center' },
-  playBadge: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    width: 34,
-    height: 34,
-    marginTop: -17,
-    marginLeft: -17,
-    borderRadius: 17,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  durBadge: {
-    position: 'absolute',
-    bottom: 6,
-    right: 6,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-  },
-  durText: { color: '#fff', fontSize: 10.5, fontWeight: '700', fontVariant: ['tabular-nums'] },
-  pipBadge: {
-    position: 'absolute',
-    top: 6,
-    left: 6,
-    paddingHorizontal: 6,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pipBadgeText: { color: colors.onPrimary, fontSize: 10, fontWeight: '800' },
-  selMark: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: colors.primary,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  selMarkOn: { backgroundColor: colors.primary },
-  actionBar: {
-    flexDirection: 'row',
-    marginHorizontal: PADDING,
-    marginBottom: 28,
-    paddingVertical: 10,
-    borderRadius: 20,
-    backgroundColor: colors.surfaceContainerHigh,
-  },
-  action: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 6 },
-  actionDim: { opacity: 0.4 },
-  actionLabel: { color: colors.onSurface, fontSize: 12, fontWeight: '600' },
-  actionDanger: { color: colors.danger },
-  fullscreen: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.94)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  fullImg: { width: '100%', height: '82%' },
-  fullVideo: { width: '100%', height: '82%' },
-  tapHint: { color: colors.onSurfaceVariant, fontSize: 13, marginTop: 14 },
-  shareFab: {
-    position: 'absolute',
-    bottom: 40,
-    alignSelf: 'center',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 22,
-    borderRadius: 26,
-    backgroundColor: colors.primary,
-  },
-  shareFabText: { color: colors.onPrimary, fontSize: 15, fontWeight: '700' },
-  videoClose: {
-    position: 'absolute',
-    top: 46,
-    right: 20,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      paddingHorizontal: PADDING,
+      paddingTop: 54,
+      paddingBottom: 12,
+    },
+    title: { color: colors.onSurface, fontSize: 20, fontWeight: '700' },
+    count: {
+      minWidth: 26,
+      height: 22,
+      paddingHorizontal: 8,
+      borderRadius: 11,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    countText: { color: colors.onPrimary, fontSize: 12, fontWeight: '800' },
+    spacer: { flex: 1 },
+    closeIcon: { padding: 4 },
+    savedChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      alignSelf: 'flex-start',
+      gap: 6,
+      marginHorizontal: PADDING,
+      marginBottom: 6,
+      paddingVertical: 5,
+      paddingHorizontal: 10,
+      borderRadius: 10,
+      backgroundColor: 'rgba(125,217,143,0.14)',
+    },
+    savedChipText: { color: colors.success, fontSize: 11.5, fontWeight: '600' },
+    empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
+    emptyText: { color: colors.onSurfaceVariant, fontSize: 15 },
+    list: { padding: PADDING, gap: GAP },
+    rowGap: { gap: GAP },
+    cell: {
+      borderRadius: 12,
+      overflow: 'hidden',
+      backgroundColor: colors.surfaceContainer,
+      borderWidth: 2,
+      borderColor: 'transparent',
+    },
+    cellSelected: { borderColor: colors.primary },
+    cellImg: { width: '100%', height: '100%' },
+    videoCell: { alignItems: 'center', justifyContent: 'center' },
+    playBadge: {
+      position: 'absolute',
+      top: '50%',
+      left: '50%',
+      width: 34,
+      height: 34,
+      marginTop: -17,
+      marginLeft: -17,
+      borderRadius: 17,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    durBadge: {
+      position: 'absolute',
+      bottom: 6,
+      right: 6,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 8,
+      backgroundColor: 'rgba(0,0,0,0.6)',
+    },
+    durText: { color: '#fff', fontSize: 10.5, fontWeight: '700', fontVariant: ['tabular-nums'] },
+    pipBadge: {
+      position: 'absolute',
+      top: 6,
+      left: 6,
+      paddingHorizontal: 6,
+      height: 18,
+      borderRadius: 9,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    pipBadgeText: { color: colors.onPrimary, fontSize: 10, fontWeight: '800' },
+    selMark: {
+      position: 'absolute',
+      top: 6,
+      right: 6,
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      borderWidth: 2,
+      borderColor: colors.primary,
+      backgroundColor: 'rgba(0,0,0,0.35)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    selMarkOn: { backgroundColor: colors.primary },
+    actionBar: {
+      flexDirection: 'row',
+      marginHorizontal: PADDING,
+      marginBottom: 28,
+      paddingVertical: 10,
+      borderRadius: 20,
+      backgroundColor: colors.surfaceContainerHigh,
+    },
+    action: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 6 },
+    actionDim: { opacity: 0.4 },
+    actionLabel: { color: colors.onSurface, fontSize: 12, fontWeight: '600' },
+    actionDanger: { color: colors.danger },
+    fullscreen: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0,0,0,0.94)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    fullImg: { width: '100%', height: '82%' },
+    fullVideo: { width: '100%', height: '82%' },
+    tapHint: { color: colors.onSurfaceVariant, fontSize: 13, marginTop: 14 },
+    shareFab: {
+      position: 'absolute',
+      bottom: 40,
+      alignSelf: 'center',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      paddingVertical: 12,
+      paddingHorizontal: 22,
+      borderRadius: 26,
+      backgroundColor: colors.primary,
+    },
+    shareFabText: { color: colors.onPrimary, fontSize: 15, fontWeight: '700' },
+    videoClose: {
+      position: 'absolute',
+      top: 46,
+      right: 20,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+  });

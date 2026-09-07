@@ -31,16 +31,17 @@ export function ProcessingIndicator({ count, progress }: ProcessingIndicatorProp
   );
 }
 
-const makeStyles = (colors: Palette) => StyleSheet.create({
-  wrap: { position: 'absolute', bottom: 132, left: 16 },
-  pill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: colors.primaryContainer,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-  },
-  text: { color: colors.onPrimaryContainer, fontSize: 12, fontWeight: '700', fontVariant: ['tabular-nums'] },
-});
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
+    wrap: { position: 'absolute', bottom: 132, left: 16 },
+    pill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: colors.primaryContainer,
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      borderRadius: 16,
+    },
+    text: { color: colors.onPrimaryContainer, fontSize: 12, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  });

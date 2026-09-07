@@ -7,22 +7,15 @@
     "scheme": "twinlens",
     "userInterfaceStyle": "dark",
     "icon": "./assets/icon.png",
-    "platforms": [
-      "android"
-    ],
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "platforms": ["android"],
+    "assetBundlePatterns": ["**/*"],
     "android": {
       "package": "fr.devitek.twinlens",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon-foreground.png",
         "backgroundImage": "./assets/adaptive-icon-background.png"
       },
-      "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO"
-      ]
+      "permissions": ["android.permission.CAMERA", "android.permission.RECORD_AUDIO"]
     },
     "plugins": [
       [

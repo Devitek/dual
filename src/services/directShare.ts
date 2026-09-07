@@ -13,11 +13,7 @@ const PACKAGES: Record<ShareTarget, string[]> = {
  * Partage DIRECT d'une capture vers Instagram / TikTok. Si l'app cible n'est pas
  * installée (ou module natif absent), repli transparent sur le partage système.
  */
-export async function shareToSocial(
-  target: ShareTarget,
-  uri: string,
-  kind: 'photo' | 'video',
-): Promise<void> {
+export async function shareToSocial(target: ShareTarget, uri: string, kind: 'photo' | 'video'): Promise<void> {
   const mime = kind === 'video' ? 'video/*' : 'image/*';
   const launched = await shareToApp(uri, mime, PACKAGES[target]);
   if (launched) return;

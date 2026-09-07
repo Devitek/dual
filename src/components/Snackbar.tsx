@@ -24,11 +24,9 @@ export function Snackbar({ notice }: { notice: Notice | null }): React.ReactElem
 
     Animated.timing(opacity, { toValue: 1, duration: 150, useNativeDriver: true }).start();
     const timer = setTimeout(() => {
-      Animated.timing(opacity, { toValue: 0, duration: 250, useNativeDriver: true }).start(
-        ({ finished }) => {
-          if (finished) setCurrent(null);
-        },
-      );
+      Animated.timing(opacity, { toValue: 0, duration: 250, useNativeDriver: true }).start(({ finished }) => {
+        if (finished) setCurrent(null);
+      });
     }, VISIBLE_MS);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -46,25 +44,26 @@ export function Snackbar({ notice }: { notice: Notice | null }): React.ReactElem
   );
 }
 
-const makeStyles = (colors: Palette) => StyleSheet.create({
-  snack: {
-    position: 'absolute',
-    left: 16,
-    right: 16,
-    bottom: 150,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: colors.surfaceContainerHighest,
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
-  },
-  dot: { color: colors.primary, fontSize: 16, fontWeight: '800' },
-  text: { color: colors.onSurface, fontSize: 14, flex: 1, lineHeight: 19 },
-});
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
+    snack: {
+      position: 'absolute',
+      left: 16,
+      right: 16,
+      bottom: 150,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      backgroundColor: colors.surfaceContainerHighest,
+      borderRadius: 12,
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+      elevation: 6,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.35,
+      shadowRadius: 6,
+    },
+    dot: { color: colors.primary, fontSize: 16, fontWeight: '800' },
+    text: { color: colors.onSurface, fontSize: 14, flex: 1, lineHeight: 19 },
+  });

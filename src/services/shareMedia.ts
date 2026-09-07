@@ -13,7 +13,10 @@ function extOf(uri: string, kind: CapturedMedia['kind']): string {
 
 /** Enlève les caractères interdits/gênants dans un nom de fichier. */
 function sanitize(s: string): string {
-  return s.replace(/[\\/:*?"<>|,]/g, '-').replace(/\s+/g, ' ').trim();
+  return s
+    .replace(/[\\/:*?"<>|,]/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 /**

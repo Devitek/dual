@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Pressable, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
 import { useColors } from '../theme/theme';
@@ -22,7 +22,12 @@ const PAD = 4;
  * thème natif Android) : piste pilule, pouce circulaire qui glisse, coche dans
  * le pouce à l'état activé. Couleurs issues de la palette Material You.
  */
-export function M3Switch({ value, onValueChange, disabled = false, accessibilityLabel }: M3SwitchProps): React.ReactElement {
+export function M3Switch({
+  value,
+  onValueChange,
+  disabled = false,
+  accessibilityLabel,
+}: M3SwitchProps): React.ReactElement {
   const colors = useColors();
   const anim = useRef(new Animated.Value(value ? 1 : 0)).current;
 

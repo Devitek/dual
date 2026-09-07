@@ -24,16 +24,16 @@ on:
   workflow_dispatch:
     inputs:
       upload_to_play:
-        description: "Envoyer aussi sur Google Play"
+        description: 'Envoyer aussi sur Google Play'
         type: boolean
         default: false
       track:
-        description: "Piste Play (si upload)"
+        description: 'Piste Play (si upload)'
         type: choice
         options: [internal, alpha, beta, production]
         default: internal
       release_status:
-        description: "Statut de la release Play (si upload)"
+        description: 'Statut de la release Play (si upload)'
         type: choice
         options: [draft, completed]
         default: draft
@@ -76,7 +76,7 @@ jobs:
 
       - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1
         with:
-          ruby-version: "3.3"
+          ruby-version: '3.3'
           bundler-cache: true
 
       - name: Install JS dependencies

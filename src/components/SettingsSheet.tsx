@@ -23,8 +23,6 @@ import {
 } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const { height: SCREEN_H } = Dimensions.get('window');
-
 import { useColors, useThemedStyles, type Palette } from '../theme/theme';
 import { haptics } from '../utils/haptics';
 import type { CaptureQuality, CaptureSpeed, SaveMode, VideoFps } from '../vision/MultiCamController';
@@ -32,6 +30,8 @@ import type { CompositionLayout, OutputRatio } from '../services/pipComposer';
 import type { CaptureMode } from './ModeSwitch';
 import { Segmented, type SegmentedOption } from './Segmented';
 import { M3Switch } from './M3Switch';
+
+const { height: SCREEN_H } = Dimensions.get('window');
 
 type IconName = React.ComponentProps<typeof MaterialIcons>['name'];
 
@@ -430,12 +430,13 @@ export function SettingsSheet(props: SettingsSheetProps): React.ReactElement {
         </Animated.View>
 
         <Animated.View
-          style={[
-            styles.sheet,
-            { paddingBottom: Math.max(insets.bottom + 12, 28), transform: [{ translateY }] },
-          ]}
+          style={[styles.sheet, { paddingBottom: Math.max(insets.bottom + 12, 28), transform: [{ translateY }] }]}
         >
-          <PanGestureHandler onGestureEvent={onPanGesture} onHandlerStateChange={onPanStateChange} activeOffsetY={[-8, 8]}>
+          <PanGestureHandler
+            onGestureEvent={onPanGesture}
+            onHandlerStateChange={onPanStateChange}
+            activeOffsetY={[-8, 8]}
+          >
             <View style={styles.dragZone}>
               <View style={styles.handle} />
             </View>
@@ -489,8 +490,14 @@ export function SettingsSheet(props: SettingsSheetProps): React.ReactElement {
                     LayoutAnimation.configureNext({
                       duration: 240,
                       update: { type: LayoutAnimation.Types.easeInEaseOut },
-                      create: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
-                      delete: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
+                      create: {
+                        type: LayoutAnimation.Types.easeInEaseOut,
+                        property: LayoutAnimation.Properties.opacity,
+                      },
+                      delete: {
+                        type: LayoutAnimation.Types.easeInEaseOut,
+                        property: LayoutAnimation.Properties.opacity,
+                      },
                     });
                     setTab(tb);
                   }}
@@ -515,63 +522,64 @@ export function SettingsSheet(props: SettingsSheetProps): React.ReactElement {
   );
 }
 
-const makeStyles = (colors: Palette) => StyleSheet.create({
-  gestureRoot: { flex: 1, justifyContent: 'flex-end' },
-  backdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: colors.scrim },
-  backdropPress: { flex: 1 },
-  sheet: {
-    backgroundColor: colors.surfaceContainer,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    overflow: 'hidden',
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    maxHeight: '86%',
-  },
-  dragZone: { paddingBottom: 4 },
-  handle: {
-    alignSelf: 'center',
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.outline,
-    marginBottom: 10,
-  },
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  title: { color: colors.onSurface, fontSize: 22, fontWeight: '700' },
-  moreBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.surfaceContainerHigh,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tabs: {
-    flexDirection: 'row',
-    backgroundColor: colors.surfaceContainerHigh,
-    borderRadius: 20,
-    padding: 3,
-    marginTop: 12,
-    marginBottom: 4,
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  tabIndicator: {
-    position: 'absolute',
-    top: 3,
-    bottom: 3,
-    left: 3,
-    borderRadius: 17,
-    backgroundColor: colors.primaryContainer,
-  },
-  tab: { flex: 1, paddingVertical: 9, borderRadius: 17, alignItems: 'center' },
-  tabLabel: { color: colors.onSurfaceVariant, fontSize: 14, fontWeight: '700' },
-  tabLabelActive: { color: colors.onPrimaryContainer },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12 },
-  rowCol: { paddingVertical: 10, gap: 10 },
-  rowHeader: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  rowLabel: { color: colors.onSurface, fontSize: 16, flex: 1 },
-  dim: { opacity: 0.4 },
-  optDesc: { color: colors.onSurfaceVariant, fontSize: 11.5, marginTop: 7 },
-});
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
+    gestureRoot: { flex: 1, justifyContent: 'flex-end' },
+    backdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: colors.scrim },
+    backdropPress: { flex: 1 },
+    sheet: {
+      backgroundColor: colors.surfaceContainer,
+      borderTopLeftRadius: 28,
+      borderTopRightRadius: 28,
+      overflow: 'hidden',
+      paddingHorizontal: 20,
+      paddingTop: 12,
+      maxHeight: '86%',
+    },
+    dragZone: { paddingBottom: 4 },
+    handle: {
+      alignSelf: 'center',
+      width: 40,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: colors.outline,
+      marginBottom: 10,
+    },
+    headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    title: { color: colors.onSurface, fontSize: 22, fontWeight: '700' },
+    moreBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.surfaceContainerHigh,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    tabs: {
+      flexDirection: 'row',
+      backgroundColor: colors.surfaceContainerHigh,
+      borderRadius: 20,
+      padding: 3,
+      marginTop: 12,
+      marginBottom: 4,
+      position: 'relative',
+      overflow: 'hidden',
+    },
+    tabIndicator: {
+      position: 'absolute',
+      top: 3,
+      bottom: 3,
+      left: 3,
+      borderRadius: 17,
+      backgroundColor: colors.primaryContainer,
+    },
+    tab: { flex: 1, paddingVertical: 9, borderRadius: 17, alignItems: 'center' },
+    tabLabel: { color: colors.onSurfaceVariant, fontSize: 14, fontWeight: '700' },
+    tabLabelActive: { color: colors.onPrimaryContainer },
+    row: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12 },
+    rowCol: { paddingVertical: 10, gap: 10 },
+    rowHeader: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+    rowLabel: { color: colors.onSurface, fontSize: 16, flex: 1 },
+    dim: { opacity: 0.4 },
+    optDesc: { color: colors.onSurfaceVariant, fontSize: 11.5, marginTop: 7 },
+  });

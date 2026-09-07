@@ -66,9 +66,7 @@ export function IntroSheet({ mode, onClose }: IntroSheetProps): React.ReactEleme
             />
           </View>
           <Text style={styles.title}>{t(isOnboarding ? 'intro.onboardTitle' : 'intro.whatsnewTitle')}</Text>
-          <Text style={styles.subtitle}>
-            {t(isOnboarding ? 'intro.onboardSubtitle' : 'intro.whatsnewSubtitle')}
-          </Text>
+          <Text style={styles.subtitle}>{t(isOnboarding ? 'intro.onboardSubtitle' : 'intro.whatsnewSubtitle')}</Text>
 
           <ScrollView
             style={styles.list}

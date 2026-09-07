@@ -186,7 +186,13 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
           <Text style={styles.section}>{t('settings.catGeneral')}</Text>
           {card([
-            rowSwitch('volume-off', t('settings.shutterSound'), shutterSound, onToggleShutterSound, t('settings.shutterSoundDesc')),
+            rowSwitch(
+              'volume-off',
+              t('settings.shutterSound'),
+              shutterSound,
+              onToggleShutterSound,
+              t('settings.shutterSoundDesc'),
+            ),
             volumeRow,
             rowSwitch('location-on', t('settings.geotag'), geotag, onToggleGeotag, t('settings.geotagDesc')),
           ])}
@@ -195,13 +201,31 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
           {card([
             rowSwitch('grid-on', t('settings.grid'), grid, onToggleGrid),
             rowSwitch('straighten', t('settings.level'), level, onToggleLevel, t('settings.levelDesc')),
-            rowSwitch('flip', t('settings.mirrorFront'), mirrorFront, onToggleMirrorFront, t('settings.mirrorFrontDesc')),
-            rowSwitch('branding-watermark', t('settings.watermark'), watermark, onToggleWatermark, t('settings.watermarkDesc')),
+            rowSwitch(
+              'flip',
+              t('settings.mirrorFront'),
+              mirrorFront,
+              onToggleMirrorFront,
+              t('settings.mirrorFrontDesc'),
+            ),
+            rowSwitch(
+              'branding-watermark',
+              t('settings.watermark'),
+              watermark,
+              onToggleWatermark,
+              t('settings.watermarkDesc'),
+            ),
           ])}
 
           <Text style={styles.section}>{t('settings.catCapture')}</Text>
           {card([
-            rowSwitch('blur-off', t('settings.stabilization'), stabilization, onToggleStabilization, t('settings.stabilizationDesc')),
+            rowSwitch(
+              'blur-off',
+              t('settings.stabilization'),
+              stabilization,
+              onToggleStabilization,
+              t('settings.stabilizationDesc'),
+            ),
           ])}
 
           <Text style={styles.section}>{t('settings.catHelp')}</Text>
@@ -216,54 +240,55 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
   );
 }
 
-const makeStyles = (colors: Palette) => StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.surface },
-  // Top app bar M3.
-  appbar: { flexDirection: 'row', alignItems: 'center', gap: 8, height: 64, paddingHorizontal: 8 },
-  backBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  pressed: { opacity: 0.7 },
-  title: { color: colors.onSurface, fontSize: 22, fontWeight: '700' },
-  scrollContent: { paddingHorizontal: 16, paddingBottom: 40 },
-  section: {
-    color: colors.primary,
-    fontSize: 13,
-    fontWeight: '700',
-    marginTop: 22,
-    marginBottom: 8,
-    marginLeft: 12,
-  },
-  // Carte de SECTION : un seul bloc arrondi qui regroupe plusieurs lignes,
-  // séparées par des « gaps » (couleur de fond) — coins arrondis au groupe, pas
-  // à chaque item (comme l'app Appareil photo).
-  card: {
-    backgroundColor: colors.surfaceContainerHigh,
-    borderRadius: 24,
-    overflow: 'hidden',
-    marginBottom: 8,
-  },
-  divider: { height: 3, backgroundColor: colors.surface },
-  cardRow: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingHorizontal: 18, paddingVertical: 16 },
-  cardRowCol: { paddingHorizontal: 18, paddingVertical: 16, gap: 12 },
-  rowHeader: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  rowTexts: { flex: 1, gap: 2 },
-  rowLabel: { color: colors.onSurface, fontSize: 16 },
-  desc: { color: colors.onSurfaceVariant, fontSize: 12, lineHeight: 16 },
-  report: {
-    color: colors.onSurfaceVariant,
-    fontSize: 12,
-    lineHeight: 17,
-    fontFamily: Platform.select({ android: 'monospace', default: undefined }),
-  },
-  copyBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    alignSelf: 'flex-start',
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    backgroundColor: colors.secondaryContainer,
-  },
-  copyText: { color: colors.onSecondaryContainer, fontSize: 13, fontWeight: '700' },
-  version: { color: colors.onSurfaceVariant, fontSize: 12, marginTop: 24, textAlign: 'center' },
-});
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
+    screen: { flex: 1, backgroundColor: colors.surface },
+    // Top app bar M3.
+    appbar: { flexDirection: 'row', alignItems: 'center', gap: 8, height: 64, paddingHorizontal: 8 },
+    backBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+    pressed: { opacity: 0.7 },
+    title: { color: colors.onSurface, fontSize: 22, fontWeight: '700' },
+    scrollContent: { paddingHorizontal: 16, paddingBottom: 40 },
+    section: {
+      color: colors.primary,
+      fontSize: 13,
+      fontWeight: '700',
+      marginTop: 22,
+      marginBottom: 8,
+      marginLeft: 12,
+    },
+    // Carte de SECTION : un seul bloc arrondi qui regroupe plusieurs lignes,
+    // séparées par des « gaps » (couleur de fond) — coins arrondis au groupe, pas
+    // à chaque item (comme l'app Appareil photo).
+    card: {
+      backgroundColor: colors.surfaceContainerHigh,
+      borderRadius: 24,
+      overflow: 'hidden',
+      marginBottom: 8,
+    },
+    divider: { height: 3, backgroundColor: colors.surface },
+    cardRow: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingHorizontal: 18, paddingVertical: 16 },
+    cardRowCol: { paddingHorizontal: 18, paddingVertical: 16, gap: 12 },
+    rowHeader: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+    rowTexts: { flex: 1, gap: 2 },
+    rowLabel: { color: colors.onSurface, fontSize: 16 },
+    desc: { color: colors.onSurfaceVariant, fontSize: 12, lineHeight: 16 },
+    report: {
+      color: colors.onSurfaceVariant,
+      fontSize: 12,
+      lineHeight: 17,
+      fontFamily: Platform.select({ android: 'monospace', default: undefined }),
+    },
+    copyBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      alignSelf: 'flex-start',
+      paddingVertical: 8,
+      paddingHorizontal: 14,
+      borderRadius: 20,
+      backgroundColor: colors.secondaryContainer,
+    },
+    copyText: { color: colors.onSecondaryContainer, fontSize: 13, fontWeight: '700' },
+    version: { color: colors.onSurfaceVariant, fontSize: 12, marginTop: 24, textAlign: 'center' },
+  });

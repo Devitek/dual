@@ -51,8 +51,12 @@ interface CaptureControlsProps {
 }
 
 function formatDuration(seconds: number): string {
-  const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-  const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+  const m = Math.floor(seconds / 60)
+    .toString()
+    .padStart(2, '0');
+  const s = Math.floor(seconds % 60)
+    .toString()
+    .padStart(2, '0');
   return `${m}:${s}`;
 }
 
@@ -160,10 +164,7 @@ export function CaptureControls({
   const ringOffset = ring.interpolate({ inputRange: [0, 1], outputRange: [RING_C, 0] });
 
   return (
-    <View
-      style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom + 8, 34) }]}
-      pointerEvents="box-none"
-    >
+    <View style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom + 8, 34) }]} pointerEvents="box-none">
       {isRecording && !boomerang && (
         <View style={styles.timer}>
           <View style={styles.recDot} />
@@ -284,7 +285,11 @@ export function CaptureControls({
             <Pressable
               onPress={onSwap}
               disabled={swapDisabled}
-              style={({ pressed }) => [styles.swapButton, pressed && styles.pressed, swapDisabled && styles.swapDisabled]}
+              style={({ pressed }) => [
+                styles.swapButton,
+                pressed && styles.pressed,
+                swapDisabled && styles.swapDisabled,
+              ]}
               accessibilityRole="button"
               accessibilityLabel={t('capture.swapA11y')}
             >
@@ -301,100 +306,101 @@ export function CaptureControls({
   );
 }
 
-const makeStyles = (colors: Palette) => StyleSheet.create({
-  // Bouton latéral (réglages) + espace symétrique à droite : même gabarit que la
-  // zone d'inversion, pour des marges équilibrées autour de l'obturateur.
-  sideBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  wrapper: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    // paddingBottom appliqué dynamiquement (safe-area) : réserve la barre
-    // système (navigation 3 boutons ~48dp vs gestuelle ~24dp) pour ne pas
-    // masquer l'obturateur et les contrôles.
-    alignItems: 'center',
-  },
-  stack: { alignItems: 'center', gap: 16, width: '100%' },
-  timer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: colors.overlayStrong,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    marginBottom: 16,
-  },
-  recDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.danger },
-  timerText: { color: colors.onSurface, fontVariant: ['tabular-nums'], fontSize: 15, fontWeight: '600' },
-  bar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    paddingHorizontal: 18,
-  },
-  zone: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  shutterOuter: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    borderWidth: 4,
-    borderColor: colors.onSurface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  shutterOuterNoBorder: { borderWidth: 0 }, // boomerang : le rail est dessiné en SVG
-  shutterPhoto: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.onSurface },
-  shutterRecDot: { width: 30, height: 30, borderRadius: 15, backgroundColor: colors.danger },
-  shutterRecStop: { width: 30, height: 30, borderRadius: 8, backgroundColor: colors.danger },
-  shutterBusy: { opacity: 0.4 },
-  swapButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: 'rgba(0,0,0,0.42)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  swapDisabled: { opacity: 0.45 },
-  pressed: { opacity: 0.7 },
-  thumbWrap: {
-    width: 52,
-    height: 52,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: colors.onSurface,
-    overflow: 'hidden',
-  },
-  thumb: { width: '100%', height: '100%' },
-  videoThumb: { backgroundColor: colors.surfaceContainerHighest, alignItems: 'center', justifyContent: 'center' },
-  dualBadge: {
-    position: 'absolute',
-    top: -6,
-    right: -6,
-    minWidth: 20,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 5,
-  },
-  dualBadgeText: { color: colors.onPrimary, fontSize: 10, fontWeight: '800' },
-  processingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.45)',
-  },
-  processingEmpty: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surfaceContainerHighest,
-  },
-});
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
+    // Bouton latéral (réglages) + espace symétrique à droite : même gabarit que la
+    // zone d'inversion, pour des marges équilibrées autour de l'obturateur.
+    sideBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+    wrapper: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      bottom: 0,
+      // paddingBottom appliqué dynamiquement (safe-area) : réserve la barre
+      // système (navigation 3 boutons ~48dp vs gestuelle ~24dp) pour ne pas
+      // masquer l'obturateur et les contrôles.
+      alignItems: 'center',
+    },
+    stack: { alignItems: 'center', gap: 16, width: '100%' },
+    timer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: colors.overlayStrong,
+      paddingVertical: 6,
+      paddingHorizontal: 14,
+      borderRadius: 20,
+      marginBottom: 16,
+    },
+    recDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.danger },
+    timerText: { color: colors.onSurface, fontVariant: ['tabular-nums'], fontSize: 15, fontWeight: '600' },
+    bar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      width: '100%',
+      paddingHorizontal: 18,
+    },
+    zone: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    shutterOuter: {
+      width: 70,
+      height: 70,
+      borderRadius: 35,
+      borderWidth: 4,
+      borderColor: colors.onSurface,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    shutterOuterNoBorder: { borderWidth: 0 }, // boomerang : le rail est dessiné en SVG
+    shutterPhoto: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.onSurface },
+    shutterRecDot: { width: 30, height: 30, borderRadius: 15, backgroundColor: colors.danger },
+    shutterRecStop: { width: 30, height: 30, borderRadius: 8, backgroundColor: colors.danger },
+    shutterBusy: { opacity: 0.4 },
+    swapButton: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      backgroundColor: 'rgba(0,0,0,0.42)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    swapDisabled: { opacity: 0.45 },
+    pressed: { opacity: 0.7 },
+    thumbWrap: {
+      width: 52,
+      height: 52,
+      borderRadius: 12,
+      borderWidth: 2,
+      borderColor: colors.onSurface,
+      overflow: 'hidden',
+    },
+    thumb: { width: '100%', height: '100%' },
+    videoThumb: { backgroundColor: colors.surfaceContainerHighest, alignItems: 'center', justifyContent: 'center' },
+    dualBadge: {
+      position: 'absolute',
+      top: -6,
+      right: -6,
+      minWidth: 20,
+      height: 18,
+      borderRadius: 9,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 5,
+    },
+    dualBadgeText: { color: colors.onPrimary, fontSize: 10, fontWeight: '800' },
+    processingOverlay: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'rgba(0,0,0,0.45)',
+    },
+    processingEmpty: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.surfaceContainerHighest,
+    },
+  });

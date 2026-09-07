@@ -32,9 +32,7 @@ module.exports = function withRemoveActivityRecognition(config) {
     manifest['uses-permission'] = manifest['uses-permission'] || [];
 
     // Purge un éventuel ajout de la permission, puis pose l'entrée de suppression.
-    manifest['uses-permission'] = manifest['uses-permission'].filter(
-      (p) => p?.$?.['android:name'] !== PERMISSION,
-    );
+    manifest['uses-permission'] = manifest['uses-permission'].filter((p) => p?.$?.['android:name'] !== PERMISSION);
     manifest['uses-permission'].push({
       $: { 'android:name': PERMISSION, 'tools:node': 'remove' },
     });

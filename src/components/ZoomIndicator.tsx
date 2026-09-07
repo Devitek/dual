@@ -39,15 +39,16 @@ export function ZoomIndicator({ zoom, nonce }: ZoomIndicatorProps): React.ReactE
   );
 }
 
-const makeStyles = (colors: Palette) => StyleSheet.create({
-  wrap: { position: 'absolute', top: '44%', left: 0, right: 0, alignItems: 'center' },
-  pill: {
-    minWidth: 56,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 18,
-    backgroundColor: colors.overlayStrong,
-    alignItems: 'center',
-  },
-  text: { color: colors.onSurface, fontSize: 15, fontWeight: '700', fontVariant: ['tabular-nums'] },
-});
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
+    wrap: { position: 'absolute', top: '44%', left: 0, right: 0, alignItems: 'center' },
+    pill: {
+      minWidth: 56,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 18,
+      backgroundColor: colors.overlayStrong,
+      alignItems: 'center',
+    },
+    text: { color: colors.onSurface, fontSize: 15, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  });
