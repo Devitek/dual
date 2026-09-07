@@ -10,6 +10,7 @@
 - [ ] Aucune édition de `CHANGELOG.md` / versions / tags (release-please)
 - [ ] **Permissions / natif touchés** → sortie du `grep` manifest collée ci-dessous (AGENTS.md §4)
 - [ ] **Réglage utilisateur ajouté** → checklist AGENTS.md §8 (3 points) + test « forcer l'arrêt → relancer »
+- [ ] **Sémantique d'un état persisté modifiée** → bump `SETTINGS_SCHEMA_VERSION` + migration + test « maj depuis version antérieure » (§8)
 - [ ] Chaînes UI dans **les 6 locales** · labels d'accessibilité sur les nouveaux contrôles
 - [ ] Impact **Play** évalué (déclarations sensibles §3, fiche §7) : aucun / décrit ci-dessous
 - [ ] Testé sur device (ou « non testable hors device » explicitement noté)

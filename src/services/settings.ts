@@ -117,12 +117,63 @@ const inSet = <T extends string>(v: string | null | undefined, allowed: readonly
 
 const SAVE_MODES = ['pip', 'pip_plus_originals', 'originals'] as const;
 
+// ---------------------------------------------------------------------------
+// MIGRATIONS DE SCHÉMA (règle AGENTS.md §8) : quand la SÉMANTIQUE d'un réglage
+// persisté change (plage, coordonnées, signification…), un ancien état
+// AsyncStorage rejoué tel quel sur le nouveau code produit des bugs visuels ou
+// fonctionnels (vécu : cadre PiP fantôme après la maj 1.19 → 1.22). Toute
+// évolution de ce genre DOIT : incrémenter SETTINGS_SCHEMA_VERSION, ajouter la
+// migration ici, et un test dans settings.test.ts.
+// ---------------------------------------------------------------------------
+
+/** Version du schéma des réglages persistés. */
+export const SETTINGS_SCHEMA_VERSION = 2;
+/** Clé AsyncStorage portant la version de schéma. */
+export const SETTINGS_SCHEMA_KEY = 'tl_settings_schema';
+
+/** Clés de MISE EN PAGE réinitialisées par la migration v<2 (refonte réglages/composition 1.22). */
+export const SCHEMA_V2_RESET_KEYS: readonly string[] = [
+  SETTINGS_KEYS.pipInset,
+  SETTINGS_KEYS.pipCorner,
+  SETTINGS_KEYS.layout,
+  SETTINGS_KEYS.outputRatio,
+];
+
+/**
+ * Applique les migrations nécessaires puis grave la version courante.
+ * - install neuve ou ≤1.21 (pas de version stockée) → v0 ;
+ * - version FUTURE (downgrade de l'app) → on ne touche à rien ;
+ * - idempotent (ne fait rien si déjà à jour).
+ */
+export async function migratePersistedSettings(): Promise<void> {
+  let stored = 0;
+  try {
+    stored = Number((await AsyncStorage.getItem(SETTINGS_SCHEMA_KEY)) ?? '0') || 0;
+  } catch {
+    return; // stockage indisponible : ne pas risquer une migration partielle
+  }
+  if (stored >= SETTINGS_SCHEMA_VERSION) return;
+
+  try {
+    if (stored < 2) {
+      // v0/v1 → v2 : la présentation de la composition a changé (réglages v2,
+      // vignette libre) — on réinitialise UNIQUEMENT la mise en page ; toutes
+      // les autres préférences (qualité, sons, mode, grille…) sont conservées.
+      await AsyncStorage.multiRemove([...SCHEMA_V2_RESET_KEYS]);
+    }
+    await AsyncStorage.setItem(SETTINGS_SCHEMA_KEY, String(SETTINGS_SCHEMA_VERSION));
+  } catch {
+    /* best-effort : la validation de loadPersistedSettings reste le filet */
+  }
+}
+
 /**
  * Lit et VALIDE tous les réglages persistés en un seul passage (clés dérivées de
  * {@link SETTINGS_KEYS}, donc impossible d'oublier de relire un réglage écrit).
  * Ne renvoie que les valeurs valides présentes.
  */
 export async function loadPersistedSettings(): Promise<Partial<PersistedSettings>> {
+  await migratePersistedSettings();
   let map: Record<string, string | null> = {};
   try {
     map = Object.fromEntries(await AsyncStorage.multiGet(Object.values(SETTINGS_KEYS)));

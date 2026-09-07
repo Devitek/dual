@@ -8,7 +8,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import {
   BURST_VALUES,
+  SCHEMA_V2_RESET_KEYS,
   SETTINGS_KEYS,
+  SETTINGS_SCHEMA_KEY,
+  SETTINGS_SCHEMA_VERSION,
   TIMER_VALUES,
   loadPersistedSettings,
   parsePipInset,
@@ -76,6 +79,9 @@ const EXPECTED: PersistedSettings = {
 
 beforeEach(async () => {
   await AsyncStorage.clear();
+  // Par défaut les tests simulent une install À JOUR (schéma courant) ; les
+  // tests de migration retirent explicitement cette clé.
+  await AsyncStorage.setItem(SETTINGS_SCHEMA_KEY, String(SETTINGS_SCHEMA_VERSION));
   jest.clearAllMocks();
 });
 
@@ -160,6 +166,48 @@ describe('saveSetting — sérialisation', () => {
     expect(out.layout).toBe('topBottom');
     expect(out.burstCount).toBe(10);
     expect(out.showSecondaryPreview).toBe(false);
+  });
+});
+
+describe('migrations de schéma (§8) — maj depuis une version antérieure', () => {
+  it('v0 (≤1.21, pas de version stockée) → v2 : les clés de mise en page sont purgées, le reste conservé', async () => {
+    // État « 1.19 » : toutes les clés valides présentes, PAS de clé de schéma.
+    await AsyncStorage.removeItem(SETTINGS_SCHEMA_KEY);
+    await AsyncStorage.multiSet(
+      (Object.keys(SETTINGS_KEYS) as SettingKey[]).map((k) => [SETTINGS_KEYS[k], VALID_RAW[k]]),
+    );
+    const out = await loadPersistedSettings();
+    // Mise en page réinitialisée…
+    expect(out).not.toHaveProperty('pipInset');
+    expect(out).not.toHaveProperty('pipCorner');
+    expect(out).not.toHaveProperty('layout');
+    expect(out).not.toHaveProperty('outputRatio');
+    // …préférences fonctionnelles conservées.
+    expect(out.captureQuality).toBe('max');
+    expect(out.mode).toBe('video');
+    expect(out.grid).toBe(true);
+    // Version gravée.
+    await expect(AsyncStorage.getItem(SETTINGS_SCHEMA_KEY)).resolves.toBe(String(SETTINGS_SCHEMA_VERSION));
+  });
+
+  it("idempotente : au 2e lancement, une mise en page re-sauvegardée n'est PLUS purgée", async () => {
+    await loadPersistedSettings(); // migre + grave v2
+    await AsyncStorage.setItem(SETTINGS_KEYS.layout, 'topBottom');
+    const out = await loadPersistedSettings();
+    expect(out.layout).toBe('topBottom');
+  });
+
+  it("version future (downgrade de l'app) : aucune purge", async () => {
+    await AsyncStorage.setItem(SETTINGS_SCHEMA_KEY, String(SETTINGS_SCHEMA_VERSION + 5));
+    await AsyncStorage.setItem(SETTINGS_KEYS.layout, 'sideBySide');
+    const out = await loadPersistedSettings();
+    expect(out.layout).toBe('sideBySide');
+    await expect(AsyncStorage.getItem(SETTINGS_SCHEMA_KEY)).resolves.toBe(String(SETTINGS_SCHEMA_VERSION + 5));
+  });
+
+  it('SCHEMA_V2_RESET_KEYS ne référence que des clés existantes', () => {
+    const all = Object.values(SETTINGS_KEYS) as string[];
+    for (const k of SCHEMA_V2_RESET_KEYS) expect(all).toContain(k);
   });
 });
 
