@@ -94,8 +94,8 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
     resetTimer.current = setTimeout(() => setCopied(false), 1800);
   }, [diagnostics]);
 
-  // Chaque réglage = une carte arrondie individuelle (style Material You récent) :
-  // icône + (libellé + description) + interrupteur M3.
+  // Une ligne (icône + libellé/description + interrupteur M3). Sans arrondi propre :
+  // c'est la CARTE de section (voir `card`) qui porte les coins arrondis.
   const rowSwitch = (
     icon: IconName,
     label: string,
@@ -103,17 +103,32 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
     onValueChange: () => void,
     desc?: string,
   ): React.ReactElement => (
-    <View style={styles.card}>
-      <View style={styles.cardRow}>
-        <MaterialIcons name={icon} size={22} color={colors.onSurfaceVariant} />
-        <View style={styles.rowTexts}>
-          <Text style={styles.rowLabel}>{label}</Text>
-          {desc != null && <Text style={styles.desc}>{desc}</Text>}
-        </View>
-        <M3Switch value={value} onValueChange={onValueChange} accessibilityLabel={label} />
+    <View style={styles.cardRow}>
+      <MaterialIcons name={icon} size={22} color={colors.onSurfaceVariant} />
+      <View style={styles.rowTexts}>
+        <Text style={styles.rowLabel}>{label}</Text>
+        {desc != null && <Text style={styles.desc}>{desc}</Text>}
       </View>
+      <M3Switch value={value} onValueChange={onValueChange} accessibilityLabel={label} />
     </View>
   );
+
+  // Regroupe les lignes d'une section dans UNE carte arrondie, séparées par des
+  // dividers (comme l'app Appareil photo : arrondi au niveau du groupe, pas de
+  // chaque item).
+  const card = (rows: React.ReactNode[]): React.ReactElement => {
+    const items = rows.filter((r) => r != null);
+    return (
+      <View style={styles.card}>
+        {items.map((r, i) => (
+          <React.Fragment key={i}>
+            {i > 0 && <View style={styles.divider} />}
+            {r}
+          </React.Fragment>
+        ))}
+      </View>
+    );
+  };
 
   const volumeKeyOptions: { value: VolumeKeyAction; label: string }[] = [
     { value: 'volume', label: t('settings.volKeyVolume') },
@@ -122,32 +137,28 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
   ];
 
   const volumeRow = (
-    <View style={styles.card}>
-      <View style={styles.cardRowCol}>
-        <View style={styles.rowHeader}>
-          <MaterialIcons name="volume-up" size={22} color={colors.onSurfaceVariant} />
-          <Text style={styles.rowLabel}>{t('settings.volumeKeys')}</Text>
-        </View>
-        <Segmented options={volumeKeyOptions} value={volumeKeyAction} onChange={onSetVolumeKeyAction} />
+    <View style={styles.cardRowCol}>
+      <View style={styles.rowHeader}>
+        <MaterialIcons name="volume-up" size={22} color={colors.onSurfaceVariant} />
+        <Text style={styles.rowLabel}>{t('settings.volumeKeys')}</Text>
       </View>
+      <Segmented options={volumeKeyOptions} value={volumeKeyAction} onChange={onSetVolumeKeyAction} />
     </View>
   );
 
   const reportRow = (
-    <View style={styles.card}>
-      <View style={styles.cardRowCol}>
-        <View style={styles.rowHeader}>
-          <MaterialIcons name="info-outline" size={22} color={colors.onSurfaceVariant} />
-          <Text style={styles.rowLabel}>{t('settings.deviceReport')}</Text>
-        </View>
-        <Text style={styles.report} selectable>
-          {buildDeviceReport(diagnostics)}
-        </Text>
-        <Pressable onPress={onCopy} style={styles.copyBtn} hitSlop={8} accessibilityRole="button">
-          <MaterialIcons name={copied ? 'check' : 'content-copy'} size={16} color={colors.onSecondaryContainer} />
-          <Text style={styles.copyText}>{copied ? t('settings.copied') : t('settings.copyReport')}</Text>
-        </Pressable>
+    <View style={styles.cardRowCol}>
+      <View style={styles.rowHeader}>
+        <MaterialIcons name="info-outline" size={22} color={colors.onSurfaceVariant} />
+        <Text style={styles.rowLabel}>{t('settings.deviceReport')}</Text>
       </View>
+      <Text style={styles.report} selectable>
+        {buildDeviceReport(diagnostics)}
+      </Text>
+      <Pressable onPress={onCopy} style={styles.copyBtn} hitSlop={8} accessibilityRole="button">
+        <MaterialIcons name={copied ? 'check' : 'content-copy'} size={16} color={colors.onSecondaryContainer} />
+        <Text style={styles.copyText}>{copied ? t('settings.copied') : t('settings.copyReport')}</Text>
+      </Pressable>
     </View>
   );
 
@@ -174,21 +185,27 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
           <Text style={styles.section}>{t('settings.catGeneral')}</Text>
-          {rowSwitch('volume-off', t('settings.shutterSound'), shutterSound, onToggleShutterSound, t('settings.shutterSoundDesc'))}
-          {volumeRow}
-          {rowSwitch('location-on', t('settings.geotag'), geotag, onToggleGeotag, t('settings.geotagDesc'))}
+          {card([
+            rowSwitch('volume-off', t('settings.shutterSound'), shutterSound, onToggleShutterSound, t('settings.shutterSoundDesc')),
+            volumeRow,
+            rowSwitch('location-on', t('settings.geotag'), geotag, onToggleGeotag, t('settings.geotagDesc')),
+          ])}
 
           <Text style={styles.section}>{t('settings.catComposition')}</Text>
-          {rowSwitch('grid-on', t('settings.grid'), grid, onToggleGrid)}
-          {rowSwitch('straighten', t('settings.level'), level, onToggleLevel, t('settings.levelDesc'))}
-          {rowSwitch('flip', t('settings.mirrorFront'), mirrorFront, onToggleMirrorFront, t('settings.mirrorFrontDesc'))}
-          {rowSwitch('branding-watermark', t('settings.watermark'), watermark, onToggleWatermark, t('settings.watermarkDesc'))}
+          {card([
+            rowSwitch('grid-on', t('settings.grid'), grid, onToggleGrid),
+            rowSwitch('straighten', t('settings.level'), level, onToggleLevel, t('settings.levelDesc')),
+            rowSwitch('flip', t('settings.mirrorFront'), mirrorFront, onToggleMirrorFront, t('settings.mirrorFrontDesc')),
+            rowSwitch('branding-watermark', t('settings.watermark'), watermark, onToggleWatermark, t('settings.watermarkDesc')),
+          ])}
 
           <Text style={styles.section}>{t('settings.catCapture')}</Text>
-          {rowSwitch('blur-off', t('settings.stabilization'), stabilization, onToggleStabilization, t('settings.stabilizationDesc'))}
+          {card([
+            rowSwitch('blur-off', t('settings.stabilization'), stabilization, onToggleStabilization, t('settings.stabilizationDesc')),
+          ])}
 
           <Text style={styles.section}>{t('settings.catHelp')}</Text>
-          {reportRow}
+          {card([reportRow])}
 
           <Text style={styles.version}>
             {t('settings.version')} {APP_VERSION}
@@ -215,8 +232,16 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
     marginBottom: 8,
     marginLeft: 12,
   },
-  // Carte M3 arrondie individuelle (une par réglage, façon Material You récent).
-  card: { backgroundColor: colors.surfaceContainerHigh, borderRadius: 24, overflow: 'hidden', marginBottom: 6 },
+  // Carte de SECTION : un seul bloc arrondi qui regroupe plusieurs lignes,
+  // séparées par des « gaps » (couleur de fond) — coins arrondis au groupe, pas
+  // à chaque item (comme l'app Appareil photo).
+  card: {
+    backgroundColor: colors.surfaceContainerHigh,
+    borderRadius: 24,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  divider: { height: 3, backgroundColor: colors.surface },
   cardRow: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingHorizontal: 18, paddingVertical: 16 },
   cardRowCol: { paddingHorizontal: 18, paddingVertical: 16, gap: 12 },
   rowHeader: { flexDirection: 'row', alignItems: 'center', gap: 16 },
