@@ -5,7 +5,8 @@ name: Store Metadata (Play listing)
 # (store/upload_listing.py). Manuel. Ne touche NI aux binaires NI aux notes de
 # version (celles-ci sont poussées avec l'AAB par release-android.yml).
 #
-# Secret requis : PLAY_SERVICE_ACCOUNT_JSON.
+# Secret requis : PLAY_SERVICE_ACCOUNT_JSON (environment `play-internal`,
+# comme release-android.yml — il n'existe PAS au niveau repo, voir #153).
 # Pré-requis : app créée dans la Play Console + le compte de service a le rôle
 # IAM "Service Usage Consumer" sur le projet Google Cloud (sinon 403 quota).
 
@@ -20,6 +21,7 @@ jobs:
   metadata:
     name: Upload Play listing
     runs-on: ubuntu-latest
+    environment: play-internal
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
@@ -31,7 +33,12 @@ jobs:
         run: pip install --quiet google-auth requests
 
       - name: Write Play service account key
-        run: printf '%s' '${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}' > "$RUNNER_TEMP/play.json"
+        run: |
+          printf '%s' '${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}' > "$RUNNER_TEMP/play.json"
+          if [ ! -s "$RUNNER_TEMP/play.json" ]; then
+            echo "::error::PLAY_SERVICE_ACCOUNT_JSON est vide — le job doit tourner dans l'environment 'play-internal' (secret non défini au niveau repo)."
+            exit 1
+          fi
 
       - name: Upload listing (raw Play Developer API)
         env:
