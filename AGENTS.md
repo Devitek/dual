@@ -157,3 +157,14 @@ Le savoir du projet vit dans GitHub, pas dans la tête de qui l'a fait :
 ## 10. Fichiers à tenir à jour quand tu changes le comportement
 - `AGENTS.md` (ce fichier), `RELEASE.md` (procédures/gotchas Play), `TODO.md` (état d'avancement), `CHANGELOG.md` (**auto** via release-please — ne pas éditer à la main).
 - **Décisions structurantes → `docs-dev/adr/`** (voir son README) : toute décision d'architecture non triviale (dépendance réseau, versioning, natif vs lib…) passe par un ADR. En particulier : **ADR 0007 (privacy = produit)** — aucune dépendance qui transmet des données hors device sans nouvel ADR.
+
+## 11. Site + fiche store = Definition of Done (IMPÉRATIF)
+
+Tout changement **visible par l'utilisateur** (feature, UI, comportement, compatibilité) n'est PAS terminé tant que la vitrine ne le reflète pas. Historique : la fiche Play a dérivé pendant 8 versions (boomerang jamais mentionné, changelogs figés à ~1.14, mockup réglages faux) faute d'être dans la DoD (issues #145, #157).
+
+**Checklist DoD « vitrine » (à dérouler dans chaque issue/PR concernée) :**
+1. **Textes** : `fastlane/metadata/android/*/full_description.txt` (+ `short_description.txt` si pertinent) et `docs/index.html` (featureList, cartes, FAQ) dans les **6 langues**.
+2. **Visuels** : si l'UI a changé, patcher les mockups `store/screenshots/src/` (les **6 variantes** de langue), régénérer via `store/screenshots/build.sh`, et **resynchroniser** `docs/assets/screenshots/phone-1..7.jpg` depuis `fastlane/metadata/android/fr-FR/images/phoneScreenshots/` (copie manuelle, oubliée 2 fois : #152, #157).
+3. **Changelog Play** : `fastlane/metadata/android/*/changelogs/default.txt` décrit la version en cours de livraison (≤ 500 caractères).
+4. **Publication** : après merge, dispatcher `store-metadata.yml` (fiche + visuels ; les changelogs partent avec l'AAB via `release-android.yml`).
+5. **Référence** : pour les mockups, la source de vérité est **l'UI réelle sur device** (captures adb), jamais le souvenir qu'on en a.
