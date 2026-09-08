@@ -165,6 +165,31 @@ jobs:
             echo "mapping=" >> "$GITHUB_OUTPUT"
           fi
 
+      # Budget de taille (finding 2.7) : l'AAB pèse ~73 Mo avec R8 (4 ABIs).
+      # Seuil d'alerte à 85 Mo : une dérive soudaine (asset embarqué par erreur,
+      # minify désactivé, lib dupliquée) doit se voir À LA RELEASE, pas chez les
+      # utilisateurs. Alerte non bloquante — ajuster le seuil en connaissance de
+      # cause si la croissance est légitime.
+      - name: AAB size budget
+        env:
+          AAB_PATH: ${{ steps.aab.outputs.path }}
+          BUDGET_MB: '85'
+        run: |
+          SIZE=$(stat -c%s "$AAB_PATH")
+          SIZE_MB=$((SIZE / 1024 / 1024))
+          {
+            echo "### 📦 Taille du livrable"
+            echo ""
+            echo "| Fichier | Taille | Budget |"
+            echo "|---|---|---|"
+            echo "| $AAB_PATH | ${SIZE_MB} Mo | ${BUDGET_MB} Mo |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$SIZE_MB" -gt "$BUDGET_MB" ]; then
+            echo "::warning title=Budget AAB dépassé::AAB ${SIZE_MB} Mo > budget ${BUDGET_MB} Mo — vérifier assets/minify avant de promouvoir."
+          else
+            echo "AAB ${SIZE_MB} Mo ≤ budget ${BUDGET_MB} Mo ✓"
+          fi
+
       - name: Attach AAB + mapping to the GitHub release
         if: steps.ver.outputs.tag != ''
         env:
