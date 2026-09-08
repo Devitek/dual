@@ -29,7 +29,8 @@
     "boomerangHoldA11y": "Segure para gravar um boomerang",
     "boomerangHint": "Segure o obturador para gravar um boomerang",
     "cancelTimer": "Toque para cancelar",
-    "cancelTimerA11y": "Cancelar o temporizador"
+    "cancelTimerA11y": "Cancelar o temporizador",
+    "zoomPresetA11y": "Zoom {{level}}×"
   },
   "mode": {
     "photo": "FOTO",
@@ -145,7 +146,9 @@
     "infoDual": "Dupla (PiP)",
     "yes": "Sim",
     "no": "Não",
-    "infoDuration": "Duração"
+    "infoDuration": "Duração",
+    "cellPhotoA11y": "Foto de {{date}}",
+    "cellVideoA11y": "Vídeo de {{date}}"
   },
   "error": {
     "title": "Câmeras indisponíveis",

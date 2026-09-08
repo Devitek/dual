@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { haptics } from '../utils/haptics';
 
@@ -45,6 +46,7 @@ function chipLabel(z: number): string {
  *    quelle que soit la position du doigt à l'écran. Auto-repli après inactivité.
  */
 export function ZoomControl({ min, max, presets, value, onZoom }: ZoomControlProps): React.ReactElement | null {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   // Valeur LOCALE pendant le glissement : pilote le ruler à 60fps sans re-rendre
   // tout l'écran (le zoom natif, lui, n'est appliqué que throttlé -> plus de lag).
@@ -204,7 +206,14 @@ export function ZoomControl({ min, max, presets, value, onZoom }: ZoomControlPro
           {presets.map((pr, i) => {
             const active = i === activeIdx;
             return (
-              <Pressable key={pr} onPress={() => tapChip(pr)} style={styles.chipHit} accessibilityRole="button">
+              <Pressable
+                key={pr}
+                onPress={() => tapChip(pr)}
+                style={styles.chipHit}
+                accessibilityRole="button"
+                accessibilityLabel={t('capture.zoomPresetA11y', { level: pr })}
+                accessibilityState={{ selected: active }}
+              >
                 {active ? (
                   <View style={styles.activeChip}>
                     <Text style={styles.activeText}>{fmt(shownValue)}</Text>

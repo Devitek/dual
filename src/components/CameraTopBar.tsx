@@ -49,6 +49,7 @@ export function CameraTopBar({
       <View style={styles.actions}>
         <Pressable
           onPress={onToggleAeLock}
+          hitSlop={8}
           android_ripple={{ color: colors.onSurfaceVariant, borderless: true, radius: 22 }}
           style={({ pressed }) => [styles.iconBtn, aeLocked && styles.iconBtnActive, pressed && styles.pressed]}
           accessibilityRole="button"
@@ -65,6 +66,7 @@ export function CameraTopBar({
         <Pressable
           onPress={onCyclePhotoFlash}
           disabled={!flashSupported}
+          hitSlop={8}
           android_ripple={{ color: colors.onSurfaceVariant, borderless: true, radius: 22 }}
           style={({ pressed }) => [styles.iconBtn, pressed && styles.pressed]}
           accessibilityRole="button"

@@ -52,6 +52,8 @@ export function ModeSwitch({
             key={m.value}
             // Un mode bloqué reste pressable (pour afficher le message), mais jamais actif.
             disabled={disabled || active}
+            // Pills de ~30 dp de haut : on étend la cible tactile à ~50 dp (a11y, #149).
+            hitSlop={{ top: 10, bottom: 10 }}
             onPress={() => {
               if (blocked) {
                 haptics.error();
