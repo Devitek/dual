@@ -1,0 +1,13 @@
+# Dev builds uniquement : le banner LogBox (warnings RN) intercepte les touches
+# de toute la zone basse de l'ecran (pills de mode, obturateur). On le ferme
+# s'il est present. Sans objet en CI (APK release, pas de LogBox).
+appId: fr.devitek.twinlens
+---
+- runFlow:
+    when:
+      visible:
+        text: '.*Open debugger to view warnings.*'
+    commands:
+      # Croix de fermeture du banner (bord droit du bandeau du bas).
+      - tapOn:
+          point: 93%,93%

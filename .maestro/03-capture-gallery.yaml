@@ -1,0 +1,31 @@
+# Capture photo (mode sequentiel sur emulateur : pas de concurrent-camera)
+# puis ouverture de la galerie de session depuis la miniature.
+appId: fr.devitek.twinlens
+---
+- launchApp
+- runFlow: common/dismiss-logbox.yaml
+# Le mode capture est persiste (§8) : on force le mode photo pour un etat connu.
+- extendedWaitUntil:
+    visible:
+      text: 'Mode photo|Photo mode'
+    timeout: 45000
+- tapOn:
+    text: 'Mode photo|Photo mode'
+- extendedWaitUntil:
+    visible:
+      text: 'Prendre une photo|Take a photo'
+    timeout: 15000
+- tapOn:
+    text: 'Prendre une photo|Take a photo'
+# La miniature n'apparait qu'une fois la capture traitee.
+- extendedWaitUntil:
+    visible:
+      text: 'Voir les médias de la session|View session media'
+    timeout: 30000
+- tapOn:
+    text: 'Voir les médias de la session|View session media'
+- extendedWaitUntil:
+    visible:
+      text: 'Médias de la session|Session media'
+    timeout: 15000
+- back

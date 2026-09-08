@@ -1,0 +1,21 @@
+# Smoke : l'app se lance et l'ecran de capture est fonctionnel.
+# Selecteurs = labels d'accessibilite (regex fr|en, seuls locales des runners/devices de test).
+appId: fr.devitek.twinlens
+---
+- launchApp
+- runFlow: common/dismiss-logbox.yaml
+# Le mode capture est persiste (§8) : on force le mode photo pour un etat connu.
+- extendedWaitUntil:
+    visible:
+      text: 'Mode photo|Photo mode'
+    timeout: 45000
+- tapOn:
+    text: 'Mode photo|Photo mode'
+- extendedWaitUntil:
+    visible:
+      text: 'Prendre une photo|Take a photo'
+    timeout: 15000
+- assertVisible:
+    text: 'Ouvrir les paramètres|Open settings'
+- assertVisible:
+    text: 'Inverser les caméras|Switch cameras'
