@@ -1,0 +1,38 @@
+# Invariant AGENTS.md §8 : un reglage modifie survit a la mort du process.
+# Le flash expose son etat dans son label a11y : pas besoin d'ouvrir la sheet.
+appId: fr.devitek.twinlens
+---
+- launchApp
+- runFlow: common/dismiss-logbox.yaml
+- extendedWaitUntil:
+    visible:
+      text: 'Flash photo : .*|Photo flash: .*'
+    timeout: 45000
+# Etat initial inconnu : on cycle (max 3 etats) jusqu'a "automatique".
+- repeat:
+    while:
+      notVisible:
+        text: 'Flash photo : automatique|Photo flash: automatic'
+    times: 3
+    commands:
+      - tapOn:
+          text: 'Flash photo : .*|Photo flash: .*'
+- assertVisible:
+    text: 'Flash photo : automatique|Photo flash: automatic'
+# Mort du process puis relance : le reglage doit etre restaure.
+- stopApp
+- launchApp
+- runFlow: common/dismiss-logbox.yaml
+- extendedWaitUntil:
+    visible:
+      text: 'Flash photo : automatique|Photo flash: automatic'
+    timeout: 45000
+# Retour a l'etat par defaut pour rendre le flow re-executable proprement.
+- repeat:
+    while:
+      notVisible:
+        text: 'Flash photo : désactivé|Photo flash: off'
+    times: 3
+    commands:
+      - tapOn:
+          text: 'Flash photo : .*|Photo flash: .*'
