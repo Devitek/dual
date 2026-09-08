@@ -256,6 +256,8 @@ export function SettingsSheet(props: SettingsSheetProps): React.ReactElement {
   const qualityOptions = QUALITY_OPTION_KEYS.map((o) => ({ value: o.value, label: t(o.labelKey), caption: o.caption }));
 
   // --- Helpers de rendu (row switch / row segmented) ---
+  // TOUTE la ligne est pressable et forme UN SEUL élément TalkBack (rôle switch) ;
+  // le M3Switch interne devient décoratif (#163).
   const rowSwitch = (
     icon: IconName,
     label: string,
@@ -263,11 +265,20 @@ export function SettingsSheet(props: SettingsSheetProps): React.ReactElement {
     onValueChange: () => void,
     disabled = false,
   ): React.ReactElement => (
-    <View style={[styles.row, disabled && styles.dim]}>
+    <Pressable
+      style={[styles.row, disabled && styles.dim]}
+      onPress={onValueChange}
+      disabled={disabled}
+      accessibilityRole="switch"
+      accessibilityState={{ checked: value, disabled }}
+      accessibilityLabel={label}
+    >
       <MaterialIcons name={icon} size={22} color={colors.onSurface} />
       <Text style={styles.rowLabel}>{label}</Text>
-      <M3Switch value={value} disabled={disabled} onValueChange={onValueChange} accessibilityLabel={label} />
-    </View>
+      <View importantForAccessibility="no-hide-descendants">
+        <M3Switch value={value} disabled={disabled} onValueChange={onValueChange} />
+      </View>
+    </Pressable>
   );
 
   const rowSeg = (icon: IconName, label: string, seg: React.ReactNode, desc?: string): React.ReactElement => (

@@ -197,7 +197,23 @@ export function ZoomControl({ min, max, presets, value, onZoom }: ZoomControlPro
         <Text style={styles.bubbleText}>{fmt(shownValue)}</Text>
       </Animated.View>
 
-      <View style={styles.pill} {...pan.panHandlers}>
+      {/* Pour TalkBack, la pill entière est UN élément « adjustable » (#163) :
+          swipe haut/bas pour zoomer par pas, valeur annoncée à chaque pas
+          (pattern Google Camera). Les chips restent visibles pour les voyants. */}
+      <View
+        style={styles.pill}
+        {...pan.panHandlers}
+        accessible
+        accessibilityRole="adjustable"
+        accessibilityLabel={t('capture.zoomSliderA11y')}
+        accessibilityValue={{ text: fmt(shownValue) }}
+        accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+        onAccessibilityAction={(e) => {
+          const step = Math.max(0.1, (max - min) / 15);
+          const dir = e.nativeEvent.actionName === 'increment' ? 1 : -1;
+          onZoom(clamp(shownValue + dir * step, min, max));
+        }}
+      >
         {/* REPLIÉ : chips espacés. */}
         <Animated.View
           style={[styles.layer, styles.chips, { opacity: collapsedOpacity }]}

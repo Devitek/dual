@@ -30,7 +30,8 @@
     "boomerangHint": "Hold the shutter to record a boomerang",
     "cancelTimer": "Tap to cancel",
     "cancelTimerA11y": "Cancel timer",
-    "zoomPresetA11y": "Zoom {{level}}×"
+    "zoomPresetA11y": "Zoom {{level}}×",
+    "zoomSliderA11y": "Zoom slider"
   },
   "mode": {
     "photo": "PHOTO",
@@ -148,7 +149,9 @@
     "no": "No",
     "infoDuration": "Duration",
     "cellPhotoA11y": "Photo from {{date}}",
-    "cellVideoA11y": "Video from {{date}}"
+    "cellVideoA11y": "Video from {{date}}",
+    "prevA11y": "Previous media",
+    "nextA11y": "Next media"
   },
   "error": {
     "title": "Cameras unavailable",

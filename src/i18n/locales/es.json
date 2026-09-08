@@ -30,7 +30,8 @@
     "boomerangHint": "Mantén pulsado el obturador para grabar un boomerang",
     "cancelTimer": "Toca para cancelar",
     "cancelTimerA11y": "Cancelar el temporizador",
-    "zoomPresetA11y": "Zoom {{level}}×"
+    "zoomPresetA11y": "Zoom {{level}}×",
+    "zoomSliderA11y": "Control de zoom"
   },
   "mode": {
     "photo": "FOTO",
@@ -148,7 +149,9 @@
     "no": "No",
     "infoDuration": "Duración",
     "cellPhotoA11y": "Foto del {{date}}",
-    "cellVideoA11y": "Vídeo del {{date}}"
+    "cellVideoA11y": "Vídeo del {{date}}",
+    "prevA11y": "Contenido anterior",
+    "nextA11y": "Contenido siguiente"
   },
   "error": {
     "title": "Cámaras no disponibles",
