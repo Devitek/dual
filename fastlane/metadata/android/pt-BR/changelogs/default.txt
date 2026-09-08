@@ -1,6 +1,4 @@
-Novidade: disposições lado a lado e empilhada — para fotos E vídeos, não só Picture-in-Picture.
-Mova e redimensione a miniatura PiP (pressione e segure para arrastar, pince para escalar).
-Fotos nítidas: antitremido "não se mexa", captura rápida e temporizador de 3 s/10 s.
-Geolocalização opcional e captura silenciosa. Compartilhar com 1 toque.
-Composição no aparelho mais rápida e robusta.
-Continua 100% grátis — sem anúncios, sem marca d'água, sem cadastro.
+Foto dupla mesmo sem câmeras simultâneas: em aparelhos não compatíveis, o TwinLens agora tira as duas fotos em sequência e as combina (modo sequencial).
+Ajustes redesenhados (Geral/Pro + tela cheia), visualizador de fotos e vídeos por gestos com controles de reprodução.
+Compartilhamento direto Instagram/TikTok mais confiável, atalhos do widget corrigidos.
+App mais leve e estável. Sempre 100% grátis, sem anúncios.

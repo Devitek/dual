@@ -1,6 +1,4 @@
-Neu: Anordnungen nebeneinander & gestapelt — für Fotos UND Videos, nicht nur Bild-in-Bild.
-PiP-Miniatur verschieben & skalieren (lange drücken zum Ziehen, Pinch zum Skalieren).
-Schärfere Aufnahmen: Anti-Unschärfe „still halten", Schnellaufnahme und Selbstauslöser (3 s/10 s).
-Optionaler Standort und lautlose Aufnahme. Teilen mit einem Tipp.
-Schnelleres, robusteres Compositing auf dem Gerät.
-Weiterhin 100% kostenlos — keine Werbung, kein Wasserzeichen, keine Anmeldung.
+Dual-Foto auch ohne gleichzeitige Kameras: Auf nicht unterstützten Handys macht TwinLens die zwei Fotos jetzt nacheinander und fügt sie zusammen (sequenzieller Modus).
+Neu gestaltete Einstellungen (Allgemein/Pro + Vollbild), Gesten-Viewer für Fotos & Videos mit Wiedergabesteuerung.
+Zuverlässigeres direktes Teilen zu Instagram/TikTok, Widget-Verknüpfungen repariert.
+Leichtere, stabilere App. Weiterhin 100% gratis, ohne Werbung.

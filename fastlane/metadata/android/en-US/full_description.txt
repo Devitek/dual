@@ -10,6 +10,7 @@ WHAT YOU GET
 • 🎬 Dual camera capture — front + back cameras at the same time (photo & video)
 • 🖼️ Layouts: Picture-in-Picture, side-by-side or stacked — composed on-device, one file ready to post (works for photos AND videos)
 • ✋ Move & resize the PiP thumbnail — long-press to drag, pinch to scale
+• ∞ Boomerang — a punchy back-and-forth loop, exported as MP4 or GIF
 • 🎯 Sharp shots: "hold still" anti-blur, fast-capture mode and a 3s / 10s self-timer
 • 🚫 No ads, no watermark on your videos, ever
 • 🙈 Surprise mode: hide the selfie preview and discover your reaction later
@@ -18,7 +19,8 @@ WHAT YOU GET
 • 💾 Keep the merged file, both raw files, or all of them
 • 🔍 Quick zoom, tap-to-focus, pinch-to-zoom, flash & torch, up to 4K
 • 🔊 Volume-key shutter or zoom — also works with Bluetooth selfie remotes
-• 📤 One-tap share · 🗂️ session gallery with in-app playback & delete
+• 📤 One-tap share (direct to Instagram/TikTok) · 🗂️ session gallery with in-app playback & delete
+• ⚡ Home-screen widget + Quick Settings tile — capture in one gesture
 • 🎨 Material You colors (Android 12+) · 🌍 6 languages
 • 🔒 100% on-device — no account, no sign-up, no servers, no tracking
 
@@ -28,4 +30,4 @@ Reaction videos, vlogs, travel, concerts, tutorials, prank reveals, "get ready w
 Dual camera. Front and back. Picture-in-Picture, side-by-side or stacked. One tap. Zero cloud. Zero cost.
 
 COMPATIBILITY
-Simultaneous front + back capture uses Android's concurrent-camera support, which not every phone exposes to apps. On phones that don't support it, TwinLens automatically switches to a single camera — every other feature still works. Tap "Why?" in the app for a quick device check.
+Simultaneous front + back capture uses Android's concurrent-camera support, which not every phone exposes to apps. On phones that don't support it, TwinLens takes the two photos one right after the other and merges them automatically (sequential dual photo); only simultaneous video stays unavailable. Tap "Why?" in the app for a quick device check.

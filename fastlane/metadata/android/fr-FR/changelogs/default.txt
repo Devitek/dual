@@ -1,6 +1,4 @@
-Nouveau : mises en page côte à côte & haut-bas — pour les photos ET les vidéos, plus seulement le Picture-in-Picture.
-Déplacez & redimensionnez la vignette PiP (appui long pour glisser, pincez pour ajuster).
-Photos nettes : anti-flou « Ne bougez pas », capture rapide et retardateur 3 s/10 s.
-Géolocalisation optionnelle et capture silencieuse. Partage en 1 tap.
-Composition sur l'appareil plus rapide et plus robuste.
-Toujours 100% gratuit — sans pub, sans filigrane, sans inscription.
+Photo double même sans caméras simultanées : sur les téléphones non compatibles, TwinLens prend désormais les deux photos l'une après l'autre et les fusionne (mode séquentiel).
+Réglages repensés (Général/Pro + écran complet), visionneuse photos & vidéos à gestes avec contrôles vidéo.
+Partage direct Instagram/TikTok fiabilisé, raccourcis du widget corrigés.
+App plus légère et plus stable. Toujours 100% gratuit, sans pub.
