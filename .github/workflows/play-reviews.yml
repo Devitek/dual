@@ -1,0 +1,68 @@
+name: Play Reviews (list / reply)
+
+# Avis Google Play depuis la CI (issue #171) :
+#   - action=list  : avis recents dans le resume du job (fenetre API ~1 semaine).
+#   - action=reply : repond a UN avis (review_id + reply_text, <= 350 caracteres).
+#
+# IMPERATIF apres un reply : reporter la reponse dans docs-dev/play-reviews.md
+# (journal versionne). L'API ne garde qu'une semaine d'avis, le journal est le
+# seul historique long ; c'est lui qui a manque deux fois (issue #171).
+#
+# Secret : PLAY_SERVICE_ACCOUNT_JSON via l'environment play-internal (#153).
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'list = voir les avis recents · reply = repondre a un avis'
+        type: choice
+        options: [list, reply]
+        default: list
+      review_id:
+        description: "reply uniquement : l'identifiant reviewId (donne par l'action list)"
+        type: string
+        default: ''
+      reply_text:
+        description: 'reply uniquement : texte de la reponse (max 350 caracteres, public)'
+        type: string
+        default: ''
+
+concurrency:
+  group: play-reviews
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  reviews:
+    name: Play reviews (${{ inputs.action }})
+    runs-on: ubuntu-latest
+    environment: play-internal
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install --quiet google-auth requests
+
+      - name: Write Play service account key
+        env:
+          PLAY_SA_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          printf '%s' "$PLAY_SA_JSON" > "$RUNNER_TEMP/play.json"
+          if [ ! -s "$RUNNER_TEMP/play.json" ]; then
+            echo "::error::PLAY_SERVICE_ACCOUNT_JSON est vide (environment play-internal requis)."
+            exit 1
+          fi
+
+      - name: Run (${{ inputs.action }})
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON_PATH: ${{ runner.temp }}/play.json
+          ACTION: ${{ inputs.action }}
+          REVIEW_ID: ${{ inputs.review_id }}
+          REPLY_TEXT: ${{ inputs.reply_text }}
+        run: python3 store/play_reviews.py
