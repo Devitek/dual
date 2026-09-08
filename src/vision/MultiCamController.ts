@@ -9,9 +9,6 @@ import {
   type CameraSessionConnection,
   type CameraVideoOutput,
   type FlashMode,
-  type PhotoOutputOptions,
-  type Recorder,
-  type Size,
   type TorchMode,
 } from 'react-native-vision-camera';
 // SDK 57 : `saveToLibraryAsync` du package racine est déprécié et THROW à
@@ -32,129 +29,41 @@ import type {
 import { writeGpsToJpeg, type GpsCoords } from '../services/exifGps';
 import i18n from '../i18n';
 
-export type CameraSlot = 'back' | 'front';
-/**
- * - `multi`      : capture avant+arrière SIMULTANÉE (concurrent-camera OK).
- * - `sequential` : les deux capteurs existent mais pas de session concurrente →
- *   photo prise en DEUX temps (arrière puis avant) puis composée ; vidéo
- *   simultanée impossible (bloquée).
- * - `single`     : un seul capteur exploitable (pas de dual possible).
- * - `none`       : aucune caméra.
- */
-export type MultiCamMode = 'multi' | 'sequential' | 'single' | 'none';
-export type MultiCamStatus = 'idle' | 'starting' | 'running' | 'error';
-export type MediaKind = 'photo' | 'video';
-/** Que sauvegarder après une capture. */
-export type SaveMode = 'pip' | 'pip_plus_originals' | 'originals';
-/** Niveau de qualité (résolutions capture + bitrate ré-encodage). */
-export type CaptureQuality = 'standard' | 'high' | 'max';
-/** Compromis vitesse/qualité du pipeline photo (anti-latence / anti-flou). */
-export type CaptureSpeed = 'speed' | 'balanced' | 'quality';
-/** Cadence vidéo cible (ips). 60 non garanti en multi-cam -> repli sur 30. */
-export type VideoFps = 30 | 60;
+import { INITIAL } from './types';
+import type {
+  CameraSlot,
+  CapturedMedia,
+  CaptureQuality,
+  CaptureSpeed,
+  MultiCamMode,
+  MultiCamSnapshot,
+  SaveMode,
+  VideoFps,
+} from './types';
+import type { ActiveRecorders, CaptureContext, RecordingAggregate } from './capture/context';
+import { QUALITY, photoOptions } from './capture/quality';
+import { capturePhoto as capturePhotoImpl } from './capture/photoCapture';
+import { captureSequentialPhoto as captureSequentialPhotoImpl } from './capture/sequentialCapture';
+import { startRecording as startRecordingImpl, stopRecording as stopRecordingImpl } from './capture/recording';
 
-export interface CapturedMedia {
-  kind: MediaKind;
-  /** URI (file://) du média de la caméra PRINCIPALE (plein écran). */
-  primaryUri: string;
-  /** URI du média de la caméra SECONDAIRE (vignette), ou null en mono. */
-  secondaryUri: string | null;
-  createdAt: number;
-  /** Durée de la vidéo en millisecondes (approx.), pour l'affichage galerie. */
-  durationMs?: number;
-  /** Vidéo boomerang (pour un nom de partage explicite). */
-  boomerang?: boolean;
-}
-
-export interface Notice {
-  /** identifiant unique (timestamp) pour re-déclencher l'affichage. */
-  id: number;
-  kind: 'success' | 'error';
-  text: string;
-}
-
-/**
- * Diagnostic de détection multi-caméra, exposé à l'UI (bandeau « mode caméra
- * unique »). Les deux premières portes sont purement DÉCLARATIVES côté
- * constructeur : `concurrentFeature` = `FEATURE_CAMERA_CONCURRENT`, `comboCount`
- * = nombre de combinaisons renvoyées par `getConcurrentCameraIds()` (via
- * CameraX). Une app tierce ne peut RIEN forcer si l'OEM ne les expose pas.
- */
-export interface MultiCamDiagnostics {
-  /** L'OS déclare la capacité concurrent-camera (FEATURE_CAMERA_CONCURRENT). */
-  concurrentFeature: boolean;
-  /** Nombre de combinaisons multi-caméra exposées par le HAL (getConcurrentCameraIds). */
-  comboCount: number;
-  /** Une combinaison avant+arrière exploitable a été trouvée. */
-  frontBackCombo: boolean;
-}
-
-export interface MultiCamSnapshot {
-  status: MultiCamStatus;
-  mode: MultiCamMode;
-  isRecording: boolean;
-  isBusy: boolean;
-  errorMessage: string | null;
-  backPreview: CameraPreviewOutput | null;
-  frontPreview: CameraPreviewOutput | null;
-  hasTorch: boolean;
-  lastCapture: CapturedMedia | null;
-  /** Message transitoire (Snackbar) : confirmation ou erreur de capture/sauvegarde. */
-  notice: Notice | null;
-  photoSaveMode: SaveMode;
-  videoSaveMode: SaveMode;
-  /** Coin où placer la vignette (live + composition PiP). */
-  pipCorner: PipCorner;
-  /** Disposition de la fusion PHOTO (pip / côte-à-côte / haut-bas). La vidéo
-   *  reste en PiP (composeur natif) pour l'instant. */
-  layout: CompositionLayout;
-  /** Position/taille LIBRE de la vignette (drag/pinch). `null` ⇒ coin (`pipCorner`). */
-  pipInset: PipInset | null;
-  /** Ajouter un discret filigrane « TwinLens » à la composition. Opt-in (OFF). */
-  watermark: boolean;
-  /** Ratio du cadre de sortie pour la disposition `pip` (full / 1:1 / 9:16). */
-  outputRatio: OutputRatio;
-  /** Boomerang exporté en GIF animé plutôt qu'en MP4. */
-  boomerangGif: boolean;
-  /** Miroir de la caméra avant à la SAUVEGARDE (selfie comme dans l'aperçu). */
-  mirrorFront: boolean;
-  /** Cadence vidéo cible (30 / 60 ips). */
-  videoFps: VideoFps;
-  /** Compensation d'exposition (EV) courante. Transitoire (non persisté). */
-  exposureBias: number;
-  /** Verrou AE/AF actif (exposition + mise au point figées). Transitoire. */
-  aeLocked: boolean;
-  /** Toutes les captures de la session courante (pour la galerie). */
-  sessionCaptures: CapturedMedia[];
-  /** Nombre de traitements (composition/sauvegarde) en cours en arrière-plan. */
-  processingCount: number;
-  captureQuality: CaptureQuality;
-  /** Compromis vitesse/qualité de la capture photo. `speed` = obturateur le
-   *  plus rapide + fusion multi-frames coupée (anti-flou de bougé). */
-  captureSpeed: CaptureSpeed;
-  /** Son d'obturateur système à la prise photo. Le SYSTÈME peut le forcer dans
-   *  certaines régions (Japon/Corée) — le réglage est alors sans effet. */
-  shutterSound: boolean;
-  /** Aperçu LIVE de la 2e caméra (vignette). `false` = « mode surprise ».
-   *  N'affecte NI la capture NI la fusion PiP — seulement l'affichage live. */
-  showSecondaryPreview: boolean;
-  /** Inscrire la localisation (GPS EXIF) dans les photos. Opt-in, on-device. */
-  geotag: boolean;
-  /** Diagnostic de détection multi-caméra (null tant que la session n'est pas construite). */
-  diagnostics: MultiCamDiagnostics | null;
-  /** Étape de la capture photo séquentielle : 0 = repos, 1 = arrière, 2 = avant.
-   *  Transitoire (pilote l'overlay « gardez la pose »). */
-  sequentialStep: number;
-}
-
-interface QualityConfig {
-  photoRes: Size;
-  videoRes: Size;
-  /** bitrate de ré-encodage de la vidéo PiP composée (bits/s). */
-  videoBitrate: number;
-  /** largeur du canvas de composition PiP photo (px). */
-  pipCanvas: number;
-}
+// Types partagés : définis dans ./types (issue #148, étape C) et ré-exportés
+// ici pour ne pas casser les imports existants (composants, hooks, services).
+export type {
+  CameraSlot,
+  CaptureQuality,
+  CaptureSpeed,
+  CapturedMedia,
+  MediaKind,
+  MultiCamDiagnostics,
+  MultiCamMode,
+  MultiCamSnapshot,
+  MultiCamStatus,
+  Notice,
+  SaveMode,
+  VideoFps,
+} from './types';
+// Idem : la config qualité vit dans ./capture/quality, ré-export de compatibilité.
+export { pipCanvasForQuality } from './capture/quality';
 
 // ⚠️ DEV UNIQUEMENT — SIMULATEUR « appareil sans concurrent-camera ».
 // Mets `true` pour FORCER le mode séquentiel sur un téléphone qui, lui, supporte
@@ -163,85 +72,6 @@ interface QualityConfig {
 // ⚠️ REPASSER À `false` AVANT MERGE. Sans effet en production (gardé par __DEV__).
 const DEV_FORCE_SEQUENTIAL = false;
 
-// NB : en multi-cam la bande passante ISP est partagée ; les vidéos restent ≤ 1080p.
-const QUALITY: Record<CaptureQuality, QualityConfig> = {
-  standard: {
-    photoRes: { width: 1920, height: 1080 },
-    videoRes: { width: 1280, height: 720 },
-    videoBitrate: 10_000_000,
-    pipCanvas: 1080,
-  },
-  high: {
-    photoRes: { width: 1920, height: 1080 },
-    videoRes: { width: 1920, height: 1080 },
-    videoBitrate: 20_000_000,
-    pipCanvas: 1440,
-  },
-  max: {
-    photoRes: { width: 3840, height: 2160 },
-    videoRes: { width: 1920, height: 1080 },
-    videoBitrate: 30_000_000,
-    pipCanvas: 1920,
-  },
-};
-
-function photoOptions(res: Size, speed: CaptureSpeed): PhotoOutputOptions {
-  return {
-    targetResolution: res,
-    containerFormat: 'jpeg',
-    quality: 0.95,
-    // `speed` réduit le temps d'exposition/traitement -> obturateur plus réactif
-    // et moins de flou de bougé ; `balanced` est le meilleur compromis par défaut.
-    qualityPrioritization: speed,
-  };
-}
-
-/** Largeur du canvas de composition PiP photo (view-shot) selon la qualité. */
-export function pipCanvasForQuality(quality: CaptureQuality): number {
-  return QUALITY[quality].pipCanvas;
-}
-
-const INITIAL: MultiCamSnapshot = {
-  status: 'idle',
-  mode: 'none',
-  isRecording: false,
-  isBusy: false,
-  errorMessage: null,
-  backPreview: null,
-  frontPreview: null,
-  hasTorch: false,
-  lastCapture: null,
-  notice: null,
-  // PiP par défaut pour photo ET vidéo (composition on-device).
-  // Repli automatique sur les originaux si le composeur n'est pas dispo.
-  photoSaveMode: 'pip',
-  videoSaveMode: 'pip',
-  pipCorner: 'top-right',
-  layout: 'pip',
-  pipInset: null,
-  watermark: false,
-  outputRatio: 'full',
-  boomerangGif: false,
-  mirrorFront: true,
-  videoFps: 30,
-  exposureBias: 0,
-  aeLocked: false,
-  sessionCaptures: [],
-  processingCount: 0,
-  captureQuality: 'high',
-  // Compromis par défaut : obturateur réactif sans sacrifier la qualité.
-  captureSpeed: 'balanced',
-  // Son d'obturateur activé par défaut (comportement système habituel).
-  shutterSound: true,
-  // Aperçu de la 2e caméra activé par défaut ; désactivable pour la surprise.
-  showSecondaryPreview: true,
-  // Géotag désactivé par défaut (permission sensible, strictement opt-in).
-  geotag: false,
-  // Renseigné à la première construction de session (buildSession).
-  diagnostics: null,
-  sequentialStep: 0,
-};
-
 /**
  * Gère une session VisionCamera v5 multi-caméra (front + back simultanés) avec
  * repli automatique en mono-caméra si le matériel ne supporte pas le multi-cam.
@@ -249,6 +79,10 @@ const INITIAL: MultiCamSnapshot = {
  * Toute la logique native/impérative (Nitro) est isolée ici, hors de React.
  * Un unique {@link MultiCamSnapshot} immuable est publié aux abonnés
  * (consommé via `useSyncExternalStore`).
+ *
+ * Les pipelines de capture (photo simultanée, photo séquentielle, sauvegarde,
+ * enregistrement vidéo) vivent dans `src/vision/capture/*` : les méthodes
+ * publiques correspondantes délèguent via un {@link CaptureContext}.
  */
 export class MultiCamController {
   private snapshot: MultiCamSnapshot = INITIAL;
@@ -287,18 +121,58 @@ export class MultiCamController {
   /** Fournisseur de position (cache) injecté depuis React (géotag opt-in). */
   private locationProvider: (() => GpsCoords | null) | null = null;
 
-  private readonly recorders: { back: Recorder | null; front: Recorder | null } = {
-    back: null,
-    front: null,
-  };
-  private recAgg = {
-    expected: 0,
-    settled: 0,
-    backPath: null as string | null,
-    frontPath: null as string | null,
-  };
+  private readonly recorders: ActiveRecorders = { back: null, front: null };
+  private recAgg: RecordingAggregate = { expected: 0, settled: 0, backPath: null, frontPath: null };
   /** Horodatage de début d'enregistrement (pour estimer la durée). */
   private recStartedAt = 0;
+
+  /**
+   * Contexte passé aux modules de capture (src/vision/capture/*) : expose les
+   * accès nécessaires (snapshot, mutations, sorties caméra, composeurs) sans
+   * rendre publics les champs privés du contrôleur.
+   */
+  private readonly ctx: CaptureContext = {
+    getSnapshot: () => this.snapshot,
+    update: (patch) => this.update(patch),
+    notify: (kind, text) => this.notify(kind, text),
+    pushCapture: (capture) => this.pushCapture(capture),
+    enqueue: (job) => this.enqueue(job),
+    persist: (filePath) => this.persist(filePath),
+    stampGps: (fileUri, coords) => this.stampGps(fileUri, coords),
+    getQuality: () => QUALITY[this.snapshot.captureQuality],
+    getPrimarySlot: () => this.primarySlot,
+    isDisposed: () => this.disposed,
+    getBoomerangMode: () => this.boomerangMode,
+    getSequentialFront: () => this.sequentialFront,
+    getBackPhoto: () => this.backPhoto,
+    getFrontPhoto: () => this.frontPhoto,
+    setFrontPhoto: (output) => {
+      this.frontPhoto = output;
+    },
+    getBackVideo: () => this.backVideo,
+    getFrontVideo: () => this.frontVideo,
+    setSession: (session) => {
+      this.session = session;
+    },
+    setFrontController: (controller) => {
+      this.frontController = controller;
+    },
+    teardownSession: () => this.teardownSession(),
+    buildSession: () => this.buildSession(),
+    getPipComposer: () => this.pipComposer,
+    getPhotoComposer: () => this.photoComposer,
+    getVideoComposer: () => this.videoComposer,
+    getLocationProvider: () => this.locationProvider,
+    getRecorders: () => this.recorders,
+    getRecAgg: () => this.recAgg,
+    setRecAgg: (agg) => {
+      this.recAgg = agg;
+    },
+    getRecStartedAt: () => this.recStartedAt,
+    setRecStartedAt: (timestamp) => {
+      this.recStartedAt = timestamp;
+    },
+  };
 
   // ---------------------------------------------------------------- store ----
   subscribe = (listener: () => void): (() => void) => {
@@ -740,6 +614,7 @@ export class MultiCamController {
   }
 
   // -------------------------------------------------------------- capture ----
+  // Les pipelines vivent dans src/vision/capture/* : fines délégations ici.
   private async persist(filePath: string): Promise<string> {
     const uri = toFileUri(filePath);
     const size = getFileSize(uri);
@@ -749,330 +624,24 @@ export class MultiCamController {
     return uri;
   }
 
+  /** Capture photo (simultanée, ou séquentielle en repli). Voir capture/photoCapture. */
   async capturePhoto(flash: FlashMode): Promise<void> {
-    if (this.snapshot.isBusy || this.snapshot.isRecording) return;
-    // Appareils sans concurrent-camera : capture PHOTO en deux temps.
-    if (this.snapshot.mode === 'sequential') {
-      await this.captureSequentialPhoto(flash);
-      return;
-    }
-    if (this.backPhoto == null) return;
-    this.update({ isBusy: true });
-
-    // 1) Capture BRUTE des deux photos EN PARALLÈLE — seule partie qui bloque
-    //    l'obturateur (les capteurs doivent avoir figé l'image).
-    let primaryPath: string;
-    let secondaryPath: string | null = null;
-    try {
-      const primaryOutput = this.primarySlot === 'back' ? this.backPhoto : (this.frontPhoto ?? this.backPhoto);
-      const secondaryOutput = this.primarySlot === 'back' ? this.frontPhoto : this.backPhoto;
-      // En mode « rapide », on coupe la fusion multi-frames : moins de latence et
-      // moins de « fantômes » sur un sujet qui bouge (levier anti-flou direct).
-      const fast = this.snapshot.captureSpeed === 'speed' ? { enableVirtualDeviceFusion: false } : {};
-      // Son d'obturateur : uniquement sur la principale (jamais de double clic),
-      // et selon le réglage utilisateur.
-      const [primaryFile, secondaryFile] = await Promise.all([
-        primaryOutput.capturePhotoToFile(
-          { flashMode: flash, enableShutterSound: this.snapshot.shutterSound, ...fast },
-          {},
-        ),
-        secondaryOutput != null
-          ? secondaryOutput.capturePhotoToFile({ flashMode: 'off', enableShutterSound: false, ...fast }, {})
-          : Promise.resolve(null),
-      ]);
-      primaryPath = primaryFile.filePath;
-      secondaryPath = secondaryFile?.filePath ?? null;
-    } catch (error) {
-      this.notify('error', i18n.t('notices.captureFailed', { error: (error as Error)?.message ?? String(error) }));
-      this.update({ isBusy: false });
-      return;
-    }
-
-    // 2) Obturateur de nouveau disponible IMMÉDIATEMENT. Composition PiP +
-    //    sauvegarde galerie partent en tâche de fond (UI réactive).
-    this.update({ isBusy: false });
-    this.enqueuePhotoSave(primaryPath, secondaryPath);
+    await capturePhotoImpl(this.ctx, flash);
   }
 
-  /**
-   * Capture PHOTO SÉQUENTIELLE (repli pour appareils sans concurrent-camera) :
-   * photo arrière depuis l'aperçu courant, puis bascule de session sur l'avant
-   * (une seule caméra à la fois), puis composition PiP. L'aperçu arrière est
-   * TOUJOURS restauré (try/finally). Si l'avant échoue, on garde l'arrière (mono).
-   */
+  /** Capture photo en deux temps (sans concurrent-camera). Voir capture/sequentialCapture. */
   async captureSequentialPhoto(flash: FlashMode): Promise<void> {
-    if (this.backPhoto == null || this.sequentialFront == null) return;
-    if (this.snapshot.isBusy || this.snapshot.isRecording) return;
-
-    const fast = this.snapshot.captureSpeed === 'speed' ? { enableVirtualDeviceFusion: false } : {};
-
-    // Étape 1/2 : photo ARRIÈRE depuis la session d'aperçu déjà active.
-    this.update({ isBusy: true, sequentialStep: 1 });
-    let backPath: string;
-    try {
-      const backFile = await this.backPhoto.capturePhotoToFile(
-        { flashMode: flash, enableShutterSound: this.snapshot.shutterSound, ...fast },
-        {},
-      );
-      backPath = backFile.filePath;
-    } catch (error) {
-      this.notify('error', i18n.t('notices.captureFailed', { error: (error as Error)?.message ?? String(error) }));
-      this.update({ isBusy: false, sequentialStep: 0 });
-      return;
-    }
-
-    // Étape 2/2 : bascule sur l'AVANT (démonte l'arrière, monte l'avant).
-    this.update({ sequentialStep: 2 });
-    let frontPath: string | null = null;
-    try {
-      await this.teardownSession();
-      frontPath = await this.captureFrontStillSequential();
-    } catch (error) {
-      if (__DEV__) console.warn('[multicam] sequential front capture failed', error);
-      this.notify('error', i18n.t('sequential.frontFailed'));
-    } finally {
-      // Restaure l'aperçu ARRIÈRE quoi qu'il arrive (sauf si l'écran a été démonté).
-      await this.teardownSession();
-      await this.buildSession();
-      this.update({ isBusy: false, sequentialStep: 0 });
-    }
-
-    // Mappe principale/secondaire selon le slot choisi, puis compose en tâche de fond.
-    let primaryPath: string;
-    let secondaryPath: string | null;
-    if (frontPath == null) {
-      primaryPath = backPath;
-      secondaryPath = null;
-    } else if (this.primarySlot === 'front') {
-      primaryPath = frontPath;
-      secondaryPath = backPath;
-    } else {
-      primaryPath = backPath;
-      secondaryPath = frontPath;
-    }
-    this.enqueuePhotoSave(primaryPath, secondaryPath);
+    await captureSequentialPhotoImpl(this.ctx, flash);
   }
 
-  /**
-   * Session AVANT éphémère (aperçu + photo) pour le 2ᵉ temps de la capture
-   * séquentielle. Publie l'aperçu (rendu comme `backPreview`) pour que
-   * l'utilisateur se cadre, laisse l'AF/AE se stabiliser, puis déclenche.
-   * L'appelant démonte la session (finally).
-   */
-  private async captureFrontStillSequential(): Promise<string | null> {
-    if (this.sequentialFront == null) return null;
-    const q = QUALITY[this.snapshot.captureQuality];
-    const fast = this.snapshot.captureSpeed === 'speed' ? { enableVirtualDeviceFusion: false } : {};
-    const session = await VisionCamera.createCameraSession(false);
-    this.session = session;
-    const preview = VisionCamera.createPreviewOutput();
-    const frontPhoto = VisionCamera.createPhotoOutput(photoOptions(q.photoRes, this.snapshot.captureSpeed));
-    this.frontPhoto = frontPhoto;
-    const controllers = await session.configure([
-      {
-        input: this.sequentialFront,
-        outputs: [
-          { output: preview, mirrorMode: 'on' },
-          { output: frontPhoto, mirrorMode: this.snapshot.mirrorFront ? 'on' : 'off' },
-        ],
-        constraints: [],
-      },
-    ]);
-    this.frontController = controllers[0] ?? null;
-    if (this.disposed) {
-      await session.stop();
-      return null;
-    }
-    await session.start();
-    // Aperçu AVANT visible pendant l'étape 2/2 (surface active + cadrage selfie).
-    this.update({ backPreview: preview });
-    await new Promise((resolve) => setTimeout(resolve, 350)); // stabilisation AF/AE
-    const file = await frontPhoto.capturePhotoToFile({ flashMode: 'off', enableShutterSound: false, ...fast }, {});
-    return file.filePath;
-  }
-
-  /**
-   * Composition PiP + sauvegarde galerie d'une paire de clichés, en tâche de
-   * fond. `secondaryPath` = null → sauvegarde mono. Partagé entre la capture
-   * simultanée et la capture séquentielle.
-   */
-  private enqueuePhotoSave(primaryPath: string, secondaryPath: string | null): void {
-    const mode = this.snapshot.photoSaveMode;
-    const corner = this.snapshot.pipCorner;
-    const canvasWidth = QUALITY[this.snapshot.captureQuality].pipCanvas;
-    const wantPip = mode !== 'originals';
-    const layout = this.snapshot.layout;
-    // Géotag : résolu MAINTENANT (position en cache). Force le chemin JS (le natif
-    // sauvegarde en interne, on ne pourrait pas y injecter l'EXIF GPS).
-    const geotag = this.snapshot.geotag;
-    const coords = geotag ? (this.locationProvider?.() ?? null) : null;
-    const pipInset = this.snapshot.pipInset;
-    const watermark = this.snapshot.watermark;
-    const outputRatio = this.snapshot.outputRatio;
-    this.enqueue(async () => {
-      // Chemin NATIF (Foreground Service, survit au kill) — prioritaire. Il gère
-      // désormais TOUTES les dispositions + vignette libre + filigrane (Lot 4a).
-      // Seul le géotag force le chemin JS (le natif sauvegarde en interne, on ne
-      // peut pas y injecter l'EXIF GPS).
-      if (wantPip && secondaryPath != null && this.photoComposer != null && coords == null) {
-        const saveOriginals = mode === 'pip_plus_originals';
-        const savedUri = await this.photoComposer!(toFileUri(primaryPath), toFileUri(secondaryPath), {
-          layout,
-          corner,
-          inset: pipInset,
-          watermark,
-          canvasWidth,
-          outputRatio,
-          saveOriginals,
-        });
-        this.pushCapture({
-          kind: 'photo',
-          primaryUri: savedUri,
-          secondaryUri: saveOriginals ? toFileUri(secondaryPath) : null,
-          createdAt: Date.now(),
-        });
-        this.notify('success', i18n.t('notices.photoSaved'));
-        return;
-      }
-
-      // Repli view-shot (in-process) / originaux.
-      const canPipJs = secondaryPath != null && this.pipComposer != null;
-      const wantOriginals = mode === 'originals' || mode === 'pip_plus_originals' || (wantPip && !canPipJs);
-      let pipUri: string | null = null;
-      if (wantPip && canPipJs) {
-        const composedPath = await this.pipComposer!(toFileUri(primaryPath), toFileUri(secondaryPath!));
-        await this.stampGps(toFileUri(composedPath), coords);
-        pipUri = await this.persist(composedPath);
-      }
-      let originalPrimaryUri: string | null = null;
-      if (wantOriginals) {
-        await this.stampGps(toFileUri(primaryPath), coords);
-        originalPrimaryUri = await this.persist(primaryPath);
-        if (secondaryPath != null) {
-          await this.stampGps(toFileUri(secondaryPath), coords);
-          await this.persist(secondaryPath);
-        }
-      }
-      const displayUri = pipUri ?? originalPrimaryUri ?? toFileUri(primaryPath);
-      const secondaryUri = secondaryPath != null ? toFileUri(secondaryPath) : null;
-      this.pushCapture({ kind: 'photo', primaryUri: displayUri, secondaryUri, createdAt: Date.now() });
-      this.notify('success', i18n.t('notices.photoSaved'));
-    });
-  }
-
-  private commitRecordingIfDone(): void {
-    if (this.recAgg.settled < this.recAgg.expected) return;
-    // Rendre la main tout de suite (arrêt effectif) ...
-    this.update({ isRecording: false, isBusy: false });
-    this.recorders.back = null;
-    this.recorders.front = null;
-
-    const primaryPath = this.primarySlot === 'back' ? this.recAgg.backPath : this.recAgg.frontPath;
-    const secondaryPath = this.primarySlot === 'back' ? this.recAgg.frontPath : this.recAgg.backPath;
-    if (primaryPath == null) {
-      this.notify('error', i18n.t('notices.noVideo'));
-      return;
-    }
-
-    // ... puis composition (si un composeur vidéo est branché) + sauvegarde EN TÂCHE DE FOND.
-    const mode = this.snapshot.videoSaveMode;
-    const corner = this.snapshot.pipCorner;
-    const layout = this.snapshot.layout;
-    const inset = this.snapshot.pipInset;
-    const watermark = this.snapshot.watermark;
-    const outputRatio = this.snapshot.outputRatio;
-    const boomerang = this.boomerangMode;
-    const boomerangGif = this.snapshot.boomerangGif;
-    const bitRate = QUALITY[this.snapshot.captureQuality].videoBitrate;
-    const wantPip = mode !== 'originals';
-    const canPip = secondaryPath != null && this.videoComposer != null;
-    // Durée estimée : figée MAINTENANT (avant la composition, qui peut être longue).
-    const durationMs = this.recStartedAt > 0 ? Date.now() - this.recStartedAt : undefined;
-    this.enqueue(async () => {
-      if (wantPip && canPip) {
-        const saveOriginals = mode === 'pip_plus_originals';
-        // Le composeur natif compose ET sauvegarde (Foreground Service) : URI galerie.
-        // Le natif gère les dispositions (pip / côte-à-côte / haut-bas) + vignette libre.
-        const savedPipUri = await this.videoComposer!(toFileUri(primaryPath), toFileUri(secondaryPath!), {
-          layout,
-          corner,
-          inset,
-          watermark,
-          bitRate,
-          outputRatio,
-          boomerang,
-          boomerangGif,
-          saveOriginals,
-        });
-        this.pushCapture({
-          kind: 'video',
-          primaryUri: savedPipUri,
-          secondaryUri: saveOriginals ? toFileUri(secondaryPath!) : null,
-          createdAt: Date.now(),
-          durationMs,
-          boomerang,
-        });
-        this.notify('success', i18n.t(boomerang ? 'notices.boomerangSaved' : 'notices.videoSaved'));
-      } else {
-        // Mode originaux, ou pas de composeur natif -> sauvegarde JS des originaux.
-        const primaryUri = await this.persist(primaryPath);
-        const secondaryUri = secondaryPath != null ? await this.persist(secondaryPath) : null;
-        this.pushCapture({ kind: 'video', primaryUri, secondaryUri, createdAt: Date.now(), durationMs });
-        this.notify('success', i18n.t(boomerang ? 'notices.boomerangSaved' : 'notices.videoSaved'));
-      }
-    });
-  }
-
-  private makeRecordingCallbacks(slot: CameraSlot) {
-    const onFinished = (filePath: string): void => {
-      if (slot === 'back') this.recAgg.backPath = filePath;
-      else this.recAgg.frontPath = filePath;
-      this.recAgg.settled += 1;
-      this.commitRecordingIfDone();
-    };
-    const onError = (error: Error): void => {
-      this.recAgg.settled += 1;
-      this.notify('error', i18n.t('notices.recError', { slot, error: error.message }));
-      this.commitRecordingIfDone();
-    };
-    return { onFinished, onError };
-  }
-
+  /** Démarre l'enregistrement vidéo (double recorder). Voir capture/recording. */
   async startRecording(): Promise<void> {
-    // Vidéo bloquée sur les appareils sans concurrent-camera (pas de flux
-    // simultané → une vidéo « double » séquentielle ne serait pas simultanée).
-    if (this.snapshot.mode === 'sequential') {
-      this.notify('error', i18n.t('sequential.videoBlocked'));
-      return;
-    }
-    if (this.backVideo == null || this.snapshot.isRecording || this.snapshot.isBusy) return;
-    this.recAgg = { expected: this.frontVideo != null ? 2 : 1, settled: 0, backPath: null, frontPath: null };
-    this.recStartedAt = Date.now();
-    this.update({ isRecording: true });
-    try {
-      this.recorders.back = await this.backVideo.createRecorder({});
-      const back = this.makeRecordingCallbacks('back');
-      await this.recorders.back.startRecording(back.onFinished, back.onError);
-
-      if (this.frontVideo != null) {
-        this.recorders.front = await this.frontVideo.createRecorder({});
-        const front = this.makeRecordingCallbacks('front');
-        await this.recorders.front.startRecording(front.onFinished, front.onError);
-      }
-    } catch (error) {
-      this.update({ isRecording: false, errorMessage: (error as Error)?.message ?? 'Démarrage vidéo échoué' });
-    }
+    await startRecordingImpl(this.ctx);
   }
 
+  /** Arrête l'enregistrement ; la finalisation passe par les callbacks. Voir capture/recording. */
   async stopRecording(): Promise<void> {
-    if (!this.snapshot.isRecording) return;
-    this.update({ isBusy: true });
-    try {
-      await this.recorders.back?.stopRecording();
-      await this.recorders.front?.stopRecording();
-    } catch {
-      /* les callbacks onFinished finaliseront */
-    }
+    await stopRecordingImpl(this.ctx);
   }
 
   // ------------------------------------------------------------- controls ----
