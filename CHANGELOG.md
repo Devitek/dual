@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.3](https://github.com/Devitek/dual/compare/v1.22.2...v1.22.3) (2026-09-08)
+
+
+### Bug Fixes
+
+* **a11y:** labels, roles, states and touch targets from the TalkBack audit ([#164](https://github.com/Devitek/dual/issues/164)) ([fcc6d64](https://github.com/Devitek/dual/commit/fcc6d642fc392f957747b5e85ad9e2ec2a869e7e))
+
 ## [1.22.2](https://github.com/Devitek/dual/compare/v1.22.1...v1.22.2) (2026-09-08)
 
 
