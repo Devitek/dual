@@ -10,6 +10,7 @@ CE QUE VOUS OBTENEZ
 • 🎬 Capture dual camera — avant + arrière en même temps (photo & vidéo)
 • 🖼️ Mises en page : Picture-in-Picture, côte à côte ou haut-bas — composées sur l'appareil, un seul fichier prêt à partager (photos ET vidéos)
 • ✋ Déplacez & redimensionnez la vignette PiP — appui long pour glisser, pincez pour ajuster
+• ∞ Boomerang — une boucle avant-arrière qui claque, exportée en MP4 ou en GIF
 • 🎯 Photos nettes : anti-flou « Ne bougez pas », mode capture rapide et retardateur 3 s / 10 s
 • 🚫 Aucune pub, aucun filigrane sur vos vidéos, jamais
 • 🙈 Mode surprise : masquez l'aperçu du selfie et découvrez votre réaction ensuite
@@ -18,7 +19,8 @@ CE QUE VOUS OBTENEZ
 • 💾 Gardez le fichier fusionné, les 2 fichiers bruts, ou tout
 • 🔍 Zoom rapide, mise au point tactile, pincer pour zoomer, flash & torche, jusqu'en 4K
 • 🔊 Déclencheur ou zoom par touches de volume — compatible télécommandes selfie Bluetooth
-• 📤 Partage en 1 tap · 🗂️ galerie de session avec lecture in-app & suppression
+• 📤 Partage en 1 tap (direct Instagram/TikTok) · 🗂️ galerie de session avec lecture in-app & suppression
+• ⚡ Widget d'accueil + tuile Réglages rapides — capturez en un geste, sans chercher l'app
 • 🎨 Couleurs Material You (Android 12+) · 🌍 6 langues
 • 🔒 100% sur l'appareil — pas de compte, pas de serveur, pas de pistage
 
@@ -28,4 +30,4 @@ Vidéos de réaction, vlogs, voyages, concerts, tutos, révélations, « prépar
 Dual camera. Avant et arrière. Picture-in-Picture, côte à côte ou haut-bas. Un geste. Zéro cloud. Zéro coût.
 
 COMPATIBILITÉ
-La capture avant + arrière simultanée utilise la fonction « caméras simultanées » d'Android, que tous les téléphones n'exposent pas aux applications. Sur ceux qui ne la prennent pas en charge, TwinLens bascule automatiquement sur une seule caméra — toutes les autres fonctions restent disponibles. Touchez « Pourquoi ? » dans l'app pour un diagnostic rapide de votre appareil.
+La capture avant + arrière simultanée utilise la fonction « caméras simultanées » d'Android, que tous les téléphones n'exposent pas aux applications. Sur ceux qui ne la prennent pas en charge, TwinLens prend les deux photos l'une après l'autre et les fusionne automatiquement (photo double séquentielle) ; seule la vidéo simultanée reste indisponible. Touchez « Pourquoi ? » dans l'app pour un diagnostic rapide de votre appareil.

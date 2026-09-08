@@ -1,6 +1,4 @@
-New: side-by-side & stacked layouts — for photos AND videos, not just Picture-in-Picture.
-Move & resize the PiP thumbnail (long-press to drag, pinch to scale).
-Sharper shots: "hold still" anti-blur, fast-capture mode and a 3s/10s self-timer.
-Optional geotagging and silent capture. One-tap share.
-Faster, more robust on-device compositing.
-Still 100% free — no ads, no watermark, no sign-up.
+Dual photo even without concurrent cameras: on unsupported phones TwinLens now takes both photos back-to-back and merges them (sequential mode).
+Redesigned settings (General/Pro + full screen), gesture photo & video viewer with playback controls.
+More reliable direct sharing to Instagram/TikTok, widget shortcuts fixed.
+Lighter, more stable app. Still 100% free, no ads.
