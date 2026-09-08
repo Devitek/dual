@@ -127,6 +127,8 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
 
   // Une ligne (icône + libellé/description + interrupteur M3). Sans arrondi propre :
   // c'est la CARTE de section (voir `card`) qui porte les coins arrondis.
+  // TOUTE la ligne est pressable et forme UN SEUL élément TalkBack (rôle switch,
+  // libellé + description) ; le M3Switch interne devient décoratif (#163).
   const rowSwitch = (
     icon: IconName,
     label: string,
@@ -134,14 +136,22 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
     onValueChange: () => void,
     desc?: string,
   ): React.ReactElement => (
-    <View style={styles.cardRow}>
+    <Pressable
+      style={styles.cardRow}
+      onPress={onValueChange}
+      accessibilityRole="switch"
+      accessibilityState={{ checked: value }}
+      accessibilityLabel={desc != null ? `${label}. ${desc}` : label}
+    >
       <MaterialIcons name={icon} size={22} color={colors.onSurfaceVariant} />
       <View style={styles.rowTexts}>
         <Text style={styles.rowLabel}>{label}</Text>
         {desc != null && <Text style={styles.desc}>{desc}</Text>}
       </View>
-      <M3Switch value={value} onValueChange={onValueChange} accessibilityLabel={label} />
-    </View>
+      <View importantForAccessibility="no-hide-descendants">
+        <M3Switch value={value} onValueChange={onValueChange} />
+      </View>
+    </Pressable>
   );
 
   // Regroupe les lignes d'une section dans UNE carte arrondie, séparées par des

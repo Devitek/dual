@@ -444,13 +444,15 @@ export function MultiCameraScreen(): React.ReactElement {
                   bottom: 210,
                   alignSelf: 'center',
                   maxWidth: '80%',
-                  backgroundColor: 'rgba(0,0,0,0.72)',
+                  // Fond >= 0.8 : garantit le contraste du texte blanc quel que
+                  // soit le viseur derrière (#163).
+                  backgroundColor: 'rgba(0,0,0,0.8)',
                   paddingHorizontal: 16,
                   paddingVertical: 10,
                   borderRadius: 20,
                 }}
               >
-                <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600', textAlign: 'center' }}>
+                <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600', textAlign: 'center' }}>
                   {t('capture.boomerangHint')}
                 </Text>
               </View>
@@ -469,7 +471,7 @@ export function MultiCameraScreen(): React.ReactElement {
                   top: '46%',
                   alignSelf: 'center',
                   maxWidth: '82%',
-                  backgroundColor: 'rgba(0,0,0,0.72)',
+                  backgroundColor: 'rgba(0,0,0,0.8)',
                   paddingHorizontal: 18,
                   paddingVertical: 12,
                   borderRadius: 20,
@@ -614,5 +616,5 @@ const makeStyles = (colors: Palette) =>
       justifyContent: 'center',
     },
     countdownText: { color: '#fff', fontSize: 120, fontWeight: '200', fontVariant: ['tabular-nums'] },
-    countdownHint: { color: 'rgba(255,255,255,0.85)', fontSize: 15, marginTop: 8 },
+    countdownHint: { color: '#fff', fontSize: 15, marginTop: 8 },
   });

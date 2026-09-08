@@ -22,6 +22,7 @@ import {
 } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { useScreenReaderEnabled } from '../hooks/useScreenReaderEnabled';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useEvent } from 'expo';
 
@@ -80,6 +81,7 @@ export function MediaViewer({
   const styles = useThemedStyles(makeStyles);
   const { t, i18n } = useTranslation();
   const insets = useSafeAreaInsets();
+  const screenReader = useScreenReaderEnabled();
 
   const [cur, setCur] = useState(index);
   const [info, setInfo] = useState(false);
@@ -280,7 +282,19 @@ export function MediaViewer({
       {/* Barre du haut : compteur (centre) + partager (droite). */}
       {chrome && (
         <View style={[styles.topBar, { top: Math.max(insets.top + 8, 40) }]}>
-          <View style={styles.topSide} />
+          <View style={styles.topSide}>
+            {screenReader && (
+              <Pressable
+                onPress={onClose}
+                style={styles.iconBtn}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel={t('gallery.closeA11y')}
+              >
+                <MaterialIcons name="close" size={22} color="#fff" />
+              </Pressable>
+            )}
+          </View>
           {media.length > 1 ? (
             <Text style={styles.counter}>
               {cur + 1} / {media.length}
@@ -321,6 +335,42 @@ export function MediaViewer({
           <Text style={styles.time}>
             {fmtTime(pos)} / {fmtTime(dur)}
           </Text>
+        </View>
+      )}
+
+      {/* Lecteur d'écran actif : la navigation gestuelle (swipes) est invisible
+          pour TalkBack, on fournit de vrais boutons (#163). Rien n'est affiché
+          pour les utilisateurs voyants (aucun changement visuel). */}
+      {screenReader && (
+        <View style={[styles.a11yBar, { bottom: Math.max(insets.bottom + 80, 96) }]}>
+          <Pressable
+            onPress={() => goTo(Math.max(0, cur - 1))}
+            disabled={cur === 0}
+            style={styles.iconBtn}
+            accessibilityRole="button"
+            accessibilityLabel={t('gallery.prevA11y')}
+            accessibilityState={{ disabled: cur === 0 }}
+          >
+            <MaterialIcons name="chevron-left" size={28} color="#fff" />
+          </Pressable>
+          <Pressable
+            onPress={() => setInfo(true)}
+            style={styles.iconBtn}
+            accessibilityRole="button"
+            accessibilityLabel={t('gallery.infoTitle')}
+          >
+            <MaterialIcons name="info-outline" size={24} color="#fff" />
+          </Pressable>
+          <Pressable
+            onPress={() => goTo(Math.min(media.length - 1, cur + 1))}
+            disabled={cur === media.length - 1}
+            style={styles.iconBtn}
+            accessibilityRole="button"
+            accessibilityLabel={t('gallery.nextA11y')}
+            accessibilityState={{ disabled: cur === media.length - 1 }}
+          >
+            <MaterialIcons name="chevron-right" size={28} color="#fff" />
+          </Pressable>
         </View>
       )}
 
@@ -436,6 +486,15 @@ const makeStyles = (colors: Palette) =>
       backgroundColor: 'rgba(0,0,0,0.45)',
       alignItems: 'center',
       justifyContent: 'center',
+    },
+    /* Barre de navigation lecteur d'écran (boutons précédent/infos/suivant). */
+    a11yBar: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      flexDirection: 'row',
+      justifyContent: 'center',
+      gap: 28,
     },
     controls: {
       position: 'absolute',
