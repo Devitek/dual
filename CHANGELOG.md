@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.4](https://github.com/Devitek/dual/compare/v1.22.3...v1.22.4) (2026-09-08)
+
+
+### Bug Fixes
+
+* **a11y:** screen-reader viewer controls, adjustable zoom, full-row switches, overlay contrast ([#167](https://github.com/Devitek/dual/issues/167)) ([f0085d4](https://github.com/Devitek/dual/commit/f0085d47a34c1dbb0597bb9e5a0fbd89b5263e91))
+
 ## [1.22.3](https://github.com/Devitek/dual/compare/v1.22.2...v1.22.3) (2026-09-08)
 
 
