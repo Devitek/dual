@@ -11,6 +11,9 @@ import { useMultiCam } from '../hooks/useMultiCam';
 import { useInAppUpdate } from '../hooks/useInAppUpdate';
 import { useVolumeShutter } from '../hooks/useVolumeShutter';
 import { useGeotag } from '../hooks/useGeotag';
+import { useZoomState } from '../hooks/useZoomState';
+import { useCaptureFlow, BOOMERANG_MAX_MS } from '../hooks/useCaptureFlow';
+import { useSettingsWiring } from '../hooks/useSettingsWiring';
 import { PermissionGate } from '../components/PermissionGate';
 import { IntroSheet } from '../components/IntroSheet';
 import { useIntro } from '../hooks/useIntro';
@@ -40,25 +43,14 @@ import {
 import { haptics } from '../utils/haptics';
 import type { FocusPoint } from '../components/FocusIndicator';
 import { pipCanvasForQuality } from '../vision/MultiCamController';
-import type { CameraSlot, CaptureQuality, CaptureSpeed, SaveMode, VideoFps } from '../vision/MultiCamController';
-import type { CompositionLayout, OutputRatio, PipInset } from '../services/pipComposer';
-import type { VolumeKeyAction } from '../native/volumeKeys';
-import {
-  loadPersistedSettings,
-  saveSetting,
-  type PersistedSettings,
-  type TimerSeconds,
-  type BurstCount,
-} from '../services/settings';
+import type { CameraSlot } from '../vision/MultiCamController';
+import { saveSetting, type TimerSeconds } from '../services/settings';
 
 /** Clé du hint « touchez la vignette » (1er lancement — one-shot, hors réglages). */
 const PIP_HINT_KEY = 'tl_seen_pip_hint';
 /** Hint one-shot « maintenir pour le boomerang » (1re fois en mode boomerang). */
 const BOOM_HINT_KEY = 'tl_seen_boom_hint';
 
-/** Boomerang (appui long) : durées mini / maxi du clip source (ms). */
-const BOOMERANG_MIN_MS = 700;
-const BOOMERANG_MAX_MS = 3000;
 /** Durée fixe d'un boomerang déclenché par une touche de volume (pas d'appui long). */
 const BOOMERANG_KEY_MS = 1500;
 /** Modes indisponibles en repli séquentiel (vidéo simultanée impossible). Référence
@@ -69,24 +61,10 @@ const SEQUENTIAL_BLOCKED_MODES: CaptureMode[] = ['video', 'boomerang'];
 export type { TimerSeconds };
 
 /**
- * Paliers de zoom rapides « par objectif » dérivés des bornes de la caméra
- * principale : ultra grand-angle (0.5×) si dispo, principal (1×), puis les
- * téléobjectifs usuels (2× / 5× / 10×) tant que l'appareil les atteint. Sur un
- * device logique multi-objectifs, franchir ces paliers bascule physiquement de
- * capteur (grand-angle → télé).
- */
-function buildZoomLevels(min: number, max: number): number[] {
-  const levels: number[] = [];
-  if (min <= 0.6) levels.push(0.5); // ultra grand-angle si dispo
-  levels.push(1); // principal
-  for (const z of [2, 5, 10, 30, 100]) {
-    if (max + 0.05 >= z) levels.push(z); // téléobjectifs / super-zoom disponibles
-  }
-  return levels;
-}
-
-/**
  * Écran principal — VisionCamera v5 multi-caméra, UI Material 3, Android.
+ * Orchestration seulement : zoom (useZoomState), flux de capture
+ * (useCaptureFlow) et réglages persistés (useSettingsWiring) vivent dans des
+ * hooks dédiés (#148).
  */
 export function MultiCameraScreen(): React.ReactElement {
   const { width, height } = useWindowDimensions();
@@ -107,29 +85,48 @@ export function MultiCameraScreen(): React.ReactElement {
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
-  const [zoomDisplay, setZoomDisplay] = useState<number | null>(null);
-  const [zoomNonce, setZoomNonce] = useState(0);
-  const [currentZoom, setCurrentZoom] = useState(1);
   const [pipHintVisible, setPipHintVisible] = useState(false);
   const [boomHint, setBoomHint] = useState(false);
-  const [volumeKeyAction, setVolumeKeyActionState] = useState<VolumeKeyAction>('volume');
-  const [stabilization, setStabilizationState] = useState(true);
-  const [timerSeconds, setTimerSecondsState] = useState<TimerSeconds>(0);
-  const [countdown, setCountdown] = useState<number | null>(null);
-  const [grid, setGridState] = useState(false);
-  const [level, setLevelState] = useState(false);
-  const [burstCount, setBurstCountState] = useState<BurstCount>(1);
   const focusNonce = useRef(0);
-  const lastZoomUpdate = useRef(0);
   const pipHintChecked = useRef(false);
   const pipRef = useRef<PipCompositorHandle>(null);
-  const flashOpacity = useRef(new Animated.Value(0)).current;
   const holdStillOpacity = useRef(new Animated.Value(0)).current;
   /** Mode demandé par un deep-link (widget/tuile) — prime sur le mode persisté. */
   const deepLinkMode = useRef<CaptureMode | null>(null);
   const wasBusy = useRef(false);
-  const countdownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const styles = useThemedStyles(makeStyles);
+
+  // Repli séquentiel : la vidéo (et le boomerang) sont impossibles faute de flux
+  // simultané. Le mode EFFECTIF est dérivé au rendu (pas de setState dans un
+  // effet, #136) : la préférence `mode` reste intacte et revient d'elle-même
+  // sur un appareil capable de multi-cam.
+  const effectiveMode: CaptureMode = cam.mode === 'sequential' ? 'photo' : mode;
+
+  // Le mode d'un deep-link (widget/tuile) prime sur le mode persisté.
+  const onRestoreMode = useCallback((m: CaptureMode) => {
+    if (deepLinkMode.current == null) setMode(m);
+  }, []);
+
+  const settings = useSettingsWiring({
+    controller: cam.controller,
+    showSecondaryPreview: cam.showSecondaryPreview,
+    onRestorePhotoFlash: setPhotoFlash,
+    onRestoreMode,
+  });
+
+  const zoom = useZoomState(cam.controller, primarySlot, cam.status);
+  // Fonctions stables (useCallback) extraites pour les deps des callbacks/effets :
+  // l'objet `zoom`/`flow` change à chaque rendu, pas ses fonctions.
+  const { showZoom, showZoomThrottled, syncToSlot } = zoom;
+
+  const flow = useCaptureFlow({
+    controller: cam.controller,
+    photoFlash,
+    burstCount: settings.burstCount,
+    timerSeconds: settings.timerSeconds,
+    isRecording: cam.isRecording,
+  });
+  const { cancelCountdown } = flow;
 
   // Injecte le compositeur PiP (view-shot) dans le contrôleur natif.
   useEffect(() => {
@@ -210,10 +207,10 @@ export function MultiCameraScreen(): React.ReactElement {
     setPrimarySlot((prev) => {
       const next: CameraSlot = prev === 'back' ? 'front' : 'back';
       cam.controller.setPrimarySlot(next);
-      setCurrentZoom(cam.controller.getZoomBounds(next).current);
+      syncToSlot(next);
       return next;
     });
-  }, [cam.controller, dismissPipHint]);
+  }, [cam.controller, dismissPipHint, syncToSlot]);
 
   const toggleTorch = useCallback(() => {
     haptics.selection();
@@ -235,23 +232,31 @@ export function MultiCameraScreen(): React.ReactElement {
     onSetPhotoFlash(next);
   }, [photoFlash, onSetPhotoFlash]);
 
-  const onSetMode = useCallback((m: CaptureMode) => {
-    setMode(m);
-    saveSetting('mode', m);
-  }, []);
+  // Changement de mode : annule un éventuel décompte (il n'a de sens qu'en mode
+  // photo) — dans le handler, pas dans un effet (#136).
+  const onSetMode = useCallback(
+    (m: CaptureMode) => {
+      if (m !== 'photo') cancelCountdown();
+      setMode(m);
+      saveSetting('mode', m);
+    },
+    [cancelCountdown],
+  );
+
+  // Ouverture d'un panneau : le décompte plein écran serait masqué -> annulation.
+  const openSettings = useCallback(() => {
+    cancelCountdown();
+    setSettingsOpen(true);
+  }, [cancelCountdown]);
+  const openGallery = useCallback(() => {
+    cancelCountdown();
+    setGalleryOpen(true);
+  }, [cancelCountdown]);
 
   // Synchronise le mode boomerang côté contrôleur (lu à la fin de l'enregistrement).
   useEffect(() => {
-    cam.controller.setBoomerangMode(mode === 'boomerang');
-  }, [mode, cam.controller]);
-
-  // Repli séquentiel : la vidéo (et le boomerang) sont impossibles faute de flux
-  // simultané. Si un mode vidéo était sélectionné (persisté / deep-link), on
-  // revient à la photo. On NE persiste PAS (la préférence revient sur un appareil
-  // capable de multi-cam).
-  useEffect(() => {
-    if (cam.mode === 'sequential' && mode !== 'photo') setMode('photo');
-  }, [cam.mode, mode]);
+    cam.controller.setBoomerangMode(effectiveMode === 'boomerang');
+  }, [effectiveMode, cam.controller]);
 
   // Widget d'accueil : miniature de la dernière capture (best-effort).
   useEffect(() => {
@@ -279,11 +284,10 @@ export function MultiCameraScreen(): React.ReactElement {
   }, [onSetMode]);
 
   // Hint one-shot « maintenir » la 1re fois qu'on passe en mode boomerang.
+  // Le rendu est conditionné au mode : pas de setState synchrone à la sortie
+  // du mode (#136), le timer nettoie l'état en différé.
   useEffect(() => {
-    if (mode !== 'boomerang') {
-      setBoomHint(false);
-      return;
-    }
+    if (effectiveMode !== 'boomerang') return;
     let cancelled = false;
     let hideTimer: ReturnType<typeof setTimeout> | undefined;
     void AsyncStorage.getItem(BOOM_HINT_KEY).then((seen) => {
@@ -296,315 +300,16 @@ export function MultiCameraScreen(): React.ReactElement {
       cancelled = true;
       if (hideTimer != null) clearTimeout(hideTimer);
     };
-  }, [mode]);
-
-  // Capture réelle : flash blanc instantané puis capture async (l'overlay
-  // « Ne bougez pas » est piloté séparément par l'état isBusy du contrôleur).
-  // En rafale (burstCount > 1), N captures séquentielles : chaque capturePhoto
-  // libère l'obturateur juste après la capture brute (la composition part en
-  // tâche de fond), la suivante peut donc s'enchaîner naturellement.
-  const burstingRef = useRef(false);
-  const doCapture = useCallback(() => {
-    const flash = (dur: number) => {
-      haptics.medium();
-      flashOpacity.setValue(0.9);
-      Animated.timing(flashOpacity, { toValue: 0, duration: dur, useNativeDriver: true }).start();
-    };
-    if (burstCount <= 1) {
-      flash(200);
-      void cam.controller.capturePhoto(photoFlash);
-      return;
-    }
-    if (burstingRef.current) return; // évite deux rafales qui se chevauchent
-    burstingRef.current = true;
-    void (async () => {
-      try {
-        for (let i = 0; i < burstCount; i++) {
-          flash(150);
-          await cam.controller.capturePhoto(photoFlash);
-          if (i < burstCount - 1) await new Promise((r) => setTimeout(r, 140));
-        }
-      } finally {
-        burstingRef.current = false;
-      }
-    })();
-  }, [cam.controller, photoFlash, flashOpacity, burstCount]);
-
-  const cancelCountdown = useCallback(() => {
-    if (countdownTimer.current != null) {
-      clearInterval(countdownTimer.current);
-      countdownTimer.current = null;
-    }
-    setCountdown(null);
-  }, []);
-
-  // Obturateur photo : capture immédiate, ou décompte du retardateur. Un second
-  // appui pendant le décompte l'annule. Le décompte ne fait QUE décrémenter un
-  // état (updater pur) ; le tick haptique et la capture à 0 sont gérés par l'effet
-  // ci-dessous (évite tout effet de bord dans un updater — safe en StrictMode).
-  const onPhoto = useCallback(() => {
-    if (countdownTimer.current != null) {
-      cancelCountdown();
-      return;
-    }
-    if (timerSeconds <= 0) {
-      doCapture();
-      return;
-    }
-    setCountdown(timerSeconds);
-    countdownTimer.current = setInterval(() => {
-      setCountdown((prev) => (prev == null ? null : prev - 1));
-    }, 1000);
-  }, [timerSeconds, doCapture, cancelCountdown]);
-
-  // Pilote le décompte : bip à chaque seconde, capture quand il atteint 0.
-  useEffect(() => {
-    if (countdown == null) return;
-    if (countdown <= 0) {
-      if (countdownTimer.current != null) {
-        clearInterval(countdownTimer.current);
-        countdownTimer.current = null;
-      }
-      setCountdown(null);
-      doCapture();
-    } else {
-      haptics.selection();
-    }
-  }, [countdown, doCapture]);
-
-  // Bornes + paliers de zoom selon la caméra principale.
-  const zoomBounds = useMemo(
-    () => cam.controller.getZoomBounds(primarySlot),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [cam.controller, primarySlot, cam.status],
-  );
-  const zoomLevels = useMemo(() => buildZoomLevels(zoomBounds.min, zoomBounds.max), [zoomBounds]);
-  // Zoom continu (slider) : applique + met à jour l'état (le tick haptique
-  // d'accroche est géré dans le ZoomControl).
-  const onZoom = useCallback(
-    (z: number) => {
-      const c = Math.min(zoomBounds.max, Math.max(zoomBounds.min, z));
-      void cam.controller.setZoom(primarySlot, c);
-      setCurrentZoom(c);
-      setZoomDisplay(c);
-      setZoomNonce((n) => n + 1);
-    },
-    [cam.controller, primarySlot, zoomBounds],
-  );
+  }, [effectiveMode]);
 
   const toggleAeLock = useCallback(() => {
     haptics.selection();
     void cam.controller.setAeLock(!cam.aeLocked);
   }, [cam.controller, cam.aeLocked]);
 
-  const onToggleRecording = useCallback(() => {
-    if (cam.isRecording) {
-      haptics.medium();
-      void cam.controller.stopRecording();
-    } else {
-      haptics.heavy();
-      void cam.controller.startRecording();
-    }
-  }, [cam.controller, cam.isRecording]);
-
-  // Boomerang = appui long : démarre à l'appui, arrête au relâchement (le natif
-  // boucle avant/arrière). On garantit une durée mini pour un clip exploitable.
-  const boomStartRef = useRef(0);
-  const boomMinTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const onBoomerangStart = useCallback(() => {
-    haptics.heavy();
-    boomStartRef.current = Date.now();
-    void cam.controller.startRecording();
-  }, [cam.controller]);
-  const onBoomerangStop = useCallback(() => {
-    if (boomMinTimer.current != null) {
-      clearTimeout(boomMinTimer.current);
-      boomMinTimer.current = null;
-    }
-    const doStop = () => {
-      haptics.medium();
-      void cam.controller.stopRecording();
-    };
-    const elapsed = Date.now() - boomStartRef.current;
-    if (elapsed >= BOOMERANG_MIN_MS) doStop();
-    else boomMinTimer.current = setTimeout(doStop, BOOMERANG_MIN_MS - elapsed);
-  }, [cam.controller]);
-
-  useEffect(
-    () => () => {
-      if (boomMinTimer.current != null) clearTimeout(boomMinTimer.current);
-    },
-    [],
-  );
-
-  const setPhotoSaveMode = useCallback(
-    (m: SaveMode) => {
-      cam.controller.setPhotoSaveMode(m);
-      saveSetting('photoSaveMode', m);
-    },
-    [cam.controller],
-  );
-  const setVideoSaveMode = useCallback(
-    (m: SaveMode) => {
-      cam.controller.setVideoSaveMode(m);
-      saveSetting('videoSaveMode', m);
-    },
-    [cam.controller],
-  );
-  const setLayout = useCallback(
-    (l: CompositionLayout) => {
-      cam.controller.setLayout(l);
-      saveSetting('layout', l);
-    },
-    [cam.controller],
-  );
-  const onMovePip = useCallback(
-    (inset: PipInset) => {
-      cam.controller.setPipInset(inset);
-      saveSetting('pipInset', inset);
-    },
-    [cam.controller],
-  );
-  const setWatermark = useCallback(
-    (value: boolean) => {
-      cam.controller.setWatermark(value);
-      saveSetting('watermark', value);
-    },
-    [cam.controller],
-  );
-  const setOutputRatio = useCallback(
-    (r: OutputRatio) => {
-      cam.controller.setOutputRatio(r);
-      saveSetting('outputRatio', r);
-    },
-    [cam.controller],
-  );
-  const setQuality = useCallback(
-    (q: CaptureQuality) => {
-      void cam.controller.setQuality(q);
-      saveSetting('captureQuality', q);
-    },
-    [cam.controller],
-  );
-  const setVideoFps = useCallback(
-    (fps: VideoFps) => {
-      void cam.controller.setVideoFps(fps);
-      saveSetting('videoFps', fps);
-    },
-    [cam.controller],
-  );
-  const setBoomerangGif = useCallback(
-    (v: boolean) => {
-      cam.controller.setBoomerangGif(v);
-      saveSetting('boomerangGif', v);
-    },
-    [cam.controller],
-  );
-  const setMirrorFront = useCallback(
-    (v: boolean) => {
-      void cam.controller.setMirrorFront(v);
-      saveSetting('mirrorFront', v);
-    },
-    [cam.controller],
-  );
-
-  const toggleSecondaryPreview = useCallback(() => {
-    haptics.selection();
-    const next = !cam.showSecondaryPreview;
-    cam.controller.setShowSecondaryPreview(next);
-    saveSetting('showSecondaryPreview', next);
-  }, [cam.controller, cam.showSecondaryPreview]);
-
-  const setVolumeKeyAction = useCallback((a: VolumeKeyAction) => {
-    setVolumeKeyActionState(a);
-    saveSetting('volumeKeyAction', a);
-  }, []);
-
-  // Restaure TOUS les réglages persistés (source unique : services/settings) et les
-  // applique au contrôleur / state. Corrige le « reset au démarrage » : sur Samsung
-  // le process est tué souvent, donc CHAQUE réglage doit être persisté + restauré ici.
-  const applyPersisted = useCallback(
-    (s: Partial<PersistedSettings>) => {
-      const c = cam.controller;
-      if (s.stabilization != null) setStabilizationState(s.stabilization);
-      if (s.captureSpeed != null) void c.setCaptureSpeed(s.captureSpeed);
-      if (s.timerSeconds != null) setTimerSecondsState(s.timerSeconds);
-      if (s.shutterSound != null) c.setShutterSound(s.shutterSound);
-      if (s.layout != null) c.setLayout(s.layout);
-      if (s.watermark != null) c.setWatermark(s.watermark);
-      if (s.outputRatio != null) c.setOutputRatio(s.outputRatio);
-      if (s.volumeKeyAction != null) setVolumeKeyActionState(s.volumeKeyAction);
-      if (s.photoSaveMode != null) c.setPhotoSaveMode(s.photoSaveMode);
-      if (s.videoSaveMode != null) c.setVideoSaveMode(s.videoSaveMode);
-      if (s.pipCorner != null) c.setPipCorner(s.pipCorner); // remet aussi pipInset à null
-      if (s.pipInset != null) c.setPipInset(s.pipInset); // -> restauré APRÈS le coin
-      if (s.captureQuality != null) void c.setQuality(s.captureQuality);
-      if (s.videoFps != null) void c.setVideoFps(s.videoFps);
-      if (s.boomerangGif != null) c.setBoomerangGif(s.boomerangGif);
-      if (s.mirrorFront != null) void c.setMirrorFront(s.mirrorFront);
-      if (s.showSecondaryPreview != null) c.setShowSecondaryPreview(s.showSecondaryPreview);
-      if (s.photoFlash != null) setPhotoFlash(s.photoFlash);
-      // Le mode d'un deep-link (widget/tuile) prime sur le mode persisté.
-      if (s.mode != null && deepLinkMode.current == null) setMode(s.mode);
-      if (s.grid != null) setGridState(s.grid);
-      if (s.level != null) setLevelState(s.level);
-      if (s.burstCount != null) setBurstCountState(s.burstCount);
-    },
-    [cam.controller],
-  );
-
-  const setGrid = useCallback((v: boolean) => {
-    setGridState(v);
-    saveSetting('grid', v);
-  }, []);
-  const setLevel = useCallback((v: boolean) => {
-    setLevelState(v);
-    saveSetting('level', v);
-  }, []);
-  const setBurstCount = useCallback((v: BurstCount) => {
-    setBurstCountState(v);
-    saveSetting('burstCount', v);
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    void loadPersistedSettings().then((s) => {
-      if (!cancelled) applyPersisted(s);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [applyPersisted]);
-
-  const setStabilization = useCallback((value: boolean) => {
-    setStabilizationState(value);
-    saveSetting('stabilization', value);
-  }, []);
-
-  const setCaptureSpeed = useCallback(
-    (s: CaptureSpeed) => {
-      void cam.controller.setCaptureSpeed(s);
-      saveSetting('captureSpeed', s);
-    },
-    [cam.controller],
-  );
-
-  const setTimerSeconds = useCallback((s: TimerSeconds) => {
-    setTimerSecondsState(s);
-    saveSetting('timerSeconds', s);
-  }, []);
-
-  const setShutterSound = useCallback(
-    (value: boolean) => {
-      cam.controller.setShutterSound(value);
-      saveSetting('shutterSound', value);
-    },
-    [cam.controller],
-  );
-
   // Overlay « Ne bougez pas » : visible exactement pendant la capture réelle
   // (fenêtre isBusy) en mode photo, si l'anti-flou est actif.
-  const holdStillVisible = stabilization && mode === 'photo' && cam.isBusy;
+  const holdStillVisible = settings.stabilization && effectiveMode === 'photo' && cam.isBusy;
   useEffect(() => {
     Animated.timing(holdStillOpacity, {
       toValue: holdStillVisible ? 1 : 0,
@@ -616,46 +321,24 @@ export function MultiCameraScreen(): React.ReactElement {
   // Haptique de fin : quand la capture photo se termine (isBusy true -> false),
   // signale « c'est bon, tu peux rebouger ».
   useEffect(() => {
-    if (wasBusy.current && !cam.isBusy && mode === 'photo') haptics.light();
+    if (wasBusy.current && !cam.isBusy && effectiveMode === 'photo') haptics.light();
     wasBusy.current = cam.isBusy;
-  }, [cam.isBusy, mode]);
-
-  // Annule un décompte en cours si on quitte le mode photo ou qu'un panneau s'ouvre.
-  useEffect(() => {
-    if (mode !== 'photo' || settingsOpen || moreOpen || galleryOpen) cancelCountdown();
-  }, [mode, settingsOpen, moreOpen, galleryOpen, cancelCountdown]);
-
-  // Nettoyage du timer au démontage.
-  useEffect(() => () => cancelCountdown(), [cancelCountdown]);
-
-  const zoomBy = useCallback(
-    (dir: 'in' | 'out') => {
-      const { min, max, current } = cam.controller.getZoomBounds(primarySlot);
-      const step = Math.max(0.1, (max - min) / 15);
-      const z = Math.min(max, Math.max(min, current + (dir === 'in' ? step : -step)));
-      void cam.controller.setZoom(primarySlot, z);
-      setCurrentZoom(z);
-      setZoomDisplay(z);
-      setZoomNonce((n) => n + 1);
-      haptics.selection();
-    },
-    [cam.controller, primarySlot],
-  );
+  }, [cam.isBusy, effectiveMode]);
 
   // Redirige les touches matérielles vers l'obturateur/zoom, seulement quand la
   // caméra est prête et qu'aucun sheet/galerie n'est ouvert (sinon volume normal).
   useVolumeShutter({
-    action: volumeKeyAction,
+    action: settings.volumeKeyAction,
     enabled: cam.status === 'running' && permissions.allGranted && !settingsOpen && !moreOpen && !galleryOpen,
     onShutter: () => {
-      if (mode === 'photo') onPhoto();
-      else if (mode === 'boomerang') {
+      if (effectiveMode === 'photo') flow.onPhoto();
+      else if (effectiveMode === 'boomerang') {
         // Touche volume : pas d'appui long -> boomerang de durée fixe.
-        onBoomerangStart();
-        setTimeout(onBoomerangStop, BOOMERANG_KEY_MS);
-      } else onToggleRecording();
+        flow.onBoomerangStart();
+        setTimeout(flow.onBoomerangStop, BOOMERANG_KEY_MS);
+      } else flow.onToggleRecording();
     },
-    onZoom: zoomBy,
+    onZoom: zoom.zoomBy,
   });
 
   // Tap-to-focus + pinch-to-zoom sur la caméra principale.
@@ -675,25 +358,16 @@ export function MultiCameraScreen(): React.ReactElement {
       })
       .onUpdate((event) => {
         const { min, max } = cam.controller.getZoomBounds(primarySlot);
-        const zoom = Math.min(max, Math.max(min, zoomBase * event.scale));
-        void cam.controller.setZoom(primarySlot, zoom);
-        const now = Date.now();
-        if (now - lastZoomUpdate.current > 80) {
-          lastZoomUpdate.current = now;
-          setZoomDisplay(zoom);
-          setCurrentZoom(zoom);
-          setZoomNonce((n) => n + 1);
-        }
+        const z = Math.min(max, Math.max(min, zoomBase * event.scale));
+        void cam.controller.setZoom(primarySlot, z);
+        showZoomThrottled(z);
       })
       .onEnd(() => {
-        const { current } = cam.controller.getZoomBounds(primarySlot);
-        setZoomDisplay(current);
-        setCurrentZoom(current);
-        setZoomNonce((n) => n + 1);
+        showZoom(cam.controller.getZoomBounds(primarySlot).current);
       });
 
     return Gesture.Simultaneous(tap, pinch);
-  }, [cam.controller, primarySlot, width, height]);
+  }, [cam.controller, primarySlot, width, height, showZoom, showZoomThrottled]);
 
   return (
     <PermissionGate permissions={permissions}>
@@ -714,14 +388,14 @@ export function MultiCameraScreen(): React.ReactElement {
               pipInset={cam.pipInset}
               layout={cam.layout}
               onTapSecondary={swap}
-              onMovePip={onMovePip}
+              onMovePip={settings.onMovePip}
               showSecondaryPreview={cam.showSecondaryPreview}
             />
 
             {cam.status === 'running' && cam.layout === 'pip' && <RatioMask ratio={cam.outputRatio} />}
-            {cam.status === 'running' && <CameraGuides grid={grid} level={level} />}
+            {cam.status === 'running' && <CameraGuides grid={settings.grid} level={settings.level} />}
 
-            <ZoomIndicator zoom={zoomDisplay} nonce={zoomNonce} />
+            <ZoomIndicator zoom={zoom.zoomDisplay} nonce={zoom.zoomNonce} />
 
             <CameraTopBar
               photoFlash={photoFlash}
@@ -738,31 +412,31 @@ export function MultiCameraScreen(): React.ReactElement {
             )}
 
             <CaptureControls
-              mode={mode}
+              mode={effectiveMode}
               onSetMode={onSetMode}
-              onOpenSettings={() => setSettingsOpen(true)}
+              onOpenSettings={openSettings}
               blockedModes={cam.mode === 'sequential' ? SEQUENTIAL_BLOCKED_MODES : undefined}
               onBlockedMode={() => cam.controller.showNotice('error', t('sequential.videoBlocked'))}
               isRecording={cam.isRecording}
               isBusy={cam.isBusy}
-              onPhoto={onPhoto}
-              onToggleRecording={onToggleRecording}
-              onBoomerangStart={onBoomerangStart}
-              onBoomerangStop={onBoomerangStop}
+              onPhoto={flow.onPhoto}
+              onToggleRecording={flow.onToggleRecording}
+              onBoomerangStart={flow.onBoomerangStart}
+              onBoomerangStop={flow.onBoomerangStop}
               boomerangMaxMs={BOOMERANG_MAX_MS}
               onSwap={swap}
               canSwap={cam.mode === 'multi'}
               lastCapture={cam.lastCapture}
               processing={cam.processingCount > 0}
-              onOpenReview={() => setGalleryOpen(true)}
-              zoomMin={zoomBounds.min}
-              zoomMax={zoomBounds.max}
-              zoomLevels={zoomLevels}
-              currentZoom={currentZoom}
-              onZoom={onZoom}
+              onOpenReview={openGallery}
+              zoomMin={zoom.zoomBounds.min}
+              zoomMax={zoom.zoomBounds.max}
+              zoomLevels={zoom.zoomLevels}
+              currentZoom={zoom.currentZoom}
+              onZoom={zoom.onZoom}
             />
 
-            {boomHint && (
+            {boomHint && effectiveMode === 'boomerang' && (
               <View
                 pointerEvents="none"
                 style={{
@@ -808,7 +482,7 @@ export function MultiCameraScreen(): React.ReactElement {
             )}
 
             {/* Flash d'obturateur (feedback instantané, blanc) */}
-            <Animated.View pointerEvents="none" style={[styles.flash, { opacity: flashOpacity }]} />
+            <Animated.View pointerEvents="none" style={[styles.flash, { opacity: flow.flashOpacity }]} />
 
             {/* Anti-flou : voile sombre + « Ne bougez pas » pendant la capture réelle */}
             <Animated.View pointerEvents="none" style={[styles.holdStill, { opacity: holdStillOpacity }]}>
@@ -816,14 +490,14 @@ export function MultiCameraScreen(): React.ReactElement {
             </Animated.View>
 
             {/* Retardateur : décompte plein écran, tap = annuler */}
-            {countdown != null && (
+            {flow.countdown != null && (
               <Pressable
                 style={styles.countdown}
-                onPress={cancelCountdown}
+                onPress={flow.cancelCountdown}
                 accessibilityRole="button"
                 accessibilityLabel={t('capture.cancelTimerA11y')}
               >
-                <Text style={styles.countdownText}>{countdown}</Text>
+                <Text style={styles.countdownText}>{flow.countdown}</Text>
                 <Text style={styles.countdownHint}>{t('capture.cancelTimer')}</Text>
               </Pressable>
             )}
@@ -835,54 +509,54 @@ export function MultiCameraScreen(): React.ReactElement {
                 setSettingsOpen(false);
                 setMoreOpen(true);
               }}
-              mode={mode}
+              mode={effectiveMode}
               torch={torchOn}
               torchSupported={cam.hasTorch}
               onToggleTorch={toggleTorch}
               secondaryPreview={cam.showSecondaryPreview}
               secondaryPreviewSupported={cam.mode === 'multi'}
-              onToggleSecondaryPreview={toggleSecondaryPreview}
+              onToggleSecondaryPreview={settings.toggleSecondaryPreview}
               layout={cam.layout}
-              onSetLayout={setLayout}
-              timerSeconds={timerSeconds}
-              onSetTimerSeconds={setTimerSeconds}
-              burstCount={burstCount}
-              onSetBurstCount={setBurstCount}
+              onSetLayout={settings.setLayout}
+              timerSeconds={settings.timerSeconds}
+              onSetTimerSeconds={settings.setTimerSeconds}
+              burstCount={settings.burstCount}
+              onSetBurstCount={settings.setBurstCount}
               boomerangGif={cam.boomerangGif}
-              onToggleBoomerangGif={() => setBoomerangGif(!cam.boomerangGif)}
+              onToggleBoomerangGif={() => settings.setBoomerangGif(!cam.boomerangGif)}
               quality={cam.captureQuality}
-              onSetQuality={setQuality}
+              onSetQuality={settings.setQuality}
               captureSpeed={cam.captureSpeed}
-              onSetCaptureSpeed={setCaptureSpeed}
+              onSetCaptureSpeed={settings.setCaptureSpeed}
               outputRatio={cam.outputRatio}
-              onSetOutputRatio={setOutputRatio}
+              onSetOutputRatio={settings.setOutputRatio}
               photoSaveMode={cam.photoSaveMode}
-              onSetPhotoSaveMode={setPhotoSaveMode}
+              onSetPhotoSaveMode={settings.setPhotoSaveMode}
               videoSaveMode={cam.videoSaveMode}
-              onSetVideoSaveMode={setVideoSaveMode}
+              onSetVideoSaveMode={settings.setVideoSaveMode}
               videoFps={cam.videoFps}
-              onSetVideoFps={setVideoFps}
+              onSetVideoFps={settings.setVideoFps}
             />
 
             <MoreSettingsModal
               visible={moreOpen}
               onClose={() => setMoreOpen(false)}
               shutterSound={cam.shutterSound}
-              onToggleShutterSound={() => setShutterSound(!cam.shutterSound)}
-              volumeKeyAction={volumeKeyAction}
-              onSetVolumeKeyAction={setVolumeKeyAction}
+              onToggleShutterSound={() => settings.setShutterSound(!cam.shutterSound)}
+              volumeKeyAction={settings.volumeKeyAction}
+              onSetVolumeKeyAction={settings.setVolumeKeyAction}
               geotag={geo.enabled}
               onToggleGeotag={onToggleGeotag}
-              grid={grid}
-              onToggleGrid={() => setGrid(!grid)}
-              level={level}
-              onToggleLevel={() => setLevel(!level)}
+              grid={settings.grid}
+              onToggleGrid={() => settings.setGrid(!settings.grid)}
+              level={settings.level}
+              onToggleLevel={() => settings.setLevel(!settings.level)}
               mirrorFront={cam.mirrorFront}
-              onToggleMirrorFront={() => setMirrorFront(!cam.mirrorFront)}
+              onToggleMirrorFront={() => settings.setMirrorFront(!cam.mirrorFront)}
               watermark={cam.watermark}
-              onToggleWatermark={() => setWatermark(!cam.watermark)}
-              stabilization={stabilization}
-              onToggleStabilization={() => setStabilization(!stabilization)}
+              onToggleWatermark={() => settings.setWatermark(!cam.watermark)}
+              stabilization={settings.stabilization}
+              onToggleStabilization={() => settings.setStabilization(!settings.stabilization)}
               diagnostics={cam.diagnostics}
             />
 
