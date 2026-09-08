@@ -84,7 +84,9 @@ export function MediaViewer({
   const [cur, setCur] = useState(index);
   const [info, setInfo] = useState(false);
   const [chrome, setChrome] = useState(true);
-  const [dims, setDims] = useState<{ w: number; h: number } | null>(null);
+  // Dimensions mémorisées AVEC la clé du média : la validité est dérivée au
+  // rendu (clé courante ?), pas de remise à null dans un effet (#136).
+  const [dims, setDims] = useState<{ key: string; w: number; h: number } | null>(null);
 
   const curRef = useRef(index);
   const offsetX = useRef(new Animated.Value(-index * W)).current;
@@ -120,13 +122,13 @@ export function MediaViewer({
 
   // Dimensions réelles (photos uniquement) pour l'écran d'infos.
   useEffect(() => {
-    setDims(null);
     if (item == null || item.kind !== 'photo') return;
+    const key = keyOf(item);
     let active = true;
     RNImage.getSize(
       item.primaryUri,
       (w, h) => {
-        if (active) setDims({ w, h });
+        if (active) setDims({ key, w, h });
       },
       () => {},
     );
@@ -134,6 +136,7 @@ export function MediaViewer({
       active = false;
     };
   }, [item]);
+  const itemDims = item != null && dims != null && dims.key === keyOf(item) ? dims : null;
 
   const backdropOpacity = ty.interpolate({
     inputRange: [-H, 0, H],
@@ -340,7 +343,7 @@ export function MediaViewer({
               <InfoRow
                 icon="aspect-ratio"
                 label={t('gallery.infoResolution')}
-                value={dims != null ? `${dims.w} × ${dims.h}` : '—'}
+                value={itemDims != null ? `${itemDims.w} × ${itemDims.h}` : '—'}
                 styles={styles}
                 colors={colors}
               />
