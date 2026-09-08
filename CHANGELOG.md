@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.2](https://github.com/Devitek/dual/compare/v1.22.1...v1.22.2) (2026-09-08)
+
+
+### Bug Fixes
+
+* **gallery:** expo-image pour galerie, visionneuse et miniature ([#155](https://github.com/Devitek/dual/issues/155)) ([b96bac0](https://github.com/Devitek/dual/commit/b96bac048ce857a4a5ff1d959ca5090b0ce2ec7b))
+
 ## [1.22.1](https://github.com/Devitek/dual/compare/v1.22.0...v1.22.1) (2026-09-07)
 
 
