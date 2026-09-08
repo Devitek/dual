@@ -16,9 +16,16 @@ export function Snackbar({ notice }: { notice: Notice | null }): React.ReactElem
   const opacity = useRef(new Animated.Value(0)).current;
   const styles = useThemedStyles(makeStyles);
 
+  // Adopte le nouveau notice PENDANT le rendu (pattern React « info du rendu
+  // précédent ») ; l'effet ne garde que les vrais effets de bord (#136).
+  const [prevId, setPrevId] = useState<number | null>(null);
+  if (notice != null && notice.id !== prevId) {
+    setPrevId(notice.id);
+    setCurrent(notice);
+  }
+
   useEffect(() => {
     if (notice == null) return;
-    setCurrent(notice);
     if (notice.kind === 'success') haptics.success();
     else haptics.error();
 

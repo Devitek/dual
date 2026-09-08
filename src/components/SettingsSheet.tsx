@@ -210,9 +210,16 @@ export function SettingsSheet(props: SettingsSheetProps): React.ReactElement {
     });
   }, [translateY, onClose]);
 
+  // Repart sur Général à chaque ouverture (comme Google Camera) : ajustement
+  // d'état PENDANT le rendu, pas dans l'effet d'animation (#136).
+  const [prevVisible, setPrevVisible] = useState(visible);
+  if (prevVisible !== visible) {
+    setPrevVisible(visible);
+    if (visible) setTab('general');
+  }
+
   useEffect(() => {
     if (!visible) return;
-    setTab('general'); // repart sur Général à chaque ouverture (comme Google Camera)
     translateY.setValue(SCREEN_H);
     Animated.spring(translateY, { toValue: 0, useNativeDriver: false, bounciness: 3, speed: 14 }).start();
   }, [visible, translateY]);

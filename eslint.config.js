@@ -34,7 +34,9 @@ module.exports = defineConfig([
       // existantes qui demandent une restructuration : warn interdit d'en
       // AJOUTER (via --max-warnings 0)… une fois le stock purgé. Burn-down
       // suivi en issue ; ne pas passer à 'error' avant.
-      'react-hooks/set-state-in-effect': 'warn',
+      // Burn-down #136 terminé : plus aucun setState synchrone dans un effet,
+      // la règle est verrouillée en erreur.
+      'react-hooks/set-state-in-effect': 'error',
     },
   },
 ]);

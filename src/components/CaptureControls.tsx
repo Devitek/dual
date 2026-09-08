@@ -97,11 +97,16 @@ export function CaptureControls({
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
 
+  // Remise à zéro du chrono à l'arrêt : ajustement d'état PENDANT le rendu
+  // (pattern React « info du rendu précédent »), pas dans un effet (#136).
+  const [prevRecording, setPrevRecording] = useState(isRecording);
+  if (prevRecording !== isRecording) {
+    setPrevRecording(isRecording);
+    if (!isRecording) setElapsed(0);
+  }
+
   useEffect(() => {
-    if (!isRecording) {
-      setElapsed(0);
-      return;
-    }
+    if (!isRecording) return;
     const startedAt = Date.now();
     const id = setInterval(() => setElapsed((Date.now() - startedAt) / 1000), 250);
     return () => clearInterval(id);

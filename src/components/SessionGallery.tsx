@@ -55,13 +55,17 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
   const data = [...captures].reverse(); // plus récent d'abord
   const cellSize = (width - PADDING * 2 - GAP * (COLS - 1)) / COLS;
 
-  // Réinitialise l'état transitoire à la fermeture de la galerie.
-  useEffect(() => {
-    if (visible) return;
-    setPreviewIndex(null);
-    setSelectMode(false);
-    setSelected(new Set());
-  }, [visible]);
+  // Réinitialise l'état transitoire à la fermeture : ajustement d'état PENDANT
+  // le rendu (pattern React « info du rendu précédent »), pas d'effet (#136).
+  const [prevVisible, setPrevVisible] = useState(visible);
+  if (prevVisible !== visible) {
+    setPrevVisible(visible);
+    if (!visible) {
+      setPreviewIndex(null);
+      setSelectMode(false);
+      setSelected(new Set());
+    }
+  }
 
   // Génère les posters des vidéos (best-effort).
   useEffect(() => {
