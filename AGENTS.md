@@ -135,6 +135,24 @@ Contexte : un testeur (Samsung S24 Ultra / One UI) a signalé « les réglages r
 
 ---
 
-## 9. Fichiers à tenir à jour quand tu changes le comportement
+## 9. GitHub = base de connaissance (IMPÉRATIF)
+
+Le savoir du projet vit dans GitHub, pas dans la tête de qui l'a fait :
+
+1. **Toute unité de travail non triviale COMMENCE par une issue** (contexte,
+   constat/preuves, plan, critères d'acceptation). Les templates existent
+   (bug / feature / audit / ADR / incident).
+2. **Les écueils, impasses et décisions prises en cours de route sont
+   documentés EN COMMENTAIRES de l'issue au fil de l'eau** — pas seulement le
+   résultat final. Une alternative écartée sans trace sera re-tentée par le
+   suivant.
+3. **Chaque PR référence son issue** (`Closes #N`) ; la PR porte le « quoi/
+   comment », l'issue porte le « pourquoi/le chemin parcouru ».
+4. Décision structurante (dépendance, versioning, natif vs lib, privacy…) →
+   **ADR** dans `docs-dev/adr/` (l'issue 📐 sert de discussion préalable).
+5. Labels : `audit p0-security perf android expo fastlane ci docs skill adr
+   play-store test dx i18n incident`.
+
+## 10. Fichiers à tenir à jour quand tu changes le comportement
 - `AGENTS.md` (ce fichier), `RELEASE.md` (procédures/gotchas Play), `TODO.md` (état d'avancement), `CHANGELOG.md` (**auto** via release-please — ne pas éditer à la main).
 - **Décisions structurantes → `docs-dev/adr/`** (voir son README) : toute décision d'architecture non triviale (dépendance réseau, versioning, natif vs lib…) passe par un ADR. En particulier : **ADR 0007 (privacy = produit)** — aucune dépendance qui transmet des données hors device sans nouvel ADR.
