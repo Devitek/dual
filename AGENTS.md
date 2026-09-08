@@ -4,7 +4,7 @@
 > qui travaille sur ce dépôt. **Respecte-le sans exception.** En cas de doute,
 > demande avant d'agir.
 
-## 0. TL;DR — les 7 règles d'or
+## 0. TL;DR : les 8 règles d'or
 1. **Conventional Commits obligatoires** (`feat:`, `fix:`, `ci:`, `chore:`, `docs:`…). C'est ce qui pilote la version.
 2. **Jamais de push direct sur `main`** → passe par une **branche + PR**. La CI (`Typecheck · Doctor · Bundle`) doit être verte.
 3. **Jamais** créer un tag/release à la main, ni bumper une version à la main. **release-please** possède `package.json`, `app.json` (`$.expo.version`), `CHANGELOG.md` et `.release-please-manifest.json`.
@@ -12,6 +12,7 @@
 5. **`android/` et `ios/` sont générés** (CNG, gitignorés). Ne les édite pas : modifie `app.json` / config plugins / le module natif local.
 6. **Avant de livrer** : `npm run typecheck` (tsc) + `npm run lint` (ESLint, ratchet 0 nouvelle warning) + `npm run format:check` verts, `npx expo-doctor` OK, et si tu touches aux permissions → `expo prebuild` + vérif du manifest.
 7. **Réglages utilisateur = TOUT persister** via la source unique `src/services/settings.ts`. Un réglage non persisté « repart au défaut » à chaque mort du process (fréquent sur Samsung). Voir §8.
+8. **Tiret cadratin (em-dash, « — ») INTERDIT** dans tout texte produit par un agent : commentaires de code, docs, issues, PRs, commits. Utilise une virgule, deux points, des parenthèses ou une phrase séparée. (Les tirets de titres déjà présents dans ce fichier sont historiques ; n'en ajoute pas de nouveaux.)
 
 ---
 

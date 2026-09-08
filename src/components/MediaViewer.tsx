@@ -3,13 +3,15 @@ import {
   Animated,
   Dimensions,
   type DimensionValue,
-  Image,
+  // getSize n'existe pas sur expo-image → on garde l'API RN pour les dimensions (#146).
+  Image as RNImage,
   PanResponder,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
 import {
   GestureHandlerRootView,
@@ -121,7 +123,7 @@ export function MediaViewer({
     setDims(null);
     if (item == null || item.kind !== 'photo') return;
     let active = true;
-    Image.getSize(
+    RNImage.getSize(
       item.primaryUri,
       (w, h) => {
         if (active) setDims({ w, h });
@@ -251,11 +253,11 @@ export function MediaViewer({
             return (
               <View key={keyOf(m)} style={styles.page}>
                 {m.kind === 'photo' ? (
-                  <Image source={{ uri: m.primaryUri }} style={styles.media} resizeMode="contain" />
+                  <Image source={{ uri: m.primaryUri }} style={styles.media} contentFit="contain" />
                 ) : i === cur ? (
                   <VideoView player={player} style={styles.media} contentFit="contain" nativeControls={false} />
                 ) : poster != null ? (
-                  <Image source={{ uri: poster }} style={styles.media} resizeMode="contain" />
+                  <Image source={{ uri: poster }} style={styles.media} contentFit="contain" />
                 ) : (
                   <View style={[styles.media, styles.videoPlaceholder]}>
                     <MaterialIcons name="movie" size={44} color={colors.onSurfaceVariant} />
