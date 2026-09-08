@@ -43,6 +43,13 @@ npx expo prebuild --platform android --no-install --clean
 grep -o 'android:name="android.permission.[^"]*"' android/app/src/main/AndroidManifest.xml | sort -u
 ```
 
+## Issues = base de connaissance (avant de coder)
+
+Toute unité de travail non triviale commence par une **issue** (contexte, plan,
+critères d'acceptation) ; les écueils et décisions rencontrés en route se
+documentent **en commentaires au fil de l'eau** ; la PR ferme l'issue
+(`Closes #N`). Décision structurante → ADR (`docs-dev/adr/`). Voir AGENTS.md §9.
+
 ## Branches, commits, PR
 
 - Branche dédiée (`feat/…`, `fix/…`, `ci/…`, `docs/…`) — **jamais** de push
