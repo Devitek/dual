@@ -22,7 +22,7 @@ on:
         options: [alpha, beta, production]
         default: alpha
       rollout:
-        description: 'Rollout production (fraction 0..1 — ignoré hors production)'
+        description: "Rollout production : FRACTION d'utilisateurs entre 0 et 1 (0.1 = 10 %). Ce n'est PAS une version : la version promue est toujours la DERNIÈRE de la piste source. Ignoré hors production."
         type: string
         default: '0.1'
 
@@ -41,6 +41,23 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
+      # Fail-fast (#169) : valider le rollout AVANT fastlane, avec un message
+      # qui explique le piège vécu (une VERSION saisie à la place de la fraction).
+      - name: Validate rollout input
+        if: inputs.to_track == 'production'
+        env:
+          ROLLOUT: ${{ inputs.rollout }}
+        run: |
+          if ! printf '%s' "$ROLLOUT" | grep -Eq '^0?\.[0-9]+$|^1(\.0+)?$'; then
+            echo "::error::rollout='$ROLLOUT' invalide. Ce champ attend une FRACTION d'utilisateurs entre 0 et 1 (ex. 0.1 = 10 %), pas un numéro de version : la version promue est automatiquement la DERNIÈRE de la piste source."
+            exit 1
+          fi
+          if awk "BEGIN { exit !($ROLLOUT <= 0 || $ROLLOUT > 1) }"; then
+            echo "::error::rollout='$ROLLOUT' hors bornes : doit être > 0 et <= 1 (1 = 100 % des utilisateurs)."
+            exit 1
+          fi
+          echo "Rollout production : $(awk "BEGIN { printf \"%d\", $ROLLOUT * 100 }") % des utilisateurs."
+
       - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1
         with:
           ruby-version: '3.3'
@@ -50,6 +67,20 @@ jobs:
         env:
           PLAY_SA_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
         run: printf '%s' "$PLAY_SA_JSON" > "$RUNNER_TEMP/play.json"
+
+      # Affiche la version qui VA etre promue (la derniere de la piste source),
+      # dans le log et le resume du job (#169). Best-effort, ne bloque jamais.
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+
+      - name: Show source track versions
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON_PATH: ${{ runner.temp }}/play.json
+          TRACK_NAME: ${{ inputs.from_track }}
+        run: |
+          pip install --quiet google-auth requests
+          python3 store/show_track.py
 
       - name: Promote
         env:
