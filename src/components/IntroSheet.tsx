@@ -87,7 +87,12 @@ export function IntroSheet({ mode, onClose }: IntroSheetProps): React.ReactEleme
             ))}
           </ScrollView>
 
-          <Pressable style={styles.cta} onPress={close} android_ripple={{ color: colors.onPrimary }}>
+          <Pressable
+            style={styles.cta}
+            onPress={close}
+            android_ripple={{ color: colors.onPrimary }}
+            accessibilityRole="button"
+          >
             <Text style={styles.ctaLabel}>{t(isOnboarding ? 'intro.start' : 'intro.gotIt')}</Text>
           </Pressable>
         </View>

@@ -233,6 +233,11 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
                   onPress={() => onCellPress(item)}
                   onLongPress={() => onCellLongPress(item)}
                   delayLongPress={300}
+                  accessibilityRole="button"
+                  accessibilityLabel={t(item.kind === 'photo' ? 'gallery.cellPhotoA11y' : 'gallery.cellVideoA11y', {
+                    date: new Date(item.createdAt).toLocaleString(i18n.language),
+                  })}
+                  accessibilityState={{ selected: isSelected }}
                 >
                   {item.kind === 'photo' ? (
                     <Image

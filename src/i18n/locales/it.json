@@ -29,7 +29,8 @@
     "boomerangHoldA11y": "Tieni premuto per registrare un boomerang",
     "boomerangHint": "Tieni premuto l’otturatore per registrare un boomerang",
     "cancelTimer": "Tocca per annullare",
-    "cancelTimerA11y": "Annulla il timer"
+    "cancelTimerA11y": "Annulla il timer",
+    "zoomPresetA11y": "Zoom {{level}}×"
   },
   "mode": {
     "photo": "FOTO",
@@ -145,7 +146,9 @@
     "infoDual": "Doppia (PiP)",
     "yes": "Sì",
     "no": "No",
-    "infoDuration": "Durata"
+    "infoDuration": "Durata",
+    "cellPhotoA11y": "Foto del {{date}}",
+    "cellVideoA11y": "Video del {{date}}"
   },
   "error": {
     "title": "Fotocamere non disponibili",
