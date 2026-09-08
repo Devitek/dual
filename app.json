@@ -55,7 +55,8 @@
           "isAndroidForegroundServiceEnabled": false
         }
       ],
-      "./plugins/withRemoveActivityRecognition"
+      "./plugins/withRemoveUnusedPermissions",
+      "expo-image"
     ]
   }
 }

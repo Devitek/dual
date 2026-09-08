@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { FlatList, Image, Linking, Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { FlatList, Linking, Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Image } from 'expo-image';
 import { MaterialIcons, FontAwesome6 } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -230,9 +231,21 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
                   delayLongPress={300}
                 >
                   {item.kind === 'photo' ? (
-                    <Image source={{ uri: item.primaryUri }} style={styles.cellImg} />
+                    <Image
+                      source={{ uri: item.primaryUri }}
+                      style={styles.cellImg}
+                      contentFit="cover"
+                      recyclingKey={keyOf(item)}
+                      transition={80}
+                    />
                   ) : poster != null ? (
-                    <Image source={{ uri: poster }} style={styles.cellImg} />
+                    <Image
+                      source={{ uri: poster }}
+                      style={styles.cellImg}
+                      contentFit="cover"
+                      recyclingKey={keyOf(item)}
+                      transition={80}
+                    />
                   ) : (
                     <View style={[styles.cellImg, styles.videoCell]}>
                       <MaterialIcons name="videocam" size={26} color={colors.onSurfaceVariant} />

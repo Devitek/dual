@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Easing, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -205,7 +206,7 @@ export function CaptureControls({
                   accessibilityLabel={t('capture.thumbnailA11y')}
                 >
                   {lastCapture.kind === 'photo' ? (
-                    <Image source={{ uri: lastCapture.primaryUri }} style={styles.thumb} />
+                    <Image source={{ uri: lastCapture.primaryUri }} style={styles.thumb} contentFit="cover" />
                   ) : (
                     <View style={[styles.thumb, styles.videoThumb]}>
                       <MaterialIcons name="play-arrow" size={22} color={colors.onSurface} />
