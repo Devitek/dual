@@ -12,6 +12,7 @@ import { useInAppUpdate } from '../hooks/useInAppUpdate';
 import { useVolumeShutter } from '../hooks/useVolumeShutter';
 import { useGeotag } from '../hooks/useGeotag';
 import { useZoomState } from '../hooks/useZoomState';
+import { useDeviceOrientation } from '../hooks/useDeviceOrientation';
 import { useCaptureFlow, BOOMERANG_MAX_MS } from '../hooks/useCaptureFlow';
 import { useSettingsWiring } from '../hooks/useSettingsWiring';
 import { PermissionGate } from '../components/PermissionGate';
@@ -115,6 +116,10 @@ export function MultiCameraScreen(): React.ReactElement {
   });
 
   const zoom = useZoomState(cam.controller, primarySlot, cam.status);
+  // Rotation des contenus de boutons selon l'orientation physique (#173),
+  // activité verrouillée portrait (façon Google Camera). Capteur actif
+  // uniquement caméra prête et app au premier plan.
+  const uiRotation = useDeviceOrientation(cam.status === 'running' && isForeground);
   // Fonctions stables (useCallback) extraites pour les deps des callbacks/effets :
   // l'objet `zoom`/`flow` change à chaque rendu, pas ses fonctions.
   const { showZoom, showZoomThrottled, syncToSlot } = zoom;
@@ -403,6 +408,7 @@ export function MultiCameraScreen(): React.ReactElement {
               onCyclePhotoFlash={cyclePhotoFlash}
               aeLocked={cam.aeLocked}
               onToggleAeLock={toggleAeLock}
+              uiRotation={uiRotation}
             />
 
             {update.updateAvailable && <UpdateBanner onUpdate={update.startUpdate} onDismiss={update.snooze} />}
@@ -434,6 +440,7 @@ export function MultiCameraScreen(): React.ReactElement {
               zoomLevels={zoom.zoomLevels}
               currentZoom={zoom.currentZoom}
               onZoom={zoom.onZoom}
+              uiRotation={uiRotation}
             />
 
             {boomHint && effectiveMode === 'boomerang' && (
