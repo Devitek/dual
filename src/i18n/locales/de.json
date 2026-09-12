@@ -125,7 +125,8 @@
     "journalEntries_one": "{{count}} Eintrag aufgezeichnet (nur lokal, wird nie gesendet)",
     "journalEntries_other": "{{count}} Einträge aufgezeichnet (nur lokal, wird nie gesendet)",
     "copyJournal": "Protokoll kopieren",
-    "clearJournal": "Löschen"
+    "clearJournal": "Löschen",
+    "rateApp": "TwinLens bewerten"
   },
   "gallery": {
     "title": "Sitzungsmedien",

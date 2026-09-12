@@ -125,7 +125,8 @@
     "journalEntries_one": "{{count}} entrada registrada (solo local, nunca se envía)",
     "journalEntries_other": "{{count}} entradas registradas (solo local, nunca se envía)",
     "copyJournal": "Copiar registro",
-    "clearJournal": "Borrar"
+    "clearJournal": "Borrar",
+    "rateApp": "Valorar TwinLens"
   },
   "gallery": {
     "title": "Medios de la sesión",

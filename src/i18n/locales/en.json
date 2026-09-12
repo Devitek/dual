@@ -125,7 +125,8 @@
     "journalEntries_one": "{{count}} entry recorded (local only, never sent)",
     "journalEntries_other": "{{count}} entries recorded (local only, never sent)",
     "copyJournal": "Copy journal",
-    "clearJournal": "Clear"
+    "clearJournal": "Clear",
+    "rateApp": "Rate TwinLens"
   },
   "gallery": {
     "title": "Session media",

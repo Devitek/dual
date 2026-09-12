@@ -125,7 +125,8 @@
     "journalEntries_one": "{{count}} voce registrata (solo locale, mai inviato)",
     "journalEntries_other": "{{count}} voci registrate (solo locale, mai inviato)",
     "copyJournal": "Copia registro",
-    "clearJournal": "Cancella"
+    "clearJournal": "Cancella",
+    "rateApp": "Valuta TwinLens"
   },
   "gallery": {
     "title": "Contenuti della sessione",
