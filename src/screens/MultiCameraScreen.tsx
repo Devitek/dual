@@ -13,6 +13,7 @@ import { useVolumeShutter } from '../hooks/useVolumeShutter';
 import { useGeotag } from '../hooks/useGeotag';
 import { useZoomState } from '../hooks/useZoomState';
 import { useDeviceOrientation } from '../hooks/useDeviceOrientation';
+import { useReviewPrompt } from '../hooks/useReviewPrompt';
 import { useCaptureFlow, BOOMERANG_MAX_MS } from '../hooks/useCaptureFlow';
 import { useSettingsWiring } from '../hooks/useSettingsWiring';
 import { PermissionGate } from '../components/PermissionGate';
@@ -120,6 +121,8 @@ export function MultiCameraScreen(): React.ReactElement {
   // activité verrouillée portrait (façon Google Camera). Capteur actif
   // uniquement caméra prête et app au premier plan.
   const uiRotation = useDeviceOrientation(cam.status === 'running' && isForeground);
+  // Avis Play (#179) : sollicité au plus une fois, à la fermeture de la galerie.
+  const review = useReviewPrompt(cam.lastCapture, cam.notice);
   // Fonctions stables (useCallback) extraites pour les deps des callbacks/effets :
   // l'objet `zoom`/`flow` change à chaque rendu, pas ses fonctions.
   const { showZoom, showZoomThrottled, syncToSlot } = zoom;
@@ -572,7 +575,11 @@ export function MultiCameraScreen(): React.ReactElement {
             <SessionGallery
               visible={galleryOpen}
               captures={cam.sessionCaptures}
-              onClose={() => setGalleryOpen(false)}
+              onClose={() => {
+                setGalleryOpen(false);
+                // Moment de satisfaction : l'utilisateur vient de voir ses photos.
+                review.onGalleryClosed();
+              }}
               onDelete={(c) => cam.controller.removeCapture(c)}
             />
 
