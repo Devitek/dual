@@ -8,6 +8,7 @@ import Svg, { Circle } from 'react-native-svg';
 
 import { useColors, useThemedStyles, type Palette } from '../theme/theme';
 import { ModeSwitch, type CaptureMode } from './ModeSwitch';
+import { RotatingView } from './RotatingView';
 import { ZoomControl } from './ZoomControl';
 import type { CapturedMedia } from '../vision/MultiCamController';
 
@@ -49,6 +50,8 @@ interface CaptureControlsProps {
   zoomLevels: number[];
   currentZoom: number;
   onZoom: (zoom: number) => void;
+  /** Rotation (degrés) du contenu des boutons selon l'orientation physique (#173). */
+  uiRotation?: number;
 }
 
 function formatDuration(seconds: number): string {
@@ -84,6 +87,7 @@ export function CaptureControls({
   lastCapture,
   processing = false,
   onOpenReview,
+  uiRotation = 0,
   zoomMin,
   zoomMax,
   zoomLevels,
@@ -179,7 +183,14 @@ export function CaptureControls({
       )}
 
       <View style={styles.stack}>
-        <ZoomControl min={zoomMin} max={zoomMax} presets={zoomLevels} value={currentZoom} onZoom={onZoom} />
+        <ZoomControl
+          min={zoomMin}
+          max={zoomMax}
+          presets={zoomLevels}
+          value={currentZoom}
+          onZoom={onZoom}
+          uiRotation={uiRotation}
+        />
 
         <ModeSwitch
           mode={mode}
@@ -198,7 +209,9 @@ export function CaptureControls({
             accessibilityRole="button"
             accessibilityLabel={t('topBar.settingsA11y')}
           >
-            <MaterialIcons name="tune" size={24} color={colors.onSurface} />
+            <RotatingView rotation={uiRotation}>
+              <MaterialIcons name="tune" size={24} color={colors.onSurface} />
+            </RotatingView>
           </Pressable>
 
           {/* Miniature de la dernière capture (+ indicateur de traitement) */}
@@ -210,18 +223,21 @@ export function CaptureControls({
                   onPress={onOpenReview}
                   accessibilityLabel={t('capture.thumbnailA11y')}
                 >
-                  {lastCapture.kind === 'photo' ? (
-                    <Image source={{ uri: lastCapture.primaryUri }} style={styles.thumb} contentFit="cover" />
-                  ) : (
-                    <View style={[styles.thumb, styles.videoThumb]}>
-                      <MaterialIcons name="play-arrow" size={22} color={colors.onSurface} />
-                    </View>
-                  )}
-                  {lastCapture.secondaryUri != null && (
-                    <View style={styles.dualBadge}>
-                      <Text style={styles.dualBadgeText}>PiP</Text>
-                    </View>
-                  )}
+                  {/* Le CONTENU pivote dans le cadre arrondi fixe (façon Google Camera). */}
+                  <RotatingView rotation={uiRotation}>
+                    {lastCapture.kind === 'photo' ? (
+                      <Image source={{ uri: lastCapture.primaryUri }} style={styles.thumb} contentFit="cover" />
+                    ) : (
+                      <View style={[styles.thumb, styles.videoThumb]}>
+                        <MaterialIcons name="play-arrow" size={22} color={colors.onSurface} />
+                      </View>
+                    )}
+                    {lastCapture.secondaryUri != null && (
+                      <View style={styles.dualBadge}>
+                        <Text style={styles.dualBadgeText}>PiP</Text>
+                      </View>
+                    )}
+                  </RotatingView>
                   {processing && (
                     <View style={styles.processingOverlay}>
                       <ActivityIndicator size="small" color={colors.onSurface} />
@@ -299,7 +315,9 @@ export function CaptureControls({
               accessibilityRole="button"
               accessibilityLabel={t('capture.swapA11y')}
             >
-              <MaterialIcons name="cameraswitch" size={24} color={colors.onSurface} />
+              <RotatingView rotation={uiRotation}>
+                <MaterialIcons name="cameraswitch" size={24} color={colors.onSurface} />
+              </RotatingView>
             </Pressable>
           </View>
 

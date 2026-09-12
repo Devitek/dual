@@ -3,6 +3,7 @@ import { Animated, PanResponder, Pressable, StyleSheet, Text, View } from 'react
 import { useTranslation } from 'react-i18next';
 
 import { haptics } from '../utils/haptics';
+import { RotatingView } from './RotatingView';
 
 interface ZoomControlProps {
   min: number;
@@ -13,6 +14,8 @@ interface ZoomControlProps {
   value: number;
   /** Zoom demandé (continu). */
   onZoom: (zoom: number) => void;
+  /** Rotation (degrés) du contenu des chips selon l'orientation physique (#173). */
+  uiRotation?: number;
 }
 
 const WIDTH = 280;
@@ -45,7 +48,14 @@ function chipLabel(z: number): string {
  *    de valeur, accroche magnétique + tick haptique. Glissement RELATIF : marche
  *    quelle que soit la position du doigt à l'écran. Auto-repli après inactivité.
  */
-export function ZoomControl({ min, max, presets, value, onZoom }: ZoomControlProps): React.ReactElement | null {
+export function ZoomControl({
+  min,
+  max,
+  presets,
+  value,
+  onZoom,
+  uiRotation = 0,
+}: ZoomControlProps): React.ReactElement | null {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   // Valeur LOCALE pendant le glissement : pilote le ruler à 60fps sans re-rendre
@@ -230,13 +240,15 @@ export function ZoomControl({ min, max, presets, value, onZoom }: ZoomControlPro
                 accessibilityLabel={t('capture.zoomPresetA11y', { level: pr })}
                 accessibilityState={{ selected: active }}
               >
-                {active ? (
-                  <View style={styles.activeChip}>
-                    <Text style={styles.activeText}>{fmt(shownValue)}</Text>
-                  </View>
-                ) : (
-                  <Text style={styles.chipText}>{chipLabel(pr)}</Text>
-                )}
+                <RotatingView rotation={uiRotation}>
+                  {active ? (
+                    <View style={styles.activeChip}>
+                      <Text style={styles.activeText}>{fmt(shownValue)}</Text>
+                    </View>
+                  ) : (
+                    <Text style={styles.chipText}>{chipLabel(pr)}</Text>
+                  )}
+                </RotatingView>
               </Pressable>
             );
           })}
