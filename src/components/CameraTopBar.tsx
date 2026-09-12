@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import { useColors, useThemedStyles, type Palette } from '../theme/theme';
+import { RotatingView } from './RotatingView';
 
 export type PhotoFlashMode = 'off' | 'on' | 'auto';
 export type TorchState = 'on' | 'off';
@@ -23,6 +24,8 @@ interface CameraTopBarProps {
   onCyclePhotoFlash: () => void;
   aeLocked: boolean;
   onToggleAeLock: () => void;
+  /** Rotation (degrés) du contenu des boutons selon l'orientation physique (#173). */
+  uiRotation?: number;
 }
 
 /**
@@ -35,6 +38,7 @@ export function CameraTopBar({
   onCyclePhotoFlash,
   aeLocked,
   onToggleAeLock,
+  uiRotation = 0,
 }: CameraTopBarProps): React.ReactElement {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
@@ -56,11 +60,13 @@ export function CameraTopBar({
           accessibilityState={{ selected: aeLocked }}
           accessibilityLabel={t('topBar.aeLockA11y')}
         >
-          <MaterialIcons
-            name={aeLocked ? 'lock' : 'lock-open'}
-            size={20}
-            color={aeLocked ? colors.warning : colors.onSurface}
-          />
+          <RotatingView rotation={uiRotation}>
+            <MaterialIcons
+              name={aeLocked ? 'lock' : 'lock-open'}
+              size={20}
+              color={aeLocked ? colors.warning : colors.onSurface}
+            />
+          </RotatingView>
         </Pressable>
 
         <Pressable
@@ -80,7 +86,9 @@ export function CameraTopBar({
             ),
           })}
         >
-          <MaterialIcons name={FLASH_ICON[photoFlash]} size={21} color={flashColor} />
+          <RotatingView rotation={uiRotation}>
+            <MaterialIcons name={FLASH_ICON[photoFlash]} size={21} color={flashColor} />
+          </RotatingView>
         </Pressable>
       </View>
     </View>
