@@ -12,10 +12,12 @@ describe('angleDelta', () => {
 
 describe('orientationFromAccel', () => {
   const cases: { nom: string; x: number; y: number; prev: DeviceOrientation; attendu: DeviceOrientation }[] = [
+    // Réaction opposée à la gravité : bord droit en bas => haut monde côté
+    // bord gauche => x = -1 (bug de signe vécu sur device, corrigé).
     { nom: 'portrait droit', x: 0, y: 1, prev: 90, attendu: 0 },
-    { nom: '90° horaire (bord droit en bas)', x: 1, y: 0, prev: 0, attendu: 90 },
+    { nom: '90° horaire (bord droit en bas)', x: -1, y: 0, prev: 0, attendu: 90 },
     { nom: 'tête en bas', x: 0, y: -1, prev: 0, attendu: 180 },
-    { nom: '270° (bord gauche en bas)', x: -1, y: 0, prev: 0, attendu: 270 },
+    { nom: '270° (bord gauche en bas)', x: 1, y: 0, prev: 0, attendu: 270 },
   ];
   for (const c of cases) {
     it(c.nom, () => {
@@ -32,9 +34,9 @@ describe('orientationFromAccel', () => {
   });
 
   it('bascule une fois la fenêtre de 30° atteinte', () => {
-    // 65° depuis le portrait : à 25° de l'axe 90 -> bascule.
+    // 65° horaires depuis le portrait : à 25° de l'axe 90 -> bascule.
     const rad = (65 * Math.PI) / 180;
-    expect(orientationFromAccel(Math.sin(rad), Math.cos(rad), 0)).toBe(90);
+    expect(orientationFromAccel(-Math.sin(rad), Math.cos(rad), 0)).toBe(90);
   });
 
   it('téléphone à plat : conserve l’orientation courante', () => {

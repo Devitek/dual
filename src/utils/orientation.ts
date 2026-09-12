@@ -30,8 +30,11 @@ export function angleDelta(a: number, b: number): number {
  * Quantise une lecture d'accéléromètre en orientation 0/90/180/270.
  *
  * Convention expo-sensors (portrait, téléphone vertical) : x vers la droite de
- * l'écran, y vers le haut, valeurs en g. Téléphone droit -> (0, 1) ;
- * tourné de 90° horaire (bord droit vers le bas) -> (1, 0).
+ * l'écran, y vers le haut, valeurs en g. L'accéléromètre mesure la force de
+ * RÉACTION (opposée à la gravité) : téléphone droit -> (0, 1) ; tourné de 90°
+ * horaire (bord droit vers le bas), le « haut monde » est du côté du bord
+ * gauche -> (-1, 0). D'où le -x dans l'atan2 (bug de signe vécu : les deux
+ * paysages étaient étiquetés à l'envers, icônes pivotées du mauvais côté).
  *
  * @param x lecture accéléromètre axe x (g)
  * @param y lecture accéléromètre axe y (g)
@@ -41,8 +44,8 @@ export function orientationFromAccel(x: number, y: number, prev: DeviceOrientati
   // Téléphone à plat : pas d'information fiable dans le plan écran.
   if (Math.sqrt(x * x + y * y) < FLAT_THRESHOLD) return prev;
 
-  // Angle horaire de la gravité dans le plan écran : 0 = portrait droit.
-  const angle = (Math.atan2(x, y) * 180) / Math.PI; // [-180, 180]
+  // Angle HORAIRE de rotation du téléphone : 0 = portrait droit.
+  const angle = (Math.atan2(-x, y) * 180) / Math.PI; // [-180, 180]
 
   for (const candidate of [0, 90, 180, 270] as const) {
     if (candidate === prev) continue;
