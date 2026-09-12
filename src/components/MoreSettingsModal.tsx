@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -187,6 +187,27 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
     </View>
   );
 
+  // Raccourci volontaire vers la fiche Play (#183) : complément du one-shot
+  // In-App Review (#179), qui n'est pas déclenchable à la demande (quotas Play).
+  const rateRow = (
+    <Pressable
+      style={styles.cardRow}
+      onPress={() => {
+        void Linking.openURL('market://details?id=fr.devitek.twinlens').catch(() =>
+          Linking.openURL('https://play.google.com/store/apps/details?id=fr.devitek.twinlens'),
+        );
+      }}
+      accessibilityRole="button"
+      accessibilityLabel={t('settings.rateApp')}
+    >
+      <MaterialIcons name="star-rate" size={22} color={colors.onSurfaceVariant} />
+      <View style={styles.rowTexts}>
+        <Text style={styles.rowLabel}>{t('settings.rateApp')}</Text>
+      </View>
+      <MaterialIcons name="open-in-new" size={18} color={colors.onSurfaceVariant} />
+    </Pressable>
+  );
+
   const reportRow = (
     <View style={styles.cardRowCol}>
       <View style={styles.rowHeader}>
@@ -301,7 +322,7 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
           ])}
 
           <Text style={styles.section}>{t('settings.catHelp')}</Text>
-          {card([reportRow, journalRow])}
+          {card([rateRow, reportRow, journalRow])}
 
           <Text style={styles.version}>
             {t('settings.version')} {APP_VERSION}
