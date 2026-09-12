@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.23.0](https://github.com/Devitek/dual/compare/v1.22.4...v1.23.0) (2026-09-12)
+
+
+### Features
+
+* **camera:** rotation des contenus de boutons selon l'orientation physique ([#175](https://github.com/Devitek/dual/issues/175)) ([f27e200](https://github.com/Devitek/dual/commit/f27e2007358b431210176930feee800d5c241d74))
+
+
+### Performance Improvements
+
+* **android:** enable R8 full mode and optimized resource shrinking ([#176](https://github.com/Devitek/dual/issues/176)) ([11e32b5](https://github.com/Devitek/dual/commit/11e32b53099fd2e212b97ee1c9b4a8a9c5c51207))
+
 ## [1.22.4](https://github.com/Devitek/dual/compare/v1.22.3...v1.22.4) (2026-09-08)
 
 
