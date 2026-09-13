@@ -1,4 +1,2 @@
-Dual photo even without concurrent cameras: on unsupported phones TwinLens now takes both photos back-to-back and merges them (sequential mode).
-Redesigned settings (General/Pro + full screen), gesture photo & video viewer with playback controls.
-More reliable direct sharing to Instagram/TikTok, widget shortcuts fixed.
-Lighter, more stable app. Still 100% free, no ads.
+New: On the Spot! Surprise invitations at random times: 3 minutes to capture the moment as a dual photo. Keep your streak alive, private history, fully adjustable (opt-in, in the gallery).
+Also: icons rotate when you hold the phone in landscape, lighter and faster app, stronger TalkBack accessibility.

@@ -1,4 +1,2 @@
-Foto doble incluso sin cámaras simultáneas: en teléfonos no compatibles, TwinLens ahora toma las dos fotos seguidas y las combina (modo secuencial).
-Ajustes rediseñados (General/Pro + pantalla completa), visor de fotos y vídeos con gestos y controles de reproducción.
-Compartir directo a Instagram/TikTok más fiable, accesos del widget corregidos.
-App más ligera y estable. Siempre 100% gratis, sin anuncios.
+¡Nuevo: On the Spot! Invitaciones sorpresa a horas aleatorias: 3 minutos para capturar el momento en foto dual. Mantén tu racha, historial privado, ajustable (opt-in, en la galería).
+Además: los iconos giran al sostener el teléfono en horizontal, app más ligera y rápida, mejor accesibilidad con TalkBack.
