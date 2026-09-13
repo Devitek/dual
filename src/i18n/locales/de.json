@@ -228,5 +228,18 @@
     "photo": "Foto",
     "video": "Video",
     "boomerang": "Boomerang"
+  },
+  "ots": {
+    "title": "On the Spot",
+    "enable": "Aktivieren",
+    "enableDesc": "Überraschende Einladungen zu zufälligen Zeiten, den Moment als Dual-Foto festzuhalten. Alles bleibt auf Ihrem Gerät.",
+    "perDayMin": "Aufrufe pro Tag",
+    "perDayMax": "Bonus bis zu",
+    "perDayMaxDesc": "Ein erfolgreicher Aufruf plant am selben Tag einen weiteren, bis zu dieser Obergrenze.",
+    "windowStart": "Beginn",
+    "windowEnd": "Ende",
+    "notifTitle": "On the Spot!",
+    "notifBody": "Jetzt: {{minutes}} Minuten, um den Moment festzuhalten.",
+    "permissionDenied": "Benachrichtigungen abgelehnt: In den Android-Einstellungen aktivieren, um On the Spot zu nutzen."
   }
 }

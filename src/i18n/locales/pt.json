@@ -228,5 +228,18 @@
     "photo": "Foto",
     "video": "Vídeo",
     "boomerang": "Boomerang"
+  },
+  "ots": {
+    "title": "On the Spot",
+    "enable": "Ativar",
+    "enableDesc": "Convites surpresa em horários aleatórios para capturar o momento em foto dupla. Tudo fica no seu aparelho.",
+    "perDayMin": "Chamados por dia",
+    "perDayMax": "Bônus até",
+    "perDayMaxDesc": "Completar um chamado agenda outro no mesmo dia, até este limite.",
+    "windowStart": "Início",
+    "windowEnd": "Fim",
+    "notifTitle": "On the Spot!",
+    "notifBody": "É agora: {{minutes}} minutos para capturar o momento.",
+    "permissionDenied": "Notificações negadas: ative nas configurações do Android para usar o On the Spot."
   }
 }

@@ -10,6 +10,14 @@ import { haptics } from '../utils/haptics';
 import { Segmented } from './Segmented';
 import { M3Switch } from './M3Switch';
 import { buildDeviceReport } from '../utils/deviceReport';
+import {
+  OTS_PER_DAY_VALUES,
+  OTS_WINDOW_END_VALUES,
+  OTS_WINDOW_START_VALUES,
+  type OtsPerDay,
+  type OtsWindowEnd,
+  type OtsWindowStart,
+} from '../services/settings';
 import { clearCrashJournal, formatCrashJournal, readCrashJournal, type CrashEntry } from '../utils/crashJournal';
 import type { MultiCamDiagnostics } from '../vision/MultiCamController';
 import type { VolumeKeyAction } from '../native/volumeKeys';
@@ -41,6 +49,17 @@ interface MoreSettingsModalProps {
   // Capture
   stabilization: boolean;
   onToggleStabilization: () => void;
+  // « Sur le fait » (#180)
+  onTheSpotEnabled: boolean;
+  onSetOnTheSpotEnabled: (v: boolean) => void;
+  onTheSpotMinPerDay: OtsPerDay;
+  onSetOnTheSpotMinPerDay: (v: OtsPerDay) => void;
+  onTheSpotMaxPerDay: OtsPerDay;
+  onSetOnTheSpotMaxPerDay: (v: OtsPerDay) => void;
+  onTheSpotWindowStart: OtsWindowStart;
+  onSetOnTheSpotWindowStart: (v: OtsWindowStart) => void;
+  onTheSpotWindowEnd: OtsWindowEnd;
+  onSetOnTheSpotWindowEnd: (v: OtsWindowEnd) => void;
   // Aide
   diagnostics?: MultiCamDiagnostics | null;
 }
@@ -70,6 +89,16 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
     onToggleWatermark,
     stabilization,
     onToggleStabilization,
+    onTheSpotEnabled,
+    onSetOnTheSpotEnabled,
+    onTheSpotMinPerDay,
+    onSetOnTheSpotMinPerDay,
+    onTheSpotMaxPerDay,
+    onSetOnTheSpotMaxPerDay,
+    onTheSpotWindowStart,
+    onSetOnTheSpotWindowStart,
+    onTheSpotWindowEnd,
+    onSetOnTheSpotWindowEnd,
     diagnostics = null,
   } = props;
 
@@ -208,6 +237,72 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
     </Pressable>
   );
 
+  // --- Section « Sur le fait » (#180) : opt-in + cadence + plage horaire. ---
+  const otsPerDayOptions = OTS_PER_DAY_VALUES.map((v) => ({ value: String(v), label: String(v) }));
+  const otsStartOptions = OTS_WINDOW_START_VALUES.map((v) => ({ value: String(v), label: `${v}:00` }));
+  const otsEndOptions = OTS_WINDOW_END_VALUES.map((v) => ({ value: String(v), label: `${v}:00` }));
+
+  const otsRows: React.ReactNode[] = [
+    rowSwitch(
+      'notifications-active',
+      t('ots.enable'),
+      onTheSpotEnabled,
+      () => onSetOnTheSpotEnabled(!onTheSpotEnabled),
+      t('ots.enableDesc'),
+    ),
+  ];
+  if (onTheSpotEnabled) {
+    otsRows.push(
+      <View style={styles.cardRowCol}>
+        <View style={styles.rowHeader}>
+          <MaterialIcons name="today" size={22} color={colors.onSurfaceVariant} />
+          <Text style={styles.rowLabel}>{t('ots.perDayMin')}</Text>
+        </View>
+        <Segmented
+          options={otsPerDayOptions}
+          value={String(onTheSpotMinPerDay)}
+          onChange={(v) => onSetOnTheSpotMinPerDay(Number(v) as OtsPerDay)}
+        />
+      </View>,
+      <View style={styles.cardRowCol}>
+        <View style={styles.rowHeader}>
+          <MaterialIcons name="add-task" size={22} color={colors.onSurfaceVariant} />
+          <View style={styles.rowTexts}>
+            <Text style={styles.rowLabel}>{t('ots.perDayMax')}</Text>
+            <Text style={styles.desc}>{t('ots.perDayMaxDesc')}</Text>
+          </View>
+        </View>
+        <Segmented
+          options={otsPerDayOptions}
+          value={String(onTheSpotMaxPerDay)}
+          onChange={(v) => onSetOnTheSpotMaxPerDay(Number(v) as OtsPerDay)}
+        />
+      </View>,
+      <View style={styles.cardRowCol}>
+        <View style={styles.rowHeader}>
+          <MaterialIcons name="schedule" size={22} color={colors.onSurfaceVariant} />
+          <Text style={styles.rowLabel}>{t('ots.windowStart')}</Text>
+        </View>
+        <Segmented
+          options={otsStartOptions}
+          value={String(onTheSpotWindowStart)}
+          onChange={(v) => onSetOnTheSpotWindowStart(Number(v) as OtsWindowStart)}
+        />
+      </View>,
+      <View style={styles.cardRowCol}>
+        <View style={styles.rowHeader}>
+          <MaterialIcons name="schedule" size={22} color={colors.onSurfaceVariant} />
+          <Text style={styles.rowLabel}>{t('ots.windowEnd')}</Text>
+        </View>
+        <Segmented
+          options={otsEndOptions}
+          value={String(onTheSpotWindowEnd)}
+          onChange={(v) => onSetOnTheSpotWindowEnd(Number(v) as OtsWindowEnd)}
+        />
+      </View>,
+    );
+  }
+
   const reportRow = (
     <View style={styles.cardRowCol}>
       <View style={styles.rowHeader}>
@@ -320,6 +415,9 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
               t('settings.stabilizationDesc'),
             ),
           ])}
+
+          <Text style={styles.section}>{t('ots.title')}</Text>
+          {card(otsRows)}
 
           <Text style={styles.section}>{t('settings.catHelp')}</Text>
           {card([rateRow, reportRow, journalRow])}

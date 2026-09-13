@@ -14,6 +14,7 @@ import { useGeotag } from '../hooks/useGeotag';
 import { useZoomState } from '../hooks/useZoomState';
 import { useDeviceOrientation } from '../hooks/useDeviceOrientation';
 import { useReviewPrompt } from '../hooks/useReviewPrompt';
+import { syncOnTheSpotSchedule } from '../services/onTheSpot';
 import { useCaptureFlow, BOOMERANG_MAX_MS } from '../hooks/useCaptureFlow';
 import { useSettingsWiring } from '../hooks/useSettingsWiring';
 import { PermissionGate } from '../components/PermissionGate';
@@ -123,6 +124,26 @@ export function MultiCameraScreen(): React.ReactElement {
   const uiRotation = useDeviceOrientation(cam.status === 'running' && isForeground);
   // Avis Play (#179) : sollicité au plus une fois, à la fermeture de la galerie.
   const review = useReviewPrompt(cam.lastCapture, cam.notice);
+
+  // « Sur le fait » (#180) : aligne les notifications programmées sur les
+  // réglages à chaque retour au premier plan (idempotent, best-effort).
+  useEffect(() => {
+    if (!isForeground) return;
+    void syncOnTheSpotSchedule({
+      enabled: settings.onTheSpotEnabled,
+      minPerDay: settings.onTheSpotMinPerDay,
+      maxPerDay: settings.onTheSpotMaxPerDay,
+      windowStart: settings.onTheSpotWindowStart,
+      windowEnd: settings.onTheSpotWindowEnd,
+    });
+  }, [
+    isForeground,
+    settings.onTheSpotEnabled,
+    settings.onTheSpotMinPerDay,
+    settings.onTheSpotMaxPerDay,
+    settings.onTheSpotWindowStart,
+    settings.onTheSpotWindowEnd,
+  ]);
   // Fonctions stables (useCallback) extraites pour les deps des callbacks/effets :
   // l'objet `zoom`/`flow` change à chaque rendu, pas ses fonctions.
   const { showZoom, showZoomThrottled, syncToSlot } = zoom;
@@ -569,6 +590,16 @@ export function MultiCameraScreen(): React.ReactElement {
               onToggleWatermark={() => settings.setWatermark(!cam.watermark)}
               stabilization={settings.stabilization}
               onToggleStabilization={() => settings.setStabilization(!settings.stabilization)}
+              onTheSpotEnabled={settings.onTheSpotEnabled}
+              onSetOnTheSpotEnabled={settings.setOnTheSpotEnabled}
+              onTheSpotMinPerDay={settings.onTheSpotMinPerDay}
+              onSetOnTheSpotMinPerDay={settings.setOnTheSpotMinPerDay}
+              onTheSpotMaxPerDay={settings.onTheSpotMaxPerDay}
+              onSetOnTheSpotMaxPerDay={settings.setOnTheSpotMaxPerDay}
+              onTheSpotWindowStart={settings.onTheSpotWindowStart}
+              onSetOnTheSpotWindowStart={settings.setOnTheSpotWindowStart}
+              onTheSpotWindowEnd={settings.onTheSpotWindowEnd}
+              onSetOnTheSpotWindowEnd={settings.setOnTheSpotWindowEnd}
               diagnostics={cam.diagnostics}
             />
 
