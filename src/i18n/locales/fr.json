@@ -240,6 +240,8 @@
     "windowEnd": "Fin de plage",
     "notifTitle": "Sur le fait !",
     "notifBody": "C’est le moment : {{minutes}} minutes pour capturer l’instant.",
-    "permissionDenied": "Notifications refusées : activez-les dans les réglages Android pour utiliser « Sur le fait »."
+    "permissionDenied": "Notifications refusées : activez-les dans les réglages Android pour utiliser « Sur le fait ».",
+    "doneNotice": "Sur le fait : réussi !",
+    "expiredNotice": "Sur le fait : trop tard, l’appel est passé."
   }
 }

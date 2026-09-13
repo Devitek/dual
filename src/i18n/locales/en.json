@@ -240,6 +240,8 @@
     "windowEnd": "Window end",
     "notifTitle": "On the Spot!",
     "notifBody": "It’s time: {{minutes}} minutes to capture the moment.",
-    "permissionDenied": "Notifications denied: enable them in Android settings to use On the Spot."
+    "permissionDenied": "Notifications denied: enable them in Android settings to use On the Spot.",
+    "doneNotice": "On the Spot: done!",
+    "expiredNotice": "On the Spot: too late, this call has passed."
   }
 }

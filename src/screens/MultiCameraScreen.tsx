@@ -15,6 +15,7 @@ import { useZoomState } from '../hooks/useZoomState';
 import { useDeviceOrientation } from '../hooks/useDeviceOrientation';
 import { useReviewPrompt } from '../hooks/useReviewPrompt';
 import { syncOnTheSpotSchedule } from '../services/onTheSpot';
+import { useOnTheSpotCall } from '../hooks/useOnTheSpotCall';
 import { useCaptureFlow, BOOMERANG_MAX_MS } from '../hooks/useCaptureFlow';
 import { useSettingsWiring } from '../hooks/useSettingsWiring';
 import { PermissionGate } from '../components/PermissionGate';
@@ -62,6 +63,14 @@ const SEQUENTIAL_BLOCKED_MODES: CaptureMode[] = ['video', 'boomerang'];
 
 // Réexport pour compat (le type vit désormais dans services/settings).
 export type { TimerSeconds };
+
+/** mm:ss restant de la fenêtre « Sur le fait ». */
+function formatOtsCountdown(ms: number): string {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
 
 /**
  * Écran principal — VisionCamera v5 multi-caméra, UI Material 3, Android.
@@ -124,6 +133,25 @@ export function MultiCameraScreen(): React.ReactElement {
   const uiRotation = useDeviceOrientation(cam.status === 'running' && isForeground);
   // Avis Play (#179) : sollicité au plus une fois, à la fermeture de la galerie.
   const review = useReviewPrompt(cam.lastCapture, cam.notice);
+
+  // « Sur le fait » (#180) : fenêtre de capture active (chip compte à rebours)
+  // + complétion sur photo. Le service planifie l'éventuel bonus.
+  const notifyOts = useCallback(
+    (kind: 'success' | 'error', text: string) => cam.controller.showNotice(kind, text),
+    [cam.controller],
+  );
+  const ots = useOnTheSpotCall(
+    settings.onTheSpotEnabled,
+    {
+      enabled: settings.onTheSpotEnabled,
+      minPerDay: settings.onTheSpotMinPerDay,
+      maxPerDay: settings.onTheSpotMaxPerDay,
+      windowStart: settings.onTheSpotWindowStart,
+      windowEnd: settings.onTheSpotWindowEnd,
+    },
+    cam.lastCapture,
+    notifyOts,
+  );
 
   // « Sur le fait » (#180) : aligne les notifications programmées sur les
   // réglages à chaque retour au premier plan (idempotent, best-effort).
@@ -437,6 +465,18 @@ export function MultiCameraScreen(): React.ReactElement {
 
             {update.updateAvailable && <UpdateBanner onUpdate={update.startUpdate} onDismiss={update.snooze} />}
 
+            {/* « Sur le fait » : fenêtre de capture ouverte -> compte à rebours. */}
+            {ots.activeCall != null && (
+              <View
+                style={styles.otsChip}
+                accessibilityRole="text"
+                accessibilityLabel={`${t('ots.title')} ${formatOtsCountdown(ots.remainingMs)}`}
+              >
+                <Text style={styles.otsChipTitle}>{t('ots.title')}</Text>
+                <Text style={styles.otsChipTime}>{formatOtsCountdown(ots.remainingMs)}</Text>
+              </View>
+            )}
+
             {(cam.mode === 'single' || cam.mode === 'sequential') && cam.status === 'running' && (
               <UnsupportedBanner mode={cam.mode} diagnostics={cam.diagnostics} />
             )}
@@ -662,4 +702,26 @@ const makeStyles = (colors: Palette) =>
     },
     countdownText: { color: '#fff', fontSize: 120, fontWeight: '200', fontVariant: ['tabular-nums'] },
     countdownHint: { color: '#fff', fontSize: 15, marginTop: 8 },
+    /* Chip « Sur le fait » : fenêtre de capture ouverte (sous la top bar). */
+    otsChip: {
+      position: 'absolute',
+      top: 104,
+      alignSelf: 'center',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: 'rgba(0,0,0,0.8)',
+      borderColor: colors.primary,
+      borderWidth: 1.5,
+      borderRadius: 20,
+      paddingHorizontal: 14,
+      paddingVertical: 7,
+    },
+    otsChipTitle: { color: '#fff', fontSize: 13, fontWeight: '700' },
+    otsChipTime: {
+      color: colors.primary,
+      fontSize: 14,
+      fontWeight: '800',
+      fontVariant: ['tabular-nums'],
+    },
   });

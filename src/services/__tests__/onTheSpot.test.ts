@@ -1,4 +1,16 @@
-import { callsOfDay, dayStartOf, drawCallTimes, pruneFuturePending, OTS_MIN_GAP_MS, type OtsCall } from '../onTheSpot';
+import {
+  applyCompletion,
+  callsOfDay,
+  canScheduleBonus,
+  dayStartOf,
+  drawCallTimes,
+  getActiveCall,
+  pruneFuturePending,
+  resolveExpiredCalls,
+  OTS_CAPTURE_WINDOW_MS,
+  OTS_MIN_GAP_MS,
+  type OtsCall,
+} from '../onTheSpot';
 
 jest.mock('@react-native-async-storage/async-storage', () =>
   // eslint-disable-next-line @typescript-eslint/no-require-imports -- factory jest (pattern officiel du mock)
@@ -110,6 +122,68 @@ describe('pruneFuturePending', () => {
   it('ne touche pas aux appels futurs déjà statués (cas théorique)', () => {
     const journal = [mk(NOW + H, 'done')];
     expect(pruneFuturePending(journal, NOW)).toHaveLength(1);
+  });
+});
+
+describe('fenêtre de capture (chantier 2)', () => {
+  const NOW = DAY_START + 12 * H;
+  const mk = (scheduledAt: number, status: OtsCall['status'] = 'pending'): OtsCall => ({
+    id: String(scheduledAt),
+    scheduledAt,
+    status,
+  });
+
+  describe('getActiveCall', () => {
+    it('rend l’appel dont la fenêtre est ouverte', () => {
+      const call = mk(NOW - 60_000);
+      expect(getActiveCall([call], NOW)?.id).toBe(call.id);
+    });
+    it('null avant l’horaire, après la fenêtre, ou si statué', () => {
+      expect(getActiveCall([mk(NOW + 1)], NOW)).toBeNull();
+      expect(getActiveCall([mk(NOW - OTS_CAPTURE_WINDOW_MS)], NOW)).toBeNull();
+      expect(getActiveCall([mk(NOW - 60_000, 'done')], NOW)).toBeNull();
+    });
+  });
+
+  describe('resolveExpiredCalls', () => {
+    it('statue « manqué » les fenêtres passées, même référence sinon', () => {
+      const fresh = [mk(NOW - 60_000), mk(NOW + H)];
+      expect(resolveExpiredCalls(fresh, NOW)).toBe(fresh);
+      const expired = [mk(NOW - OTS_CAPTURE_WINDOW_MS - 1), mk(NOW - 60_000)];
+      const resolved = resolveExpiredCalls(expired, NOW);
+      expect(resolved).not.toBe(expired);
+      expect(resolved[0]?.status).toBe('missed');
+      expect(resolved[1]?.status).toBe('pending'); // fenêtre encore ouverte
+    });
+  });
+
+  describe('applyCompletion', () => {
+    it('statue « done » avec le média si la fenêtre est ouverte', () => {
+      const call = mk(NOW - 60_000);
+      const { journal, completed } = applyCompletion([call], call.id, 'file://x.jpg', NOW);
+      expect(completed).toBe(true);
+      expect(journal[0]?.status).toBe('done');
+      expect(journal[0]?.mediaUri).toBe('file://x.jpg');
+    });
+    it('ignore si fenêtre close, appel inconnu ou déjà statué', () => {
+      expect(
+        applyCompletion([mk(NOW - OTS_CAPTURE_WINDOW_MS)], String(NOW - OTS_CAPTURE_WINDOW_MS), 'u', NOW).completed,
+      ).toBe(false);
+      expect(applyCompletion([], 'inconnu', 'u', NOW).completed).toBe(false);
+      expect(applyCompletion([mk(NOW - 60_000, 'done')], String(NOW - 60_000), 'u', NOW).completed).toBe(false);
+    });
+  });
+
+  describe('canScheduleBonus', () => {
+    it('vrai sous le plafond quotidien, faux au plafond', () => {
+      const journal = [mk(NOW - 2 * H, 'done'), mk(NOW - H, 'missed')];
+      expect(canScheduleBonus(journal, DAY_START, 3)).toBe(true);
+      expect(canScheduleBonus(journal, DAY_START, 2)).toBe(false);
+    });
+    it('ne compte que les appels du jour', () => {
+      const journal = [mk(NOW - DAY, 'done'), mk(NOW - H, 'done')];
+      expect(canScheduleBonus(journal, DAY_START, 2)).toBe(true);
+    });
   });
 });
 

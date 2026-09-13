@@ -240,6 +240,8 @@
     "windowEnd": "Fine",
     "notifTitle": "On the Spot!",
     "notifBody": "È il momento: {{minutes}} minuti per catturare l’attimo.",
-    "permissionDenied": "Notifiche rifiutate: attivale nelle impostazioni Android per usare On the Spot."
+    "permissionDenied": "Notifiche rifiutate: attivale nelle impostazioni Android per usare On the Spot.",
+    "doneNotice": "On the Spot: fatto!",
+    "expiredNotice": "On the Spot: troppo tardi, questo richiamo è passato."
   }
 }

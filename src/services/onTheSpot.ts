@@ -138,6 +138,53 @@ export function pruneFuturePending(journal: readonly OtsCall[], now: number): Ot
   return journal.filter((c) => !(c.status === 'pending' && c.scheduledAt > now));
 }
 
+/** L'appel dont la fenêtre de capture est OUVERTE à l'instant `now` (ou null). */
+export function getActiveCall(journal: readonly OtsCall[], now: number): OtsCall | null {
+  return (
+    journal.find(
+      (c) => c.status === 'pending' && c.scheduledAt <= now && now < c.scheduledAt + OTS_CAPTURE_WINDOW_MS,
+    ) ?? null
+  );
+}
+
+/**
+ * Marque « manqués » les appels en attente dont la fenêtre est passée.
+ * Rend la MÊME référence si rien n'a changé (permet un save conditionnel).
+ */
+export function resolveExpiredCalls(journal: readonly OtsCall[], now: number): readonly OtsCall[] {
+  if (!journal.some((c) => c.status === 'pending' && c.scheduledAt + OTS_CAPTURE_WINDOW_MS <= now)) {
+    return journal;
+  }
+  return journal.map((c) =>
+    c.status === 'pending' && c.scheduledAt + OTS_CAPTURE_WINDOW_MS <= now ? { ...c, status: 'missed' as const } : c,
+  );
+}
+
+/**
+ * Applique une réussite (pure) : l'appel passe « done » avec son média SI sa
+ * fenêtre est encore ouverte. `completed=false` sinon (déjà statué, expiré...).
+ */
+export function applyCompletion(
+  journal: readonly OtsCall[],
+  callId: string,
+  mediaUri: string,
+  now: number,
+): { journal: readonly OtsCall[]; completed: boolean } {
+  const call = journal.find((c) => c.id === callId);
+  if (call == null || call.status !== 'pending' || now >= call.scheduledAt + OTS_CAPTURE_WINDOW_MS) {
+    return { journal, completed: false };
+  }
+  return {
+    journal: journal.map((c) => (c.id === callId ? { ...c, status: 'done' as const, mediaUri } : c)),
+    completed: true,
+  };
+}
+
+/** Un bonus est planifiable si le total d'appels du jour reste sous le plafond. */
+export function canScheduleBonus(journal: readonly OtsCall[], dayStartMs: number, maxPerDay: number): boolean {
+  return callsOfDay([...journal], dayStartMs).length < maxPerDay;
+}
+
 // ---------------------------------------------------------------------------
 // Journal (AsyncStorage, best-effort)
 // ---------------------------------------------------------------------------
@@ -187,9 +234,16 @@ async function scheduleCallNotification(call: OtsCall): Promise<void> {
   });
 }
 
-/** Sync en cours : les appels concurrents s'enchaînent au lieu de se croiser
- *  (l'effet React peut se re-déclencher pendant qu'une sync lit le journal). */
-let syncInFlight: Promise<void> = Promise.resolve();
+/** Verrou d'exclusion des opérations sur le journal : sync, complétion et
+ *  résolution des expirés s'ENCHAÎNENT au lieu de se croiser (l'effet React
+ *  peut se re-déclencher pendant qu'une opération lit le journal). */
+let opInFlight: Promise<unknown> = Promise.resolve();
+
+function runExclusive<T>(fn: () => Promise<T>): Promise<T> {
+  const next = opInFlight.then(fn, fn);
+  opInFlight = next.catch(() => {});
+  return next;
+}
 
 /**
  * Aligne les notifications programmées sur les réglages : désactivé => tout
@@ -203,8 +257,68 @@ export function syncOnTheSpotSchedule(
   now: number = Date.now(),
   random: () => number = Math.random,
 ): Promise<void> {
-  syncInFlight = syncInFlight.then(() => doSync(settings, now, random));
-  return syncInFlight;
+  return runExclusive(() => doSync(settings, now, random));
+}
+
+/**
+ * Relit le journal en résolvant les fenêtres expirées (persisté si changement).
+ * C'est LA lecture à utiliser côté UI : le journal rendu est toujours cohérent.
+ */
+export function refreshJournal(now: number = Date.now()): Promise<readonly OtsCall[]> {
+  return runExclusive(async () => {
+    const journal = await loadJournal();
+    const resolved = resolveExpiredCalls(journal, now);
+    if (resolved !== journal) await saveJournal(resolved);
+    return resolved;
+  });
+}
+
+/**
+ * Réussite d'un appel : statue « done » (si la fenêtre est encore ouverte) et,
+ * si le plafond quotidien n'est pas atteint, tire UN appel bonus dans le reste
+ * de la journée (mécanique progressive décidée dans #180). Rend 'completed' ou
+ * 'ignored' (appel déjà statué / fenêtre close entre-temps).
+ */
+export function completeActiveCall(
+  callId: string,
+  mediaUri: string,
+  settings: OtsSettings,
+  now: number = Date.now(),
+  random: () => number = Math.random,
+): Promise<'completed' | 'ignored'> {
+  return runExclusive(async () => {
+    const stored = await loadJournal();
+    const journal = resolveExpiredCalls(stored, now);
+    const { journal: updated, completed } = applyCompletion(journal, callId, mediaUri, now);
+    if (!completed) {
+      // Persiste au moins la résolution des expirés si elle a eu lieu.
+      if (journal !== stored) await saveJournal(journal);
+      return 'ignored';
+    }
+
+    const dayStart = dayStartOf(now);
+    let final = updated;
+    if (canScheduleBonus(updated, dayStart, settings.maxPerDay)) {
+      const times = drawCallTimes({
+        count: 1,
+        windowStartHour: settings.windowStart,
+        windowEndHour: settings.windowEnd,
+        dayStartMs: dayStart,
+        earliestMs: now + OTS_MIN_LEAD_MS,
+        random,
+      });
+      const first = times[0];
+      if (first != null) {
+        const bonus: OtsCall = { id: newCallId(first, random), scheduledAt: first, status: 'pending' };
+        final = [...updated, bonus];
+        await saveJournal(final);
+        await scheduleCallNotification(bonus);
+        return 'completed';
+      }
+    }
+    await saveJournal(final);
+    return 'completed';
+  });
 }
 
 async function doSync(settings: OtsSettings, now: number, random: () => number): Promise<void> {
@@ -223,7 +337,8 @@ async function doSync(settings: OtsSettings, now: number, random: () => number):
     const perms = await Notifications.getPermissionsAsync();
     if (!perms.granted) return; // la demande se fait au moment de l'activation (UI)
 
-    const journal = await loadJournal();
+    const stored = await loadJournal();
+    const journal = resolveExpiredCalls(stored, now);
     const additions: OtsCall[] = [];
 
     for (const dayOffset of [0, 1]) {
@@ -246,7 +361,10 @@ async function doSync(settings: OtsSettings, now: number, random: () => number):
       }
     }
 
-    if (additions.length === 0) return;
+    if (additions.length === 0) {
+      if (journal !== stored) await saveJournal(journal);
+      return;
+    }
     await saveJournal([...journal, ...additions]);
     for (const call of additions) {
       await scheduleCallNotification(call);

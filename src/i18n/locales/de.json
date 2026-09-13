@@ -240,6 +240,8 @@
     "windowEnd": "Ende",
     "notifTitle": "On the Spot!",
     "notifBody": "Jetzt: {{minutes}} Minuten, um den Moment festzuhalten.",
-    "permissionDenied": "Benachrichtigungen abgelehnt: In den Android-Einstellungen aktivieren, um On the Spot zu nutzen."
+    "permissionDenied": "Benachrichtigungen abgelehnt: In den Android-Einstellungen aktivieren, um On the Spot zu nutzen.",
+    "doneNotice": "On the Spot: geschafft!",
+    "expiredNotice": "On the Spot: zu spät, dieser Aufruf ist vorbei."
   }
 }
