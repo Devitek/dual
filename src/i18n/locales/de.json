@@ -152,7 +152,8 @@
     "cellPhotoA11y": "Foto vom {{date}}",
     "cellVideoA11y": "Video vom {{date}}",
     "prevA11y": "Vorheriges Medium",
-    "nextA11y": "Nächstes Medium"
+    "nextA11y": "Nächstes Medium",
+    "tabSession": "Session"
   },
   "error": {
     "title": "Kameras nicht verfügbar",
@@ -214,10 +215,8 @@
     "guidesDesc": "Drittel-Raster, Wasserwaage, Selbstauslöser und Serie.",
     "shareTitle": "Teilen & Standort",
     "shareDesc": "Teilen mit einem Tippen, optionales Wasserzeichen und Foto-Standort.",
-    "newGuidesTitle": "Raster & Wasserwaage",
-    "newGuidesDesc": "Neues Drittel-Raster und Horizont-Wasserwaage im Sucher.",
-    "newBurstTitle": "Serienmodus",
-    "newBurstDesc": "×3, ×5 oder ×10 Doppelaufnahmen mit einem Tippen."
+    "otsTitle": "On the Spot",
+    "otsDesc": "Überraschende Einladungen zu zufälligen Zeiten, den Moment als Dual-Foto festzuhalten. Serie pflegen, Verlauf nur für dich. In der Galerie aktivieren."
   },
   "update": {
     "available": "Eine neue Version ist verfügbar.",
@@ -243,6 +242,13 @@
     "permissionDenied": "Benachrichtigungen abgelehnt: In den Android-Einstellungen aktivieren, um On the Spot zu nutzen.",
     "doneNotice": "On the Spot: geschafft!",
     "expiredNotice": "On the Spot: zu spät, dieser Aufruf ist vorbei.",
-    "doneNoticeStreak": "On the Spot: geschafft! Serie: {{count}} Tage."
+    "doneNoticeStreak": "On the Spot: geschafft! Serie: {{count}} Tage.",
+    "streakCurrent": "Serie:",
+    "streakBest": "Rekord:",
+    "filterCompleted": "Geschafft",
+    "missedCell": "Verpasst",
+    "emptyJournal": "Deine ersten Aufrufe kommen. Benachrichtigungen anlassen und überraschen lassen!",
+    "introStreak": "Jeder Erfolg verlängert deine Serie. Der Verlauf bleibt hier, nur für dich.",
+    "customize": "Anpassen"
   }
 }

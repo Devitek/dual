@@ -152,7 +152,8 @@
     "cellPhotoA11y": "Foto del {{date}}",
     "cellVideoA11y": "Vídeo del {{date}}",
     "prevA11y": "Contenido anterior",
-    "nextA11y": "Contenido siguiente"
+    "nextA11y": "Contenido siguiente",
+    "tabSession": "Sesión"
   },
   "error": {
     "title": "Cámaras no disponibles",
@@ -214,10 +215,8 @@
     "guidesDesc": "Cuadrícula de tercios, nivel, temporizador y ráfaga.",
     "shareTitle": "Compartir y ubicar",
     "shareDesc": "Compartir con un toque, marca de agua opcional y ubicación en las fotos.",
-    "newGuidesTitle": "Cuadrícula y nivel",
-    "newGuidesDesc": "Nueva cuadrícula de tercios y nivel de horizonte en el visor.",
-    "newBurstTitle": "Modo ráfaga",
-    "newBurstDesc": "Dispara ×3, ×5 o ×10 fotos dobles con un toque."
+    "otsTitle": "On the Spot",
+    "otsDesc": "Invitaciones sorpresa a horas aleatorias para capturar el momento en foto dual. Mantén tu racha, con un historial solo para ti. Actívalo desde la galería."
   },
   "update": {
     "available": "Hay una nueva versión disponible.",
@@ -243,6 +242,13 @@
     "permissionDenied": "Notificaciones rechazadas: actívalas en los ajustes de Android para usar On the Spot.",
     "doneNotice": "¡On the Spot: conseguido!",
     "expiredNotice": "On the Spot: demasiado tarde, este aviso ya pasó.",
-    "doneNoticeStreak": "¡On the Spot: conseguido! Racha: {{count}} días."
+    "doneNoticeStreak": "¡On the Spot: conseguido! Racha: {{count}} días.",
+    "streakCurrent": "Racha:",
+    "streakBest": "Récord:",
+    "filterCompleted": "Conseguidas",
+    "missedCell": "Perdido",
+    "emptyJournal": "Tus primeros avisos están en camino. ¡Mantén las notificaciones activadas y déjate sorprender!",
+    "introStreak": "Cada acierto alarga tu racha. El historial queda aquí, solo para ti.",
+    "customize": "Personalizar"
   }
 }

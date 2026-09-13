@@ -249,7 +249,22 @@ export function CaptureControls({
               <View style={[styles.thumbWrap, styles.processingEmpty]}>
                 <ActivityIndicator color={colors.onSurface} />
               </View>
-            ) : null}
+            ) : (
+              // Aucune capture en session : la galerie reste accessible (onglet
+              // « Sur le fait », historique) via une icône permanente (#180).
+              <Pressable
+                style={({ pressed }) => [styles.thumbWrap, styles.emptyGallery, pressed && styles.pressed]}
+                onPress={onOpenReview}
+                accessibilityRole="button"
+                // Label DIFFÉRENT de la miniature : celle-ci sert de preuve de
+                // capture au flow Maestro 03 (n'apparaît qu'après une photo).
+                accessibilityLabel={t('gallery.title')}
+              >
+                <RotatingView rotation={uiRotation}>
+                  <MaterialIcons name="photo-library" size={22} color={colors.onSurface} />
+                </RotatingView>
+              </Pressable>
+            )}
           </View>
 
           {/* Centre : obturateur unique (photo / vidéo repos / vidéo en cours) */}
@@ -396,6 +411,13 @@ const makeStyles = (colors: Palette) =>
       borderWidth: 2,
       borderColor: colors.onSurface,
       overflow: 'hidden',
+    },
+    /* Entrée galerie sans capture : même gabarit que la miniature, fond sobre. */
+    emptyGallery: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'rgba(0,0,0,0.42)',
+      borderColor: 'rgba(255,255,255,0.55)',
     },
     thumb: { width: '100%', height: '100%' },
     videoThumb: { backgroundColor: colors.surfaceContainerHighest, alignItems: 'center', justifyContent: 'center' },

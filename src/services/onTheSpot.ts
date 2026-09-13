@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
+import { Directory, File, Paths } from 'expo-file-system';
 
 import i18n from '../i18n';
 import type { OtsPerDay, OtsWindowEnd, OtsWindowStart } from './settings';
@@ -183,6 +184,45 @@ export function applyCompletion(
 /** Un bonus est planifiable si le total d'appels du jour reste sous le plafond. */
 export function canScheduleBonus(journal: readonly OtsCall[], dayStartMs: number, maxPerDay: number): boolean {
   return callsOfDay([...journal], dayStartMs).length < maxPerDay;
+}
+
+/** Un jour d'appels, pour l'onglet galerie (du plus récent au plus ancien). */
+export interface OtsDayGroup {
+  dayStartMs: number;
+  /** Appels du jour, du plus ancien au plus récent. */
+  calls: OtsCall[];
+}
+
+/** Groupe le journal par jour local, jours décroissants, appels croissants. */
+export function groupCallsByDay(journal: readonly OtsCall[]): OtsDayGroup[] {
+  const byDay = new Map<number, OtsCall[]>();
+  for (const call of journal) {
+    const day = dayStartOf(call.scheduledAt);
+    const list = byDay.get(day);
+    if (list == null) byDay.set(day, [call]);
+    else list.push(call);
+  }
+  return [...byDay.entries()]
+    .sort((a, b) => b[0] - a[0])
+    .map(([dayStartMs, calls]) => ({ dayStartMs, calls: calls.sort((a, b) => a.scheduledAt - b.scheduledAt) }));
+}
+
+/**
+ * Copie le média d'une réussite vers un fichier DURABLE de l'app
+ * (documents/onthespot/). Les fichiers de session sont nettoyables : sans
+ * cette copie, l'historique « Sur le fait » perdrait ses aperçus. Rend l'URI
+ * durable, ou l'URI source en cas d'échec (best-effort).
+ */
+export function persistCallMedia(callId: string, sourceUri: string): string {
+  try {
+    const dir = new Directory(Paths.document, 'onthespot');
+    if (!dir.exists) dir.create({ intermediates: true });
+    const dest = new File(dir, `${callId}.jpg`);
+    if (!dest.exists) new File(sourceUri).copy(dest);
+    return dest.uri;
+  } catch {
+    return sourceUri;
+  }
 }
 
 // ---------------------------------------------------------------------------

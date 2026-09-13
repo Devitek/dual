@@ -33,6 +33,7 @@ import { ZoomIndicator } from '../components/ZoomIndicator';
 import { UnsupportedBanner } from '../components/UnsupportedBanner';
 import { CameraErrorView } from '../components/CameraErrorView';
 import { SessionGallery } from '../components/SessionGallery';
+import { OnTheSpotGallery } from '../components/OnTheSpotGallery';
 import { PipHint } from '../components/PipHint';
 import { PipCompositor, type PipCompositorHandle } from '../components/PipCompositor';
 import { Snackbar } from '../components/Snackbar';
@@ -97,8 +98,11 @@ export function MultiCameraScreen(): React.ReactElement {
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  /** Section ciblée à l'ouverture d'Autres réglages (CTA « Personnaliser »). */
+  const [moreScrollTarget, setMoreScrollTarget] = useState<'ots' | null>(null);
   const [pipHintVisible, setPipHintVisible] = useState(false);
   const [boomHint, setBoomHint] = useState(false);
+
   const focusNonce = useRef(0);
   const pipHintChecked = useRef(false);
   const pipRef = useRef<PipCompositorHandle>(null);
@@ -580,6 +584,7 @@ export function MultiCameraScreen(): React.ReactElement {
               onClose={() => setSettingsOpen(false)}
               onOpenMore={() => {
                 setSettingsOpen(false);
+                setMoreScrollTarget(null);
                 setMoreOpen(true);
               }}
               mode={effectiveMode}
@@ -640,6 +645,7 @@ export function MultiCameraScreen(): React.ReactElement {
               onSetOnTheSpotWindowStart={settings.setOnTheSpotWindowStart}
               onTheSpotWindowEnd={settings.onTheSpotWindowEnd}
               onSetOnTheSpotWindowEnd={settings.setOnTheSpotWindowEnd}
+              scrollTarget={moreScrollTarget}
               diagnostics={cam.diagnostics}
             />
 
@@ -652,6 +658,18 @@ export function MultiCameraScreen(): React.ReactElement {
                 review.onGalleryClosed();
               }}
               onDelete={(c) => cam.controller.removeCapture(c)}
+              otsContent={
+                <OnTheSpotGallery
+                  visible={galleryOpen}
+                  active={settings.onTheSpotEnabled}
+                  onEnable={() => settings.setOnTheSpotEnabled(true)}
+                  onCustomize={() => {
+                    setGalleryOpen(false);
+                    setMoreScrollTarget('ots');
+                    setMoreOpen(true);
+                  }}
+                />
+              }
             />
 
             <Snackbar notice={cam.notice} />

@@ -6,6 +6,7 @@ import {
   dayStartOf,
   drawCallTimes,
   getActiveCall,
+  groupCallsByDay,
   pruneFuturePending,
   resolveExpiredCalls,
   OTS_CAPTURE_WINDOW_MS,
@@ -17,6 +18,13 @@ jest.mock('@react-native-async-storage/async-storage', () =>
   // eslint-disable-next-line @typescript-eslint/no-require-imports -- factory jest (pattern officiel du mock)
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
+
+// expo-file-system (copie durable) n'existe pas sous Jest : mock minimal.
+jest.mock('expo-file-system', () => ({
+  Paths: { document: '/mock' },
+  Directory: jest.fn(),
+  File: jest.fn(),
+}));
 
 // expo-notifications n'a pas de module natif sous Jest : on ne teste ici que
 // la logique PURE, le mock neutralise le setNotificationHandler d'import.
@@ -185,6 +193,22 @@ describe('fenêtre de capture (chantier 2)', () => {
       const journal = [mk(NOW - DAY, 'done'), mk(NOW - H, 'done')];
       expect(canScheduleBonus(journal, DAY_START, 2)).toBe(true);
     });
+  });
+});
+
+describe('groupCallsByDay (chantier 4)', () => {
+  const mk = (scheduledAt: number): OtsCall => ({ id: String(scheduledAt), scheduledAt, status: 'pending' });
+
+  it('groupe par jour local, jours décroissants, appels croissants', () => {
+    const journal = [mk(DAY_START + 15 * H), mk(DAY_START + DAY + 10 * H), mk(DAY_START + 9 * H)];
+    const groups = groupCallsByDay(journal);
+    expect(groups).toHaveLength(2);
+    expect(groups[0]?.dayStartMs).toBe(dayStartOf(DAY_START + DAY)); // le plus récent d'abord
+    expect(groups[1]?.calls.map((c) => c.scheduledAt)).toEqual([DAY_START + 9 * H, DAY_START + 15 * H]);
+  });
+
+  it('journal vide : aucun groupe', () => {
+    expect(groupCallsByDay([])).toEqual([]);
   });
 });
 

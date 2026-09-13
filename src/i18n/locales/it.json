@@ -152,7 +152,8 @@
     "cellPhotoA11y": "Foto del {{date}}",
     "cellVideoA11y": "Video del {{date}}",
     "prevA11y": "Contenuto precedente",
-    "nextA11y": "Contenuto successivo"
+    "nextA11y": "Contenuto successivo",
+    "tabSession": "Sessione"
   },
   "error": {
     "title": "Fotocamere non disponibili",
@@ -214,10 +215,8 @@
     "guidesDesc": "Griglia dei terzi, livella, autoscatto e raffica.",
     "shareTitle": "Condividi e geotag",
     "shareDesc": "Condivisione con un tocco, filigrana opzionale e posizione nelle foto.",
-    "newGuidesTitle": "Griglia e livella",
-    "newGuidesDesc": "Nuova griglia dei terzi e livella d’orizzonte nel mirino.",
-    "newBurstTitle": "Modalità raffica",
-    "newBurstDesc": "Scatta ×3, ×5 o ×10 foto doppie con un tocco."
+    "otsTitle": "On the Spot",
+    "otsDesc": "Inviti a sorpresa a orari casuali per catturare l’attimo in foto duale. Mantieni la serie, con una cronologia solo per te. Attivalo dalla galleria."
   },
   "update": {
     "available": "È disponibile una nuova versione.",
@@ -243,6 +242,13 @@
     "permissionDenied": "Notifiche rifiutate: attivale nelle impostazioni Android per usare On the Spot.",
     "doneNotice": "On the Spot: fatto!",
     "expiredNotice": "On the Spot: troppo tardi, questo richiamo è passato.",
-    "doneNoticeStreak": "On the Spot: fatto! Serie: {{count}} giorni."
+    "doneNoticeStreak": "On the Spot: fatto! Serie: {{count}} giorni.",
+    "streakCurrent": "Serie:",
+    "streakBest": "Record:",
+    "filterCompleted": "Riuscite",
+    "missedCell": "Mancato",
+    "emptyJournal": "I tuoi primi richiami stanno arrivando. Tieni attive le notifiche e lasciati sorprendere!",
+    "introStreak": "Ogni successo allunga la tua serie. La cronologia resta qui, solo per te.",
+    "customize": "Personalizza"
   }
 }
