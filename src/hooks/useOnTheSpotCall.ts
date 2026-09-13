@@ -4,6 +4,7 @@ import * as Notifications from 'expo-notifications';
 import i18n from '../i18n';
 import {
   completeActiveCall,
+  computeStreak,
   getActiveCall,
   refreshJournal,
   OTS_CAPTURE_WINDOW_MS,
@@ -123,8 +124,16 @@ export function useOnTheSpotCall(
     if (call == null || lastCapture == null || lastCapture === lastHandled.current) return;
     if (lastCapture.kind !== 'photo') return;
     lastHandled.current = lastCapture;
-    void completeActiveCall(call.id, lastCapture.primaryUri, settingsRef.current).then((res) => {
-      if (res === 'completed') notifyRef.current('success', i18n.t('ots.doneNotice'));
+    void completeActiveCall(call.id, lastCapture.primaryUri, settingsRef.current).then(async (res) => {
+      if (res === 'completed') {
+        // La série (streak) rend la réussite tangible dès 2 jours consécutifs.
+        const journal = await refreshJournal();
+        const streak = computeStreak(journal, Date.now());
+        notifyRef.current(
+          'success',
+          streak.current >= 2 ? i18n.t('ots.doneNoticeStreak', { count: streak.current }) : i18n.t('ots.doneNotice'),
+        );
+      }
       void refresh();
     });
   }, [lastCapture, refresh]);

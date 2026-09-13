@@ -242,6 +242,7 @@
     "notifBody": "Es el momento: {{minutes}} minutos para capturar el instante.",
     "permissionDenied": "Notificaciones rechazadas: actívalas en los ajustes de Android para usar On the Spot.",
     "doneNotice": "¡On the Spot: conseguido!",
-    "expiredNotice": "On the Spot: demasiado tarde, este aviso ya pasó."
+    "expiredNotice": "On the Spot: demasiado tarde, este aviso ya pasó.",
+    "doneNoticeStreak": "¡On the Spot: conseguido! Racha: {{count}} días."
   }
 }

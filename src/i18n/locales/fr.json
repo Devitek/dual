@@ -242,6 +242,7 @@
     "notifBody": "C’est le moment : {{minutes}} minutes pour capturer l’instant.",
     "permissionDenied": "Notifications refusées : activez-les dans les réglages Android pour utiliser « Sur le fait ».",
     "doneNotice": "Sur le fait : réussi !",
-    "expiredNotice": "Sur le fait : trop tard, l’appel est passé."
+    "expiredNotice": "Sur le fait : trop tard, l’appel est passé.",
+    "doneNoticeStreak": "Sur le fait : réussi ! Série : {{count}} jours."
   }
 }
