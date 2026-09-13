@@ -90,15 +90,20 @@ export function useOnTheSpotCall(
   }, [enabled, refresh]);
 
   // Surveillance : rattrape une fenêtre qui s'ouvre pendant que l'app est
-  // ouverte, et l'état initial au montage.
+  // ouverte, et l'état initial au montage. Le chargement initial part en
+  // microtâche : pas de setState synchrone dans le corps de l'effet (règle
+  // set-state-in-effect verrouillée en erreur, #136).
   useEffect(() => {
     if (!enabled) {
       activeRef.current = null;
       return;
     }
-    void refresh();
+    const kickoff = setTimeout(() => void refresh(), 0);
     const id = setInterval(() => void refresh(), POLL_MS);
-    return () => clearInterval(id);
+    return () => {
+      clearTimeout(kickoff);
+      clearInterval(id);
+    };
   }, [enabled, refresh]);
 
   // Compte à rebours : tick chaque seconde pendant une fenêtre ouverte ;
@@ -138,5 +143,7 @@ export function useOnTheSpotCall(
     });
   }, [lastCapture, refresh]);
 
-  return { activeCall, remainingMs };
+  // Désactivation à chaud : l'état interne peut rester « actif », le rendu est
+  // dérivé (pas de reset par setState dans un effet).
+  return enabled ? { activeCall, remainingMs } : { activeCall: null, remainingMs: 0 };
 }
