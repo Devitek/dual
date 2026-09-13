@@ -45,3 +45,16 @@ production, rollout 10 %)** :
 > funciona). ¡Gracias por tu paciencia!
 
 Suivi : s'il repasse l'avis à la hausse ou répond, noter ici.
+
+---
+
+## 2026-09 · Anne-Cécile Queïnnec · 5★ · fr · Pixel 7a (v1.15.1)
+
+**Avis** : « Très facile d'utilisation, interface simple, l'appli fait
+parfaitement ce qu'on lui demande ! »
+
+**Réponse (console, antérieure au journal, reportée a posteriori)** :
+
+> Merci beaucoup Anne-Cécile pour votre retour et ces 5 étoiles ! Ravis que la
+> simplicité de TwinLens vous plaise. À bientôt, et n'hésitez pas si vous avez
+> des suggestions.

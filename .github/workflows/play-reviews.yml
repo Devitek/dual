@@ -11,6 +11,11 @@ name: Play Reviews (list / reply)
 # Secret : PLAY_SERVICE_ACCOUNT_JSON via l'environment play-internal (#153).
 
 on:
+  # Cron hebdo (#190) : liste les avis et ECHOUE s'il en reste sans reponse
+  # (la fenetre API n'est que d'une semaine ; l'echec declenche la notification
+  # GitHub native, un job rouge = il y a du courrier).
+  schedule:
+    - cron: '30 6 * * 1'
   workflow_dispatch:
     inputs:
       action:
@@ -36,7 +41,7 @@ permissions:
 
 jobs:
   reviews:
-    name: Play reviews (${{ inputs.action }})
+    name: Play reviews (${{ inputs.action || 'list' }})
     runs-on: ubuntu-latest
     environment: play-internal
     steps:
@@ -59,10 +64,12 @@ jobs:
             exit 1
           fi
 
-      - name: Run (${{ inputs.action }})
+      - name: Run (${{ inputs.action || 'list' }})
         env:
           PLAY_SERVICE_ACCOUNT_JSON_PATH: ${{ runner.temp }}/play.json
-          ACTION: ${{ inputs.action }}
+          ACTION: ${{ inputs.action || 'list' }}
           REVIEW_ID: ${{ inputs.review_id }}
           REPLY_TEXT: ${{ inputs.reply_text }}
+          # Echec sur avis sans reponse UNIQUEMENT en cron (dispatch = informatif).
+          FAIL_ON_UNANSWERED: ${{ github.event_name == 'schedule' && '1' || '' }}
         run: python3 store/play_reviews.py

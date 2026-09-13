@@ -49,6 +49,10 @@ def session() -> requests.Session:
 
 
 def do_list(s: requests.Session) -> None:
+    # FAIL_ON_UNANSWERED=1 (cron, #190) : au moins un avis sans reponse
+    # developpeur => exit 1 => notification GitHub native d'echec de workflow.
+    fail_on_unanswered = os.environ.get("FAIL_ON_UNANSWERED") == "1"
+    unanswered = 0
     r = s.get(f"{API}/applications/{PKG}/reviews", params={"maxResults": 100}, timeout=30)
     if not r.ok:
         die(f"reviews.list HTTP {r.status_code}: {r.text[:400]}")
@@ -84,11 +88,14 @@ def do_list(s: requests.Session) -> None:
             reply = (dev.get("text", "") or "").strip().replace("\n", " ")
             lines.append(f"- notre reponse actuelle : {reply}")
         else:
-            lines.append("- notre reponse actuelle : (aucune)")
+            unanswered += 1
+            lines.append("- notre reponse actuelle : **(aucune)** <- a traiter")
         lines.append("")
     out = "\n".join(lines)
     print(out)
     summary_write(out)
+    if fail_on_unanswered and unanswered > 0:
+        die(f"{unanswered} avis sans reponse dans la fenetre : voir le resume du job, repondre via l'action reply, puis reporter dans docs-dev/play-reviews.md.")
 
 
 def validate_reply_inputs() -> tuple[str, str]:
