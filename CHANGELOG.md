@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.24.0](https://github.com/Devitek/dual/compare/v1.23.0...v1.24.0) (2026-09-13)
+
+
+### Features
+
+* **onthespot:** calcul de la streak, annoncée dans la notice de réussite ([#187](https://github.com/Devitek/dual/issues/187)) ([d3ce8db](https://github.com/Devitek/dual/commit/d3ce8dbab837b2b1cc9ba596af8c33d3812ac7c5))
+* **onthespot:** capture window with countdown chip, completion and bonus calls ([273c92c](https://github.com/Devitek/dual/commit/273c92c90813e0c16fc2c87f21484de9b8a28c5a))
+* **onthespot:** gallery tab with day history, streak, onboarding and durable media ([#188](https://github.com/Devitek/dual/issues/188)) ([227fcec](https://github.com/Devitek/dual/commit/227fcec6aac3104d22075483456f496c63e64c26))
+* **onthespot:** scheduling foundation with local inexact notifications ([#185](https://github.com/Devitek/dual/issues/185)) ([2d77511](https://github.com/Devitek/dual/commit/2d7751132a324bd0e51fb3e91cc61e7f7025a4f0))
+* **review:** ask for a Play review at the right moment, at most once ([#181](https://github.com/Devitek/dual/issues/181)) ([ad710a9](https://github.com/Devitek/dual/commit/ad710a9d048fa7efd1e66a0eb78dfc29d23e8977))
+* **settings:** add a 'Rate TwinLens' shortcut in the more-settings menu ([#184](https://github.com/Devitek/dual/issues/184)) ([46599e8](https://github.com/Devitek/dual/commit/46599e84a83ad8763cef8a3e931742027850b546))
+
 ## [1.23.0](https://github.com/Devitek/dual/compare/v1.22.4...v1.23.0) (2026-09-12)
 
 
