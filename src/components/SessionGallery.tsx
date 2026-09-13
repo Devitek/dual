@@ -21,6 +21,8 @@ interface SessionGalleryProps {
   onClose: () => void;
   /** Suppression d'une capture (session + galerie best-effort). */
   onDelete: (capture: CapturedMedia) => void | Promise<void>;
+  /** Onglet « Sur le fait » (#180) : contenu fourni par l'écran. */
+  otsContent?: React.ReactNode;
 }
 
 const COLS = 3;
@@ -41,7 +43,13 @@ function formatDuration(ms?: number): string | null {
  * Galerie des médias de la session : posters vidéo, lecture in-app, sélection
  * multiple (appui long) et actions Partager / Ouvrir / Supprimer.
  */
-export function SessionGallery({ visible, captures, onClose, onDelete }: SessionGalleryProps): React.ReactElement {
+export function SessionGallery({
+  visible,
+  captures,
+  onClose,
+  onDelete,
+  otsContent,
+}: SessionGalleryProps): React.ReactElement {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const colors = useColors();
@@ -51,6 +59,8 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [posters, setPosters] = useState<Record<string, string>>({});
+  /** Onglet courant : médias de session ou historique « Sur le fait ». */
+  const [tab, setTab] = useState<'session' | 'ots'>('session');
 
   const data = [...captures].reverse(); // plus récent d'abord
   const cellSize = (width - PADDING * 2 - GAP * (COLS - 1)) / COLS;
@@ -64,6 +74,7 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
       setPreviewIndex(null);
       setSelectMode(false);
       setSelected(new Set());
+      setTab('session');
     }
   }
 
@@ -203,135 +214,163 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
           )}
         </View>
 
-        {!selectMode && data.length > 0 && (
-          <View style={styles.savedChip}>
-            <MaterialIcons name="cloud-done" size={15} color={colors.success} />
-            <Text style={styles.savedChipText}>{t('gallery.savedChip')}</Text>
-          </View>
-        )}
-
-        {data.length === 0 ? (
-          <View style={styles.empty}>
-            <MaterialIcons name="photo-library" size={40} color={colors.onSurfaceVariant} />
-            <Text style={styles.emptyText}>{t('gallery.empty')}</Text>
-          </View>
-        ) : (
-          <FlatList
-            data={data}
-            keyExtractor={keyOf}
-            numColumns={COLS}
-            columnWrapperStyle={styles.rowGap}
-            contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 16 }]}
-            extraData={{ selectMode, sel: selected, posters }}
-            renderItem={({ item }) => {
-              const isSelected = selected.has(keyOf(item));
-              const poster = item.kind === 'video' ? posters[keyOf(item)] : undefined;
-              const dur = formatDuration(item.durationMs);
+        {/* Onglets Session | Sur le fait (#180), hors mode sélection. */}
+        {otsContent != null && !selectMode && (
+          <View style={styles.tabs}>
+            {(['session', 'ots'] as const).map((value) => {
+              const activeTab = tab === value;
               return (
                 <Pressable
-                  style={[styles.cell, { width: cellSize, height: cellSize }, isSelected && styles.cellSelected]}
-                  onPress={() => onCellPress(item)}
-                  onLongPress={() => onCellLongPress(item)}
-                  delayLongPress={300}
+                  key={value}
+                  style={[styles.tabCell, activeTab && styles.tabCellOn]}
+                  onPress={() => setTab(value)}
                   accessibilityRole="button"
-                  accessibilityLabel={t(item.kind === 'photo' ? 'gallery.cellPhotoA11y' : 'gallery.cellVideoA11y', {
-                    date: new Date(item.createdAt).toLocaleString(i18n.language),
-                  })}
-                  accessibilityState={{ selected: isSelected }}
+                  accessibilityState={{ selected: activeTab }}
                 >
-                  {item.kind === 'photo' ? (
-                    <Image
-                      source={{ uri: item.primaryUri }}
-                      style={styles.cellImg}
-                      contentFit="cover"
-                      recyclingKey={keyOf(item)}
-                      transition={80}
-                    />
-                  ) : poster != null ? (
-                    <Image
-                      source={{ uri: poster }}
-                      style={styles.cellImg}
-                      contentFit="cover"
-                      recyclingKey={keyOf(item)}
-                      transition={80}
-                    />
-                  ) : (
-                    <View style={[styles.cellImg, styles.videoCell]}>
-                      <MaterialIcons name="videocam" size={26} color={colors.onSurfaceVariant} />
-                    </View>
-                  )}
-
-                  {item.kind === 'video' && (
-                    <>
-                      <View style={styles.playBadge} pointerEvents="none">
-                        <MaterialIcons name="play-arrow" size={22} color="#fff" />
-                      </View>
-                      {dur != null && (
-                        <View style={styles.durBadge} pointerEvents="none">
-                          <Text style={styles.durText}>{dur}</Text>
-                        </View>
-                      )}
-                    </>
-                  )}
-
-                  {item.secondaryUri != null && (
-                    <View style={styles.pipBadge} pointerEvents="none">
-                      <Text style={styles.pipBadgeText}>PiP</Text>
-                    </View>
-                  )}
-
-                  {selectMode && (
-                    <View style={[styles.selMark, isSelected && styles.selMarkOn]} pointerEvents="none">
-                      {isSelected && <MaterialIcons name="check" size={16} color={colors.onPrimary} />}
-                    </View>
-                  )}
+                  <Text style={[styles.tabText, activeTab && styles.tabTextOn]}>
+                    {value === 'session' ? t('gallery.tabSession') : t('ots.title')}
+                  </Text>
                 </Pressable>
               );
-            }}
-          />
+            })}
+          </View>
         )}
 
-        {selectMode && selectedItems.length > 0 && (
-          <View style={styles.actionBar}>
-            <Pressable
-              style={[styles.action, selectedItems.length !== 1 && styles.actionDim]}
-              disabled={selectedItems.length !== 1}
-              onPress={shareSelected}
-            >
-              <MaterialIcons name="share" size={22} color={colors.onSurface} />
-              <Text style={styles.actionLabel}>{t('gallery.share')}</Text>
-            </Pressable>
-            <Pressable
-              style={[styles.action, selectedItems.length !== 1 && styles.actionDim]}
-              disabled={selectedItems.length !== 1}
-              onPress={() => shareToTarget('instagram')}
-              accessibilityLabel={t('gallery.shareInstagramA11y')}
-            >
-              <FontAwesome6 name="instagram" size={21} color={colors.onSurface} />
-              <Text style={styles.actionLabel}>Instagram</Text>
-            </Pressable>
-            <Pressable
-              style={[styles.action, selectedItems.length !== 1 && styles.actionDim]}
-              disabled={selectedItems.length !== 1}
-              onPress={() => shareToTarget('tiktok')}
-              accessibilityLabel={t('gallery.shareTiktokA11y')}
-            >
-              <FontAwesome6 name="tiktok" size={21} color={colors.onSurface} />
-              <Text style={styles.actionLabel}>TikTok</Text>
-            </Pressable>
-            <Pressable
-              style={[styles.action, selectedItems.length !== 1 && styles.actionDim]}
-              disabled={selectedItems.length !== 1}
-              onPress={openSelected}
-            >
-              <MaterialIcons name="open-in-new" size={22} color={colors.onSurface} />
-              <Text style={styles.actionLabel}>{t('gallery.open')}</Text>
-            </Pressable>
-            <Pressable style={styles.action} onPress={deleteSelected}>
-              <MaterialIcons name="delete-outline" size={22} color={colors.danger} />
-              <Text style={[styles.actionLabel, styles.actionDanger]}>{t('gallery.delete')}</Text>
-            </Pressable>
-          </View>
+        {tab === 'ots' && otsContent != null ? (
+          otsContent
+        ) : (
+          <>
+            {!selectMode && data.length > 0 && (
+              <View style={styles.savedChip}>
+                <MaterialIcons name="cloud-done" size={15} color={colors.success} />
+                <Text style={styles.savedChipText}>{t('gallery.savedChip')}</Text>
+              </View>
+            )}
+
+            {data.length === 0 ? (
+              <View style={styles.empty}>
+                <MaterialIcons name="photo-library" size={40} color={colors.onSurfaceVariant} />
+                <Text style={styles.emptyText}>{t('gallery.empty')}</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={data}
+                keyExtractor={keyOf}
+                numColumns={COLS}
+                columnWrapperStyle={styles.rowGap}
+                contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 16 }]}
+                extraData={{ selectMode, sel: selected, posters }}
+                renderItem={({ item }) => {
+                  const isSelected = selected.has(keyOf(item));
+                  const poster = item.kind === 'video' ? posters[keyOf(item)] : undefined;
+                  const dur = formatDuration(item.durationMs);
+                  return (
+                    <Pressable
+                      style={[styles.cell, { width: cellSize, height: cellSize }, isSelected && styles.cellSelected]}
+                      onPress={() => onCellPress(item)}
+                      onLongPress={() => onCellLongPress(item)}
+                      delayLongPress={300}
+                      accessibilityRole="button"
+                      accessibilityLabel={t(item.kind === 'photo' ? 'gallery.cellPhotoA11y' : 'gallery.cellVideoA11y', {
+                        date: new Date(item.createdAt).toLocaleString(i18n.language),
+                      })}
+                      accessibilityState={{ selected: isSelected }}
+                    >
+                      {item.kind === 'photo' ? (
+                        <Image
+                          source={{ uri: item.primaryUri }}
+                          style={styles.cellImg}
+                          contentFit="cover"
+                          recyclingKey={keyOf(item)}
+                          transition={80}
+                        />
+                      ) : poster != null ? (
+                        <Image
+                          source={{ uri: poster }}
+                          style={styles.cellImg}
+                          contentFit="cover"
+                          recyclingKey={keyOf(item)}
+                          transition={80}
+                        />
+                      ) : (
+                        <View style={[styles.cellImg, styles.videoCell]}>
+                          <MaterialIcons name="videocam" size={26} color={colors.onSurfaceVariant} />
+                        </View>
+                      )}
+
+                      {item.kind === 'video' && (
+                        <>
+                          <View style={styles.playBadge} pointerEvents="none">
+                            <MaterialIcons name="play-arrow" size={22} color="#fff" />
+                          </View>
+                          {dur != null && (
+                            <View style={styles.durBadge} pointerEvents="none">
+                              <Text style={styles.durText}>{dur}</Text>
+                            </View>
+                          )}
+                        </>
+                      )}
+
+                      {item.secondaryUri != null && (
+                        <View style={styles.pipBadge} pointerEvents="none">
+                          <Text style={styles.pipBadgeText}>PiP</Text>
+                        </View>
+                      )}
+
+                      {selectMode && (
+                        <View style={[styles.selMark, isSelected && styles.selMarkOn]} pointerEvents="none">
+                          {isSelected && <MaterialIcons name="check" size={16} color={colors.onPrimary} />}
+                        </View>
+                      )}
+                    </Pressable>
+                  );
+                }}
+              />
+            )}
+
+            {selectMode && selectedItems.length > 0 && (
+              <View style={styles.actionBar}>
+                <Pressable
+                  style={[styles.action, selectedItems.length !== 1 && styles.actionDim]}
+                  disabled={selectedItems.length !== 1}
+                  onPress={shareSelected}
+                >
+                  <MaterialIcons name="share" size={22} color={colors.onSurface} />
+                  <Text style={styles.actionLabel}>{t('gallery.share')}</Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.action, selectedItems.length !== 1 && styles.actionDim]}
+                  disabled={selectedItems.length !== 1}
+                  onPress={() => shareToTarget('instagram')}
+                  accessibilityLabel={t('gallery.shareInstagramA11y')}
+                >
+                  <FontAwesome6 name="instagram" size={21} color={colors.onSurface} />
+                  <Text style={styles.actionLabel}>Instagram</Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.action, selectedItems.length !== 1 && styles.actionDim]}
+                  disabled={selectedItems.length !== 1}
+                  onPress={() => shareToTarget('tiktok')}
+                  accessibilityLabel={t('gallery.shareTiktokA11y')}
+                >
+                  <FontAwesome6 name="tiktok" size={21} color={colors.onSurface} />
+                  <Text style={styles.actionLabel}>TikTok</Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.action, selectedItems.length !== 1 && styles.actionDim]}
+                  disabled={selectedItems.length !== 1}
+                  onPress={openSelected}
+                >
+                  <MaterialIcons name="open-in-new" size={22} color={colors.onSurface} />
+                  <Text style={styles.actionLabel}>{t('gallery.open')}</Text>
+                </Pressable>
+                <Pressable style={styles.action} onPress={deleteSelected}>
+                  <MaterialIcons name="delete-outline" size={22} color={colors.danger} />
+                  <Text style={[styles.actionLabel, styles.actionDanger]}>{t('gallery.delete')}</Text>
+                </Pressable>
+              </View>
+            )}
+          </>
         )}
       </View>
 
@@ -354,6 +393,19 @@ export function SessionGallery({ visible, captures, onClose, onDelete }: Session
 const makeStyles = (colors: Palette) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
+    /* Onglets Session | Sur le fait (#180). */
+    tabs: {
+      flexDirection: 'row',
+      marginHorizontal: 20,
+      marginBottom: 12,
+      backgroundColor: colors.surfaceContainerHigh,
+      borderRadius: 22,
+      padding: 4,
+    },
+    tabCell: { flex: 1, alignItems: 'center', paddingVertical: 9, borderRadius: 18 },
+    tabCellOn: { backgroundColor: colors.primaryContainer },
+    tabText: { color: colors.onSurfaceVariant, fontSize: 14, fontWeight: '600' },
+    tabTextOn: { color: colors.onPrimaryContainer, fontWeight: '700' },
     header: {
       flexDirection: 'row',
       alignItems: 'center',

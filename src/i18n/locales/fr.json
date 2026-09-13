@@ -152,7 +152,8 @@
     "cellPhotoA11y": "Photo du {{date}}",
     "cellVideoA11y": "Vidéo du {{date}}",
     "prevA11y": "Média précédent",
-    "nextA11y": "Média suivant"
+    "nextA11y": "Média suivant",
+    "tabSession": "Session"
   },
   "error": {
     "title": "Caméras indisponibles",
@@ -214,10 +215,8 @@
     "guidesDesc": "Grille des tiers, niveau, retardateur et rafale.",
     "shareTitle": "Partage & géotag",
     "shareDesc": "Partage en un tap, filigrane optionnel et localisation des photos.",
-    "newGuidesTitle": "Grille & niveau",
-    "newGuidesDesc": "Nouvelle grille des tiers et niveau d’horizon dans le viseur.",
-    "newBurstTitle": "Mode rafale",
-    "newBurstDesc": "Enchaînez ×3, ×5 ou ×10 doubles clichés en un appui."
+    "otsTitle": "Sur le fait",
+    "otsDesc": "Des invitations surprise, à des heures aléatoires, à capturer l’instant en photo duale. Série à entretenir, historique rien que pour vous. À activer dans la galerie."
   },
   "update": {
     "available": "Une nouvelle version est disponible.",
@@ -243,6 +242,13 @@
     "permissionDenied": "Notifications refusées : activez-les dans les réglages Android pour utiliser « Sur le fait ».",
     "doneNotice": "Sur le fait : réussi !",
     "expiredNotice": "Sur le fait : trop tard, l’appel est passé.",
-    "doneNoticeStreak": "Sur le fait : réussi ! Série : {{count}} jours."
+    "doneNoticeStreak": "Sur le fait : réussi ! Série : {{count}} jours.",
+    "streakCurrent": "Série :",
+    "streakBest": "Record :",
+    "filterCompleted": "Réussites",
+    "missedCell": "Manqué",
+    "emptyJournal": "Vos premiers appels arrivent. Gardez les notifications activées et laissez-vous surprendre !",
+    "introStreak": "Chaque réussite allonge votre série. L’historique reste ici, rien que pour vous.",
+    "customize": "Personnaliser"
   }
 }

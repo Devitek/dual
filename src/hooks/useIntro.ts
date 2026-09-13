@@ -11,7 +11,7 @@ const WHATSNEW_KEY = 'tl_whatsnew_rev';
  * la feuille des nouveautés après une mise à jour marquante (découplé de la version
  * app / release-please : on ne spamme les utilisateurs que quand on le décide).
  */
-export const WHATS_NEW_REV = 1;
+export const WHATS_NEW_REV = 2; // rev 2 : « Sur le fait » (#180)
 
 /**
  * Décide quelle feuille d'intro afficher, une seule fois, quand l'UI principale est

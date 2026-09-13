@@ -152,7 +152,8 @@
     "cellPhotoA11y": "Foto de {{date}}",
     "cellVideoA11y": "Vídeo de {{date}}",
     "prevA11y": "Mídia anterior",
-    "nextA11y": "Próxima mídia"
+    "nextA11y": "Próxima mídia",
+    "tabSession": "Sessão"
   },
   "error": {
     "title": "Câmeras indisponíveis",
@@ -214,10 +215,8 @@
     "guidesDesc": "Grade de terços, nível, temporizador e rajada.",
     "shareTitle": "Compartilhar e localizar",
     "shareDesc": "Compartilhe com um toque, marca d’água opcional e local nas fotos.",
-    "newGuidesTitle": "Grade e nível",
-    "newGuidesDesc": "Nova grade de terços e nível de horizonte no visor.",
-    "newBurstTitle": "Modo rajada",
-    "newBurstDesc": "Dispare ×3, ×5 ou ×10 fotos duplas com um toque."
+    "otsTitle": "On the Spot",
+    "otsDesc": "Convites surpresa em horários aleatórios para capturar o momento em foto dupla. Mantenha sua sequência, com um histórico só para você. Ative na galeria."
   },
   "update": {
     "available": "Há uma nova versão disponível.",
@@ -243,6 +242,13 @@
     "permissionDenied": "Notificações negadas: ative nas configurações do Android para usar o On the Spot.",
     "doneNotice": "On the Spot: conseguido!",
     "expiredNotice": "On the Spot: tarde demais, este chamado já passou.",
-    "doneNoticeStreak": "On the Spot: conseguido! Sequência: {{count}} dias."
+    "doneNoticeStreak": "On the Spot: conseguido! Sequência: {{count}} dias.",
+    "streakCurrent": "Sequência:",
+    "streakBest": "Recorde:",
+    "filterCompleted": "Concluídos",
+    "missedCell": "Perdido",
+    "emptyJournal": "Seus primeiros chamados estão chegando. Mantenha as notificações ativadas e deixe-se surpreender!",
+    "introStreak": "Cada acerto aumenta sua sequência. O histórico fica aqui, só para você.",
+    "customize": "Personalizar"
   }
 }

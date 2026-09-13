@@ -6,6 +6,7 @@ import {
   completeActiveCall,
   computeStreak,
   getActiveCall,
+  persistCallMedia,
   refreshJournal,
   OTS_CAPTURE_WINDOW_MS,
   type OtsCall,
@@ -129,7 +130,9 @@ export function useOnTheSpotCall(
     if (call == null || lastCapture == null || lastCapture === lastHandled.current) return;
     if (lastCapture.kind !== 'photo') return;
     lastHandled.current = lastCapture;
-    void completeActiveCall(call.id, lastCapture.primaryUri, settingsRef.current).then(async (res) => {
+    // Copie durable : les fichiers de session sont nettoyables, pas l'historique.
+    const durableUri = persistCallMedia(call.id, lastCapture.primaryUri);
+    void completeActiveCall(call.id, durableUri, settingsRef.current).then(async (res) => {
       if (res === 'completed') {
         // La série (streak) rend la réussite tangible dès 2 jours consécutifs.
         const journal = await refreshJournal();

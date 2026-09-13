@@ -22,11 +22,13 @@ const ONBOARDING_ITEMS: IntroItem[] = [
   { icon: 'open-with', titleKey: 'intro.moveTitle', descKey: 'intro.moveDesc' },
   { icon: 'grid-on', titleKey: 'intro.guidesTitle', descKey: 'intro.guidesDesc' },
   { icon: 'share', titleKey: 'intro.shareTitle', descKey: 'intro.shareDesc' },
+  { icon: 'notifications-active', titleKey: 'intro.otsTitle', descKey: 'intro.otsDesc' },
 ];
 
+// Rév. 2 (#180) : la promo one-shot de « Sur le fait » pour les utilisateurs
+// existants passe par CETTE feuille (uniquement la slide de la feature).
 const WHATSNEW_ITEMS: IntroItem[] = [
-  { icon: 'straighten', titleKey: 'intro.newGuidesTitle', descKey: 'intro.newGuidesDesc' },
-  { icon: 'burst-mode', titleKey: 'intro.newBurstTitle', descKey: 'intro.newBurstDesc' },
+  { icon: 'notifications-active', titleKey: 'intro.otsTitle', descKey: 'intro.otsDesc' },
 ];
 
 interface IntroSheetProps {

@@ -152,7 +152,8 @@
     "cellPhotoA11y": "Photo from {{date}}",
     "cellVideoA11y": "Video from {{date}}",
     "prevA11y": "Previous media",
-    "nextA11y": "Next media"
+    "nextA11y": "Next media",
+    "tabSession": "Session"
   },
   "error": {
     "title": "Cameras unavailable",
@@ -214,10 +215,8 @@
     "guidesDesc": "Rule-of-thirds grid, level, self-timer and burst.",
     "shareTitle": "Share & tag",
     "shareDesc": "One-tap share, optional watermark and photo location.",
-    "newGuidesTitle": "Grid & level",
-    "newGuidesDesc": "New rule-of-thirds grid and horizon level in the viewfinder.",
-    "newBurstTitle": "Burst mode",
-    "newBurstDesc": "Fire ×3, ×5 or ×10 dual shots with one tap."
+    "otsTitle": "On the Spot",
+    "otsDesc": "Surprise invitations at random times to capture the moment as a dual photo. Keep your streak going, with a history just for you. Enable it from the gallery."
   },
   "update": {
     "available": "A new version is available.",
@@ -243,6 +242,13 @@
     "permissionDenied": "Notifications denied: enable them in Android settings to use On the Spot.",
     "doneNotice": "On the Spot: done!",
     "expiredNotice": "On the Spot: too late, this call has passed.",
-    "doneNoticeStreak": "On the Spot: done! Streak: {{count}} days."
+    "doneNoticeStreak": "On the Spot: done! Streak: {{count}} days.",
+    "streakCurrent": "Streak:",
+    "streakBest": "Best:",
+    "filterCompleted": "Completed",
+    "missedCell": "Missed",
+    "emptyJournal": "Your first calls are coming. Keep notifications on and let yourself be surprised!",
+    "introStreak": "Every success extends your streak. The history stays here, just for you.",
+    "customize": "Customize"
   }
 }

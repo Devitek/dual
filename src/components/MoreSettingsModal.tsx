@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Animated, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -60,6 +60,9 @@ interface MoreSettingsModalProps {
   onSetOnTheSpotWindowStart: (v: OtsWindowStart) => void;
   onTheSpotWindowEnd: OtsWindowEnd;
   onSetOnTheSpotWindowEnd: (v: OtsWindowEnd) => void;
+  /** À l'ouverture, scrolle directement sur cette section (#180 : CTA
+   *  « Personnaliser » de l'écran de présentation). */
+  scrollTarget?: 'ots' | null;
   // Aide
   diagnostics?: MultiCamDiagnostics | null;
 }
@@ -99,6 +102,7 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
     onSetOnTheSpotWindowStart,
     onTheSpotWindowEnd,
     onSetOnTheSpotWindowEnd,
+    scrollTarget = null,
     diagnostics = null,
   } = props;
 
@@ -106,6 +110,33 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
   const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+
+  // Scroll ciblé sur la section « Sur le fait » (CTA « Personnaliser », #180) :
+  // la position est mesurée au layout de la section, le scroll part une fois le
+  // modal posé, puis la carte CLIGNOTE (2 pulsations) : le pattern natif Android
+  // « scroll puis highlight de la ligne ». Aucun setState : règle #136 sereine.
+  const scrollRef = useRef<ScrollView>(null);
+  const otsSectionY = useRef(0);
+  const otsHighlight = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!visible || scrollTarget !== 'ots') return;
+    const timer = setTimeout(() => {
+      scrollRef.current?.scrollTo({ y: Math.max(0, otsSectionY.current - 12), animated: true });
+    }, 300);
+    const blink = setTimeout(() => {
+      otsHighlight.setValue(0);
+      Animated.sequence([
+        Animated.timing(otsHighlight, { toValue: 1, duration: 180, useNativeDriver: true }),
+        Animated.timing(otsHighlight, { toValue: 0, duration: 260, useNativeDriver: true }),
+        Animated.timing(otsHighlight, { toValue: 1, duration: 180, useNativeDriver: true }),
+        Animated.timing(otsHighlight, { toValue: 0, duration: 500, useNativeDriver: true }),
+      ]).start();
+    }, 900);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(blink);
+    };
+  }, [visible, scrollTarget, otsHighlight]);
   const [copied, setCopied] = useState(false);
   const [journal, setJournal] = useState<CrashEntry[]>([]);
   const [journalCopied, setJournalCopied] = useState(false);
@@ -371,7 +402,7 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
           <Text style={styles.title}>{t('settings.moreTitle')}</Text>
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <ScrollView ref={scrollRef} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
           <Text style={styles.section}>{t('settings.catGeneral')}</Text>
           {card([
             rowSwitch(
@@ -416,8 +447,23 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
             ),
           ])}
 
-          <Text style={styles.section}>{t('ots.title')}</Text>
-          {card(otsRows)}
+          <View
+            onLayout={(e) => {
+              otsSectionY.current = e.nativeEvent.layout.y;
+            }}
+          >
+            <Text style={styles.section}>{t('ots.title')}</Text>
+            <View>
+              {card(otsRows)}
+              <Animated.View
+                pointerEvents="none"
+                style={[
+                  styles.sectionHighlight,
+                  { opacity: otsHighlight.interpolate({ inputRange: [0, 1], outputRange: [0, 0.16] }) },
+                ]}
+              />
+            </View>
+          </View>
 
           <Text style={styles.section}>{t('settings.catHelp')}</Text>
           {card([rateRow, reportRow, journalRow])}
@@ -458,6 +504,16 @@ const makeStyles = (colors: Palette) =>
       marginBottom: 8,
     },
     divider: { height: 3, backgroundColor: colors.surface },
+    /* Flash de mise en avant (pattern natif Android) sur la carte ciblée. */
+    sectionHighlight: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 8,
+      borderRadius: 24,
+      backgroundColor: colors.primary,
+    },
     cardRow: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingHorizontal: 18, paddingVertical: 16 },
     cardRowCol: { paddingHorizontal: 18, paddingVertical: 16, gap: 12 },
     rowHeader: { flexDirection: 'row', alignItems: 'center', gap: 16 },
