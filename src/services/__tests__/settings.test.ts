@@ -49,6 +49,11 @@ const VALID_RAW: Record<SettingKey, string> = {
   videoFps: '60',
   boomerangGif: '1',
   mirrorFront: '0',
+  onTheSpotEnabled: '1',
+  onTheSpotMinPerDay: '2',
+  onTheSpotMaxPerDay: '3',
+  onTheSpotWindowStart: '10',
+  onTheSpotWindowEnd: '21',
 };
 
 /** La valeur ATTENDUE côté app après lecture/validation. */
@@ -75,6 +80,11 @@ const EXPECTED: PersistedSettings = {
   videoFps: 60,
   boomerangGif: true,
   mirrorFront: false,
+  onTheSpotEnabled: true,
+  onTheSpotMinPerDay: 2,
+  onTheSpotMaxPerDay: 3,
+  onTheSpotWindowStart: 10,
+  onTheSpotWindowEnd: 21,
 };
 
 beforeEach(async () => {

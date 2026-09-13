@@ -228,5 +228,18 @@
     "photo": "Foto",
     "video": "Video",
     "boomerang": "Boomerang"
+  },
+  "ots": {
+    "title": "On the Spot",
+    "enable": "Attiva",
+    "enableDesc": "Inviti a sorpresa a orari casuali per catturare l’attimo in foto duale. Tutto resta sul tuo dispositivo.",
+    "perDayMin": "Richiami al giorno",
+    "perDayMax": "Bonus fino a",
+    "perDayMaxDesc": "Completare un richiamo ne programma un altro lo stesso giorno, fino a questo tetto.",
+    "windowStart": "Inizio",
+    "windowEnd": "Fine",
+    "notifTitle": "On the Spot!",
+    "notifBody": "È il momento: {{minutes}} minuti per catturare l’attimo.",
+    "permissionDenied": "Notifiche rifiutate: attivale nelle impostazioni Android per usare On the Spot."
   }
 }

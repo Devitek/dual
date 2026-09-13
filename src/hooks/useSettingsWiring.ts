@@ -12,10 +12,16 @@ import type { PhotoFlashMode } from '../components/CameraTopBar';
 import type { CompositionLayout, OutputRatio, PipInset } from '../services/pipComposer';
 import type { VolumeKeyAction } from '../native/volumeKeys';
 import { haptics } from '../utils/haptics';
+import * as Notifications from 'expo-notifications';
+
+import i18n from '../i18n';
 import {
   loadPersistedSettings,
   saveSetting,
   type BurstCount,
+  type OtsPerDay,
+  type OtsWindowEnd,
+  type OtsWindowStart,
   type PersistedSettings,
   type TimerSeconds,
 } from '../services/settings';
@@ -58,6 +64,18 @@ export interface SettingsWiring {
   setCaptureSpeed: (s: CaptureSpeed) => void;
   setShutterSound: (v: boolean) => void;
   toggleSecondaryPreview: () => void;
+  // « Sur le fait » (#180) : opt-in + cadence + plage horaire.
+  onTheSpotEnabled: boolean;
+  onTheSpotMinPerDay: OtsPerDay;
+  onTheSpotMaxPerDay: OtsPerDay;
+  onTheSpotWindowStart: OtsWindowStart;
+  onTheSpotWindowEnd: OtsWindowEnd;
+  /** Active/désactive ; l'activation demande la permission notifications. */
+  setOnTheSpotEnabled: (v: boolean) => void;
+  setOnTheSpotMinPerDay: (v: OtsPerDay) => void;
+  setOnTheSpotMaxPerDay: (v: OtsPerDay) => void;
+  setOnTheSpotWindowStart: (v: OtsWindowStart) => void;
+  setOnTheSpotWindowEnd: (v: OtsWindowEnd) => void;
 }
 
 /**
@@ -81,6 +99,11 @@ export function useSettingsWiring({
   const [grid, setGridState] = useState(false);
   const [level, setLevelState] = useState(false);
   const [burstCount, setBurstCountState] = useState<BurstCount>(1);
+  const [onTheSpotEnabled, setOnTheSpotEnabledState] = useState(false);
+  const [onTheSpotMinPerDay, setOnTheSpotMinPerDayState] = useState<OtsPerDay>(1);
+  const [onTheSpotMaxPerDay, setOnTheSpotMaxPerDayState] = useState<OtsPerDay>(3);
+  const [onTheSpotWindowStart, setOnTheSpotWindowStartState] = useState<OtsWindowStart>(9);
+  const [onTheSpotWindowEnd, setOnTheSpotWindowEndState] = useState<OtsWindowEnd>(19);
 
   const applyPersisted = useCallback(
     (s: Partial<PersistedSettings>) => {
@@ -107,6 +130,11 @@ export function useSettingsWiring({
       if (s.grid != null) setGridState(s.grid);
       if (s.level != null) setLevelState(s.level);
       if (s.burstCount != null) setBurstCountState(s.burstCount);
+      if (s.onTheSpotEnabled != null) setOnTheSpotEnabledState(s.onTheSpotEnabled);
+      if (s.onTheSpotMinPerDay != null) setOnTheSpotMinPerDayState(s.onTheSpotMinPerDay);
+      if (s.onTheSpotMaxPerDay != null) setOnTheSpotMaxPerDayState(s.onTheSpotMaxPerDay);
+      if (s.onTheSpotWindowStart != null) setOnTheSpotWindowStartState(s.onTheSpotWindowStart);
+      if (s.onTheSpotWindowEnd != null) setOnTheSpotWindowEndState(s.onTheSpotWindowEnd);
     },
     [controller, onRestorePhotoFlash, onRestoreMode],
   );
@@ -230,6 +258,56 @@ export function useSettingsWiring({
     },
     [controller],
   );
+  // « Sur le fait » : l'ACTIVATION demande la permission notifications (Android
+  // 13+). Refusée => notice + on reste désactivé (pas de réglage mensonger).
+  const setOnTheSpotEnabled = useCallback(
+    (v: boolean) => {
+      if (!v) {
+        setOnTheSpotEnabledState(false);
+        saveSetting('onTheSpotEnabled', false);
+        return;
+      }
+      void (async () => {
+        let granted = (await Notifications.getPermissionsAsync()).granted;
+        if (!granted) granted = (await Notifications.requestPermissionsAsync()).granted;
+        if (!granted) {
+          controller.showNotice('error', i18n.t('ots.permissionDenied'));
+          return;
+        }
+        setOnTheSpotEnabledState(true);
+        saveSetting('onTheSpotEnabled', true);
+      })();
+    },
+    [controller],
+  );
+  const setOnTheSpotMinPerDay = useCallback((v: OtsPerDay) => {
+    setOnTheSpotMinPerDayState(v);
+    saveSetting('onTheSpotMinPerDay', v);
+    // Contrainte min <= max : monter le min tire le max avec lui.
+    setOnTheSpotMaxPerDayState((max) => {
+      if (max >= v) return max;
+      saveSetting('onTheSpotMaxPerDay', v);
+      return v;
+    });
+  }, []);
+  const setOnTheSpotMaxPerDay = useCallback((v: OtsPerDay) => {
+    setOnTheSpotMaxPerDayState(v);
+    saveSetting('onTheSpotMaxPerDay', v);
+    setOnTheSpotMinPerDayState((min) => {
+      if (min <= v) return min;
+      saveSetting('onTheSpotMinPerDay', v);
+      return v;
+    });
+  }, []);
+  const setOnTheSpotWindowStart = useCallback((v: OtsWindowStart) => {
+    setOnTheSpotWindowStartState(v);
+    saveSetting('onTheSpotWindowStart', v);
+  }, []);
+  const setOnTheSpotWindowEnd = useCallback((v: OtsWindowEnd) => {
+    setOnTheSpotWindowEndState(v);
+    saveSetting('onTheSpotWindowEnd', v);
+  }, []);
+
   const toggleSecondaryPreview = useCallback(() => {
     haptics.selection();
     const next = !showSecondaryPreview;
@@ -263,5 +341,15 @@ export function useSettingsWiring({
     setCaptureSpeed,
     setShutterSound,
     toggleSecondaryPreview,
+    onTheSpotEnabled,
+    onTheSpotMinPerDay,
+    onTheSpotMaxPerDay,
+    onTheSpotWindowStart,
+    onTheSpotWindowEnd,
+    setOnTheSpotEnabled,
+    setOnTheSpotMinPerDay,
+    setOnTheSpotMaxPerDay,
+    setOnTheSpotWindowStart,
+    setOnTheSpotWindowEnd,
   };
 }

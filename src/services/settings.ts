@@ -14,6 +14,16 @@ export type TimerSeconds = (typeof TIMER_VALUES)[number];
 export const BURST_VALUES = [1, 3, 5, 10] as const;
 export type BurstCount = (typeof BURST_VALUES)[number];
 
+/** « Sur le fait » (#180) : appels par jour (garantis / bonus max). */
+export const OTS_PER_DAY_VALUES = [1, 2, 3] as const;
+export type OtsPerDay = (typeof OTS_PER_DAY_VALUES)[number];
+/** Heures de début possibles de la plage « Sur le fait ». */
+export const OTS_WINDOW_START_VALUES = [8, 9, 10] as const;
+export type OtsWindowStart = (typeof OTS_WINDOW_START_VALUES)[number];
+/** Heures de fin possibles de la plage « Sur le fait ». */
+export const OTS_WINDOW_END_VALUES = [18, 19, 21] as const;
+export type OtsWindowEnd = (typeof OTS_WINDOW_END_VALUES)[number];
+
 /**
  * SOURCE DE VÉRITÉ UNIQUE des réglages utilisateur persistés (AsyncStorage).
  *
@@ -51,6 +61,11 @@ export const SETTINGS_KEYS = {
   videoFps: 'tl_video_fps',
   boomerangGif: 'tl_boomerang_gif',
   mirrorFront: 'tl_mirror_front',
+  onTheSpotEnabled: 'tl_ots_enabled',
+  onTheSpotMinPerDay: 'tl_ots_min',
+  onTheSpotMaxPerDay: 'tl_ots_max',
+  onTheSpotWindowStart: 'tl_ots_window_start',
+  onTheSpotWindowEnd: 'tl_ots_window_end',
 } as const;
 
 export interface PersistedSettings {
@@ -84,6 +99,16 @@ export interface PersistedSettings {
   boomerangGif: boolean;
   /** Miroir de la caméra avant à la sauvegarde (selfie comme l'aperçu). */
   mirrorFront: boolean;
+  /** « Sur le fait » activé (opt-in, défaut désactivé). */
+  onTheSpotEnabled: boolean;
+  /** Appels garantis par jour (défaut 1). */
+  onTheSpotMinPerDay: OtsPerDay;
+  /** Plafond d'appels bonus par jour (défaut 3, jamais < min). */
+  onTheSpotMaxPerDay: OtsPerDay;
+  /** Heure de début de la plage (défaut 9). */
+  onTheSpotWindowStart: OtsWindowStart;
+  /** Heure de fin de la plage (défaut 19). */
+  onTheSpotWindowEnd: OtsWindowEnd;
 }
 
 export type SettingKey = keyof PersistedSettings;
@@ -224,6 +249,17 @@ export async function loadPersistedSettings(): Promise<Partial<PersistedSettings
   if (fps === 30 || fps === 60) out.videoFps = fps;
   if (g('boomerangGif') != null) out.boomerangGif = g('boomerangGif') === '1';
   if (g('mirrorFront') != null) out.mirrorFront = g('mirrorFront') === '1';
+  if (g('onTheSpotEnabled') != null) out.onTheSpotEnabled = g('onTheSpotEnabled') === '1';
+  const otsMin = Number(g('onTheSpotMinPerDay'));
+  if (OTS_PER_DAY_VALUES.includes(otsMin as OtsPerDay)) out.onTheSpotMinPerDay = otsMin as OtsPerDay;
+  const otsMax = Number(g('onTheSpotMaxPerDay'));
+  if (OTS_PER_DAY_VALUES.includes(otsMax as OtsPerDay)) out.onTheSpotMaxPerDay = otsMax as OtsPerDay;
+  const otsStart = Number(g('onTheSpotWindowStart'));
+  if (OTS_WINDOW_START_VALUES.includes(otsStart as OtsWindowStart)) {
+    out.onTheSpotWindowStart = otsStart as OtsWindowStart;
+  }
+  const otsEnd = Number(g('onTheSpotWindowEnd'));
+  if (OTS_WINDOW_END_VALUES.includes(otsEnd as OtsWindowEnd)) out.onTheSpotWindowEnd = otsEnd as OtsWindowEnd;
 
   return out;
 }

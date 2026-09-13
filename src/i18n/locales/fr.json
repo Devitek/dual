@@ -228,5 +228,18 @@
     "photo": "Photo",
     "video": "Vidéo",
     "boomerang": "Boomerang"
+  },
+  "ots": {
+    "title": "Sur le fait",
+    "enable": "Activer",
+    "enableDesc": "Des invitations surprise, à des heures aléatoires, à capturer l’instant en photo duale. Tout reste sur votre appareil.",
+    "perDayMin": "Appels par jour",
+    "perDayMax": "Bonus jusqu’à",
+    "perDayMaxDesc": "Réussir un appel en déclenche un autre dans la journée, jusqu’à ce plafond.",
+    "windowStart": "Début de plage",
+    "windowEnd": "Fin de plage",
+    "notifTitle": "Sur le fait !",
+    "notifBody": "C’est le moment : {{minutes}} minutes pour capturer l’instant.",
+    "permissionDenied": "Notifications refusées : activez-les dans les réglages Android pour utiliser « Sur le fait »."
   }
 }

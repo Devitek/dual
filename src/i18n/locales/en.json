@@ -228,5 +228,18 @@
     "photo": "Photo",
     "video": "Video",
     "boomerang": "Boomerang"
+  },
+  "ots": {
+    "title": "On the Spot",
+    "enable": "Enable",
+    "enableDesc": "Surprise invitations at random times to capture the moment as a dual photo. Everything stays on your device.",
+    "perDayMin": "Calls per day",
+    "perDayMax": "Bonus up to",
+    "perDayMaxDesc": "Completing a call schedules another one the same day, up to this cap.",
+    "windowStart": "Window start",
+    "windowEnd": "Window end",
+    "notifTitle": "On the Spot!",
+    "notifBody": "It’s time: {{minutes}} minutes to capture the moment.",
+    "permissionDenied": "Notifications denied: enable them in Android settings to use On the Spot."
   }
 }
