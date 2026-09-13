@@ -186,6 +186,59 @@ export function canScheduleBonus(journal: readonly OtsCall[], dayStartMs: number
 }
 
 // ---------------------------------------------------------------------------
+// Streak (chantier 3) : jours consécutifs avec au moins une réussite.
+// Navigation entre jours via dayStartOf(± 12/36 h) et JAMAIS ± 24 h : les
+// jours de changement d'heure font 23 ou 25 h, une arithmétique naïve
+// casserait la série deux fois par an.
+// ---------------------------------------------------------------------------
+
+export interface OtsStreak {
+  /** Série en cours (une journée SANS réussite ne casse la série qu'une fois finie). */
+  current: number;
+  /** Meilleure série de l'historique. */
+  best: number;
+}
+
+/** Début du jour local PRÉCÉDENT celui qui commence à `dayStartMs`. */
+function prevDayStart(dayStartMs: number): number {
+  return dayStartOf(dayStartMs - 12 * 3_600_000);
+}
+
+/** Vrai si le jour commençant à `b` suit immédiatement celui commençant à `a`. */
+function isNextDay(a: number, b: number): boolean {
+  return dayStartOf(a + 36 * 3_600_000) === b;
+}
+
+export function computeStreak(journal: readonly OtsCall[], now: number): OtsStreak {
+  const successDays = new Set<number>();
+  for (const c of journal) {
+    if (c.status === 'done') successDays.add(dayStartOf(c.scheduledAt));
+  }
+
+  // Série en cours : on remonte depuis aujourd'hui ; si aujourd'hui n'a pas
+  // (encore) de réussite, la série d'hier tient toujours (journée en cours).
+  const today = dayStartOf(now);
+  let current = 0;
+  let cursor = successDays.has(today) ? today : prevDayStart(today);
+  while (successDays.has(cursor)) {
+    current += 1;
+    cursor = prevDayStart(cursor);
+  }
+
+  // Meilleure série : parcours chronologique des jours de réussite.
+  const days = [...successDays].sort((a, b) => a - b);
+  let best = current;
+  let run = 0;
+  let prev: number | null = null;
+  for (const d of days) {
+    run = prev != null && isNextDay(prev, d) ? run + 1 : 1;
+    prev = d;
+    if (run > best) best = run;
+  }
+  return { current, best };
+}
+
+// ---------------------------------------------------------------------------
 // Journal (AsyncStorage, best-effort)
 // ---------------------------------------------------------------------------
 

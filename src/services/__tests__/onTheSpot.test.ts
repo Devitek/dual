@@ -2,6 +2,7 @@ import {
   applyCompletion,
   callsOfDay,
   canScheduleBonus,
+  computeStreak,
   dayStartOf,
   drawCallTimes,
   getActiveCall,
@@ -184,6 +185,49 @@ describe('fenêtre de capture (chantier 2)', () => {
       const journal = [mk(NOW - DAY, 'done'), mk(NOW - H, 'done')];
       expect(canScheduleBonus(journal, DAY_START, 2)).toBe(true);
     });
+  });
+});
+
+describe('computeStreak (chantier 3)', () => {
+  const NOW = DAY_START + 15 * H; // en journée
+  const done = (dayOffset: number): OtsCall => ({
+    id: `d${dayOffset}`,
+    scheduledAt: dayStartOf(DAY_START - dayOffset * DAY) + 10 * H,
+    status: 'done',
+  });
+  const missed = (dayOffset: number): OtsCall => ({ ...done(dayOffset), id: `m${dayOffset}`, status: 'missed' });
+
+  it('journal vide : zéro partout', () => {
+    expect(computeStreak([], NOW)).toEqual({ current: 0, best: 0 });
+  });
+
+  it('réussite aujourd’hui : série de 1', () => {
+    expect(computeStreak([done(0)], NOW)).toEqual({ current: 1, best: 1 });
+  });
+
+  it('pas encore de réussite aujourd’hui : la série d’hier tient (journée en cours)', () => {
+    expect(computeStreak([done(1), done(2)], NOW).current).toBe(2);
+  });
+
+  it('un jour manqué casse la série en cours, pas le record', () => {
+    // réussites J-1..J-3, trou à J-4, réussites J-5..J-9 (série de 5)
+    const journal = [done(1), done(2), done(3), missed(4), done(5), done(6), done(7), done(8), done(9)];
+    const s = computeStreak(journal, NOW);
+    expect(s.current).toBe(3);
+    expect(s.best).toBe(5);
+  });
+
+  it('plusieurs réussites le même jour comptent pour un seul jour', () => {
+    const twice: OtsCall = { ...done(0), id: 'bis', scheduledAt: done(0).scheduledAt + 2 * H };
+    expect(computeStreak([done(0), twice], NOW)).toEqual({ current: 1, best: 1 });
+  });
+
+  it('les manqués seuls ne comptent jamais', () => {
+    expect(computeStreak([missed(0), missed(1)], NOW)).toEqual({ current: 0, best: 0 });
+  });
+
+  it('avant-hier sans hier : série cassée malgré la journée en cours', () => {
+    expect(computeStreak([done(2), done(3)], NOW).current).toBe(0);
   });
 });
 

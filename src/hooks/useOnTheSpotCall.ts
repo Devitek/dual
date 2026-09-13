@@ -4,6 +4,7 @@ import * as Notifications from 'expo-notifications';
 import i18n from '../i18n';
 import {
   completeActiveCall,
+  computeStreak,
   getActiveCall,
   refreshJournal,
   OTS_CAPTURE_WINDOW_MS,
@@ -89,15 +90,20 @@ export function useOnTheSpotCall(
   }, [enabled, refresh]);
 
   // Surveillance : rattrape une fenêtre qui s'ouvre pendant que l'app est
-  // ouverte, et l'état initial au montage.
+  // ouverte, et l'état initial au montage. Le chargement initial part en
+  // microtâche : pas de setState synchrone dans le corps de l'effet (règle
+  // set-state-in-effect verrouillée en erreur, #136).
   useEffect(() => {
     if (!enabled) {
       activeRef.current = null;
       return;
     }
-    void refresh();
+    const kickoff = setTimeout(() => void refresh(), 0);
     const id = setInterval(() => void refresh(), POLL_MS);
-    return () => clearInterval(id);
+    return () => {
+      clearTimeout(kickoff);
+      clearInterval(id);
+    };
   }, [enabled, refresh]);
 
   // Compte à rebours : tick chaque seconde pendant une fenêtre ouverte ;
@@ -123,11 +129,21 @@ export function useOnTheSpotCall(
     if (call == null || lastCapture == null || lastCapture === lastHandled.current) return;
     if (lastCapture.kind !== 'photo') return;
     lastHandled.current = lastCapture;
-    void completeActiveCall(call.id, lastCapture.primaryUri, settingsRef.current).then((res) => {
-      if (res === 'completed') notifyRef.current('success', i18n.t('ots.doneNotice'));
+    void completeActiveCall(call.id, lastCapture.primaryUri, settingsRef.current).then(async (res) => {
+      if (res === 'completed') {
+        // La série (streak) rend la réussite tangible dès 2 jours consécutifs.
+        const journal = await refreshJournal();
+        const streak = computeStreak(journal, Date.now());
+        notifyRef.current(
+          'success',
+          streak.current >= 2 ? i18n.t('ots.doneNoticeStreak', { count: streak.current }) : i18n.t('ots.doneNotice'),
+        );
+      }
       void refresh();
     });
   }, [lastCapture, refresh]);
 
-  return { activeCall, remainingMs };
+  // Désactivation à chaud : l'état interne peut rester « actif », le rendu est
+  // dérivé (pas de reset par setState dans un effet).
+  return enabled ? { activeCall, remainingMs } : { activeCall: null, remainingMs: 0 };
 }
