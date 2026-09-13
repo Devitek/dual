@@ -11,6 +11,7 @@ WHAT YOU GET
 • 🖼️ Layouts: Picture-in-Picture, side-by-side or stacked — composed on-device, one file ready to post (works for photos AND videos)
 • ✋ Move & resize the PiP thumbnail — long-press to drag, pinch to scale
 • ∞ Boomerang — a punchy back-and-forth loop, exported as MP4 or GIF
+• 🔔 On the Spot : surprise invitations at random times: 3 minutes to capture the moment, a streak to keep alive, a private history
 • 🎯 Sharp shots: "hold still" anti-blur, fast-capture mode and a 3s / 10s self-timer
 • 🚫 No ads, no watermark on your videos, ever
 • 🙈 Surprise mode: hide the selfie preview and discover your reaction later

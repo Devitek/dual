@@ -143,6 +143,28 @@ svg { fill: none; stroke: #E6E0E9; stroke-width: 2; }
 .segcell.on { background: #4F378B; color: #EADDFF; }
 .optdesc { color: #CAC4D0; font-size: 30px; margin-top: 20px; }
 
+/* --- Onglet « Sur le fait » (onthespot) --- */
+.otsstats { display: flex; align-items: center; gap: 18px; margin-bottom: 40px; }
+.otschip { display: inline-flex; align-items: center; gap: 12px; background: #2B2930; border-radius: 26px;
+  padding: 14px 24px; font-size: 30px; font-weight: 700; }
+.otschip .flame { color: #D0BCFF; }
+.otsfilter { margin-left: auto; display: inline-flex; align-items: center; gap: 12px; border: 3px solid #938F99;
+  border-radius: 26px; padding: 14px 24px; font-size: 28px; font-weight: 600; color: #CAC4D0; }
+.otsday { margin-bottom: 44px; }
+.otsdaylabel { color: #CAC4D0; font-size: 30px; font-weight: 700; text-transform: capitalize; margin-bottom: 18px; }
+.otsrow { display: flex; gap: 20px; }
+.otscell { width: 296px; height: 296px; border-radius: 34px; overflow: hidden; position: relative;
+  background: #2B2930; }
+.okbadge { position: absolute; top: 12px; right: 12px; width: 52px; height: 52px; border-radius: 50%;
+  background: #D0BCFF; display: flex; align-items: center; justify-content: center; }
+.okbadge svg { width: 30px; height: 30px; stroke: #381E72; stroke-width: 3; }
+.otstime { position: absolute; left: 16px; bottom: 12px; color: #fff; font-size: 26px; font-weight: 700;
+  text-shadow: 0 2px 8px rgba(0,0,0,.8); }
+.otsmissed { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  background: transparent; border: 3px dashed #49454F; }
+.otsmissed svg { width: 56px; height: 56px; stroke: #938F99; }
+.otsmissed span { color: #938F99; font-size: 24px; font-weight: 600; }
+
 /* --- Gallery (screen4) --- */
 .gal { position: absolute; inset: 0; background: #141218; padding: 150px 48px 0; }
 .galhead { display: flex; align-items: center; gap: 26px; margin-bottom: 26px; }
