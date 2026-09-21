@@ -8,6 +8,7 @@ import {
   getActiveCall,
   persistCallMedia,
   refreshJournal,
+  syncOnTheSpotSchedule,
   OTS_CAPTURE_WINDOW_MS,
   type OtsCall,
   type OtsSettings,
@@ -55,7 +56,11 @@ export function useOnTheSpotCall(
     const journal = await refreshJournal();
     const now = Date.now();
     const active = getActiveCall([...journal], now);
+    const hadActive = activeRef.current != null;
     activeRef.current = active;
+    // Fenêtre expirée pendant l'usage (manqué « en direct ») : la journée peut
+    // continuer (#199), la sync tire l'éventuel appel suivant.
+    if (hadActive && active == null) void syncOnTheSpotSchedule(settingsRef.current);
     setActiveCall(active);
     setRemainingMs(active != null ? Math.max(0, active.scheduledAt + OTS_CAPTURE_WINDOW_MS - now) : 0);
     // Tap sur une notification dont la fenêtre est déjà close : le dire.

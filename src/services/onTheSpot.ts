@@ -181,9 +181,34 @@ export function applyCompletion(
   };
 }
 
-/** Un bonus est planifiable si le total d'appels du jour reste sous le plafond. */
-export function canScheduleBonus(journal: readonly OtsCall[], dayStartMs: number, maxPerDay: number): boolean {
-  return callsOfDay([...journal], dayStartMs).length < maxPerDay;
+/**
+ * Tire le PROCHAIN appel du jour si la journée peut continuer (#199) : plafond
+ * quotidien non atteint, aucun appel du jour encore en attente (actif ou
+ * futur : au plus UN pending par jour, jamais de spoiler), et fenêtre restante
+ * suffisante. S'applique après une réussite COMME après un manqué : rater le
+ * premier appel ne clôt plus la journée.
+ */
+export function drawNextCallIfBelowCap(
+  journal: readonly OtsCall[],
+  settings: OtsSettings,
+  now: number,
+  random: () => number = Math.random,
+): OtsCall | null {
+  const dayStart = dayStartOf(now);
+  const today = callsOfDay(journal, dayStart);
+  if (today.length >= settings.maxPerDay) return null;
+  if (today.some((c) => c.status === 'pending')) return null;
+  const times = drawCallTimes({
+    count: 1,
+    windowStartHour: settings.windowStart,
+    windowEndHour: settings.windowEnd,
+    dayStartMs: dayStart,
+    earliestMs: now + OTS_MIN_LEAD_MS,
+    random,
+  });
+  const first = times[0];
+  if (first == null) return null;
+  return { id: newCallId(first, random), scheduledAt: first, status: 'pending' };
 }
 
 /** Un jour d'appels, pour l'onglet galerie (du plus récent au plus ancien). */
@@ -389,27 +414,16 @@ export function completeActiveCall(
       return 'ignored';
     }
 
-    const dayStart = dayStartOf(now);
-    let final = updated;
-    if (canScheduleBonus(updated, dayStart, settings.maxPerDay)) {
-      const times = drawCallTimes({
-        count: 1,
-        windowStartHour: settings.windowStart,
-        windowEndHour: settings.windowEnd,
-        dayStartMs: dayStart,
-        earliestMs: now + OTS_MIN_LEAD_MS,
-        random,
-      });
-      const first = times[0];
-      if (first != null) {
-        const bonus: OtsCall = { id: newCallId(first, random), scheduledAt: first, status: 'pending' };
-        final = [...updated, bonus];
-        await saveJournal(final);
-        await scheduleCallNotification(bonus);
-        return 'completed';
-      }
+    // La journée continue jusqu'au plafond (#199) : même mécanique après une
+    // réussite qu'après un manqué (voir doSync pour le chemin « manqué »).
+    const next = drawNextCallIfBelowCap(updated, settings, now, random);
+    if (next != null) {
+      const final = [...updated, next];
+      await saveJournal(final);
+      await scheduleCallNotification(next);
+      return 'completed';
     }
-    await saveJournal(final);
+    await saveJournal(updated);
     return 'completed';
   });
 }
@@ -437,10 +451,18 @@ async function doSync(settings: OtsSettings, now: number, random: () => number):
     for (const dayOffset of [0, 1]) {
       const dayStart = dayStartOf(now) + dayOffset * 24 * 3_600_000;
       const existing = callsOfDay(journal, dayStart);
-      // Des appels déjà planifiés (ou passés) ce jour-là : on ne re-tire pas,
-      // même s'ils sont inférieurs au min (fenêtre restante trop courte hier
-      // soir, réglage augmenté en cours de journée...). Simplicité d'abord.
-      if (existing.length > 0) continue;
+      // Des appels déjà planifiés (ou passés) ce jour-là : on ne re-tire pas
+      // le contingent min, MAIS la journée en cours peut continuer (#199) :
+      // si le dernier appel du jour est statué (réussi OU manqué) et que le
+      // plafond n'est pas atteint, on tire le suivant. Un manqué ne clôt
+      // plus la journée.
+      if (existing.length > 0) {
+        if (dayOffset === 0) {
+          const next = drawNextCallIfBelowCap([...journal, ...additions], settings, now, random);
+          if (next != null) additions.push(next);
+        }
+        continue;
+      }
       const times = drawCallTimes({
         count: settings.minPerDay,
         windowStartHour: settings.windowStart,
