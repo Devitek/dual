@@ -1,10 +1,10 @@
 import {
   applyCompletion,
   callsOfDay,
-  canScheduleBonus,
   computeStreak,
   dayStartOf,
   drawCallTimes,
+  drawNextCallIfBelowCap,
   getActiveCall,
   groupCallsByDay,
   pruneFuturePending,
@@ -183,15 +183,41 @@ describe('fenêtre de capture (chantier 2)', () => {
     });
   });
 
-  describe('canScheduleBonus', () => {
-    it('vrai sous le plafond quotidien, faux au plafond', () => {
-      const journal = [mk(NOW - 2 * H, 'done'), mk(NOW - H, 'missed')];
-      expect(canScheduleBonus(journal, DAY_START, 3)).toBe(true);
-      expect(canScheduleBonus(journal, DAY_START, 2)).toBe(false);
+  describe('drawNextCallIfBelowCap (#199 : un manqué ne clôt plus la journée)', () => {
+    const settings = { enabled: true, minPerDay: 1, maxPerDay: 3, windowStart: 9, windowEnd: 19 } as const;
+    const midday = dayStartOf(NOW) + 12 * H;
+
+    it('tire le suivant après un MANQUÉ, sous le plafond (le cas cœur)', () => {
+      const next = drawNextCallIfBelowCap([mk(midday - 2 * H, 'missed')], settings, midday, () => 0.5);
+      expect(next).not.toBeNull();
+      expect(next?.status).toBe('pending');
+      expect(next?.scheduledAt).toBeGreaterThan(midday);
+      expect(next?.scheduledAt).toBeLessThanOrEqual(dayStartOf(midday) + 19 * H);
     });
+
+    it('tire aussi après une réussite (mécanique unifiée)', () => {
+      expect(drawNextCallIfBelowCap([mk(midday - 2 * H, 'done')], settings, midday, () => 0.5)).not.toBeNull();
+    });
+
+    it('rien au plafond quotidien', () => {
+      const journal = [mk(midday - 4 * H, 'missed'), mk(midday - 3 * H, 'missed'), mk(midday - 2 * H, 'done')];
+      expect(drawNextCallIfBelowCap(journal, settings, midday)).toBeNull();
+    });
+
+    it('rien si un appel du jour est encore en attente (au plus un pending)', () => {
+      expect(drawNextCallIfBelowCap([mk(midday + 2 * H, 'pending')], settings, midday)).toBeNull();
+      // pending ACTIF (fenêtre ouverte) : idem
+      expect(drawNextCallIfBelowCap([mk(midday - 60_000, 'pending')], settings, midday)).toBeNull();
+    });
+
+    it('rien si la fenêtre du jour est finie', () => {
+      const evening = dayStartOf(NOW) + 20 * H;
+      expect(drawNextCallIfBelowCap([mk(evening - 5 * H, 'missed')], settings, evening)).toBeNull();
+    });
+
     it('ne compte que les appels du jour', () => {
-      const journal = [mk(NOW - DAY, 'done'), mk(NOW - H, 'done')];
-      expect(canScheduleBonus(journal, DAY_START, 2)).toBe(true);
+      const journal = [mk(midday - DAY, 'missed'), mk(midday - DAY - H, 'missed'), mk(midday - DAY - 2 * H, 'missed')];
+      expect(drawNextCallIfBelowCap(journal, settings, midday)).not.toBeNull();
     });
   });
 });
