@@ -58,3 +58,24 @@ parfaitement ce qu'on lui demande ! »
 > Merci beaucoup Anne-Cécile pour votre retour et ces 5 étoiles ! Ravis que la
 > simplicité de TwinLens vous plaise. À bientôt, et n'hésitez pas si vous avez
 > des suggestions.
+
+---
+
+## 2026-09 · Michael Holzleithner · 5★ · en · v1.24.0 (production)
+
+Premier avis sur la 1.24.0 en production. Détecté par le cron hebdo
+(run rouge du lundi : le mécanisme #190 a fonctionné du premier coup).
+
+**Avis** : « Super thanks for this app! Un grand merci! »
+
+**Réponse (2026-09, envoyée à la main via la console ; rédigée ici,
+reviewId `e59f2c24-e62d-4722-ae99-c5ae1a5f9da2`)** :
+
+> Thank you so much Michael, this made our day! If you haven't yet, try the
+> new On the Spot mode: surprise invitations at random times to capture the
+> moment (opt-in, in the gallery). Suggestions are always welcome. Un grand
+> merci à vous ! 🙂
+
+Choix : réponse dans sa langue avec le clin d'œil miroir (il finit en
+français, on finit en français), micro-nudge vers « Sur le fait » (il est sur
+la version qui l'a).
