@@ -57,7 +57,15 @@
       ],
       "./plugins/withRemoveUnusedPermissions",
       "./plugins/withR8Optimization",
-      "expo-image"
+      "expo-image",
+      [
+        "expo-notifications",
+        {
+          "sounds": [
+            "./assets/sounds/onthespot_ringtone.wav"
+          ]
+        }
+      ]
     ]
   }
 }
