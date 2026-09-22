@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.25.0](https://github.com/Devitek/dual/compare/v1.24.0...v1.25.0) (2026-09-22)
+
+
+### Features
+
+* **onthespot:** a missed call no longer ends the day (catch-up to the cap) ([#201](https://github.com/Devitek/dual/issues/201)) ([f3e82f1](https://github.com/Devitek/dual/commit/f3e82f1ed7fa26254acfe10ba2a7ac4e9aa185a7))
+* **onthespot:** dedicated notification channel with signature sound and tuned vibration ([#203](https://github.com/Devitek/dual/issues/203)) ([818e354](https://github.com/Devitek/dual/commit/818e354c685d42213e6ebe5aea702fb4ad01c149)), closes [#200](https://github.com/Devitek/dual/issues/200)
+
 ## [1.24.0](https://github.com/Devitek/dual/compare/v1.23.0...v1.24.0) (2026-09-13)
 
 
