@@ -1,2 +1,2 @@
-Nouveau : « Sur le fait » ! Des invitations surprise à des heures aléatoires : 3 minutes pour capturer l’instant en photo double. Série à entretenir, historique privé, réglable (opt-in, dans la galerie).
-Aussi : les icônes pivotent quand vous tenez le téléphone en paysage, app plus légère et plus rapide, accessibilité TalkBack renforcée.
+« Sur le fait » s'améliore : les invitations ont désormais une sonnerie et une vibration signature, impossible de les manquer.
+Et un rendez-vous manqué ne clôt plus votre journée : un nouveau est reprogrammé tant que le quota du jour n'est pas atteint.
