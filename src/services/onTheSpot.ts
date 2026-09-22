@@ -340,15 +340,61 @@ function newCallId(scheduledAt: number, random: () => number): string {
   return `${scheduledAt.toString(36)}-${Math.floor(random() * 36 ** 4).toString(36)}`;
 }
 
+/** Canal Android dédié « Sur le fait » (#200). Suffixe versionné : les
+ *  attributs d'un canal sont FIGÉS à sa création ET un canal supprimé est
+ *  RESSUSCITÉ avec ses anciens réglages si on recrée le même id (vécu : son
+ *  muet après changement de fichier). Toute évolution son/vibration = _v3. */
+export const OTS_CHANNEL_ID = 'onthespot_v2';
+/** Signature vibratoire calée sur les DEUX attaques de la sonnerie (0,08 s et
+ *  0,40 s : la 2ᵉ impulsion démarre à 80+220+90 = 390 ms, synchrone avec
+ *  l'audio). La traîne ne vibre pas : moteur tout-ou-rien, on reste sec. */
+export const OTS_VIBRATION_PATTERN = [80, 220, 90, 300];
+/** Son signature choisi à l'oreille (asset res/raw via le config plugin). */
+const OTS_SOUND = 'onthespot_ringtone.wav';
+
+let channelReady = false;
+/**
+ * Crée (idempotent) le canal de notification dédié : importance MAX
+ * (heads-up), vibration signature, son custom. Bonus : l'utilisateur peut
+ * régler finement CE canal dans les paramètres Android sans toucher au reste.
+ * NB Android : les attributs d'un canal sont figés à sa création ; en cas
+ * d'évolution (son/pattern), CHANGER l'id du canal (onthespot_v3...).
+ */
+async function ensureChannel(): Promise<void> {
+  if (channelReady) return;
+  await Notifications.setNotificationChannelAsync(OTS_CHANNEL_ID, {
+    name: i18n.t('ots.title'),
+    importance: Notifications.AndroidImportance.MAX,
+    vibrationPattern: OTS_VIBRATION_PATTERN,
+    sound: OTS_SOUND,
+    enableVibrate: true,
+    // IMPÉRATIF : sans attributs audio explicites, expo-notifications pose
+    // setSound(uri, null) et le canal reste MUET (vécu : mAudioAttributes=null
+    // au dumpsys, aucun son, même pas celui par défaut).
+    audioAttributes: {
+      usage: Notifications.AndroidAudioUsage.NOTIFICATION,
+      contentType: Notifications.AndroidAudioContentType.SONIFICATION,
+    },
+  });
+  channelReady = true;
+}
+
 async function scheduleCallNotification(call: OtsCall): Promise<void> {
+  await ensureChannel();
   await Notifications.scheduleNotificationAsync({
     identifier: `${OTS_NOTIFICATION_PREFIX}${call.id}`,
     content: {
       title: i18n.t('ots.notifTitle'),
       body: i18n.t('ots.notifBody', { minutes: Math.round(OTS_CAPTURE_WINDOW_MS / 60000) }),
+      sound: OTS_SOUND,
+      vibrate: OTS_VIBRATION_PATTERN,
       data: { url: `${OTS_DEEP_LINK_PREFIX}${call.id}` },
     },
-    trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: new Date(call.scheduledAt) },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.DATE,
+      date: new Date(call.scheduledAt),
+      channelId: OTS_CHANNEL_ID,
+    },
   });
 }
 
