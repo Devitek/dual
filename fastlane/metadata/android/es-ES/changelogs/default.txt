@@ -1,2 +1,1 @@
-On the Spot mejora: las invitaciones ahora tienen un tono y una vibración propios, imposibles de pasar por alto.
-Y una cita perdida ya no termina tu día: se programa una nueva mientras no se alcance el límite diario.
+Mantenimiento: actualizaciones técnicas y correcciones menores para mejorar la estabilidad y la fiabilidad de la app.
