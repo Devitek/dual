@@ -1,2 +1,1 @@
-On the Spot gets better: invitations now come with a signature ringtone and vibration, impossible to miss.
-And a missed call no longer ends your day: a new one is scheduled as long as the daily quota isn't reached.
+Maintenance: technical updates and minor fixes to improve the app's stability and reliability.

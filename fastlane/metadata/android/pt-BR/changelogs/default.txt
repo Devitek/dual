@@ -1,2 +1,1 @@
-On the Spot melhora: os convites agora têm um toque e uma vibração próprios, impossíveis de perder.
-E um convite perdido não encerra mais o seu dia: um novo é agendado enquanto o limite diário não for atingido.
+Manutenção: atualizações técnicas e pequenas correções para melhorar a estabilidade e a confiabilidade do app.
