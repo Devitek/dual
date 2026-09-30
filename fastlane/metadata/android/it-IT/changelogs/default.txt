@@ -1,2 +1,1 @@
-On the Spot migliora: gli inviti ora hanno una suoneria e una vibrazione dedicate, impossibili da perdere.
-E un invito mancato non chiude più la tua giornata: ne viene programmato uno nuovo finché non si raggiunge il limite giornaliero.
+Manutenzione: aggiornamenti tecnici e piccole correzioni per migliorare la stabilità e l'affidabilità dell'app.

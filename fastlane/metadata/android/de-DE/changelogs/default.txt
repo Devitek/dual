@@ -1,2 +1,1 @@
-On the Spot wird besser: Einladungen haben jetzt einen eigenen Klingelton und eine eigene Vibration, unmöglich zu verpassen.
-Ein verpasster Termin beendet nicht mehr deinen Tag: Ein neuer wird geplant, solange das Tageslimit nicht erreicht ist.
+Wartung: technische Aktualisierungen und kleinere Korrekturen für mehr Stabilität und Zuverlässigkeit der App.

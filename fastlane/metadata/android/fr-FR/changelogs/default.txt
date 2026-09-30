@@ -1,2 +1,1 @@
-« Sur le fait » s'améliore : les invitations ont désormais une sonnerie et une vibration signature, impossible de les manquer.
-Et un rendez-vous manqué ne clôt plus votre journée : un nouveau est reprogrammé tant que le quota du jour n'est pas atteint.
+Maintenance : mises à jour techniques et corrections mineures pour améliorer la stabilité et la fiabilité de l'application.
