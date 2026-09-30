@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.25.1](https://github.com/Devitek/dual/compare/v1.25.0...v1.25.1) (2026-09-30)
+
+
+### Bug Fixes
+
+* **deps:** align Expo SDK 57 packages and bump maintenance dependencies ([#209](https://github.com/Devitek/dual/issues/209)) ([1388b92](https://github.com/Devitek/dual/commit/1388b923d0d6d31d9566b5e53550fcaa27e6b302))
+
 ## [1.25.0](https://github.com/Devitek/dual/compare/v1.24.0...v1.25.0) (2026-09-22)
 
 
