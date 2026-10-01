@@ -72,3 +72,31 @@ export function uiRotationFor(orientation: DeviceOrientation): number {
       return 0;
   }
 }
+
+/**
+ * Orientation de sortie caméra (convention VisionCamera `CameraOrientation`) à
+ * graver dans l'EXIF des captures, dérivée de l'orientation PHYSIQUE (#174).
+ *
+ * On N'utilise PAS l'OrientationManager `device` de VisionCamera : en multi-cam
+ * impératif il ne pousse aucune mise à jour (vérifié sur device, l'EXIF restait
+ * `up`). On alimente nous-mêmes `output.outputOrientation` depuis la détection
+ * accéléromètre déjà fiable (celle des icônes, #173).
+ *
+ * Convention : `DeviceOrientation` = degrés HORAIRES depuis le portrait ;
+ * `CameraOrientation` 'right' = tourné 90° à droite (horaire), 'left' = 90° à
+ * gauche. Le mapping est donc direct (calibré sur device).
+ */
+export type CaptureOrientation = 'up' | 'right' | 'down' | 'left';
+
+export function cameraOrientationFor(orientation: DeviceOrientation): CaptureOrientation {
+  switch (orientation) {
+    case 90:
+      return 'right';
+    case 180:
+      return 'down';
+    case 270:
+      return 'left';
+    default:
+      return 'up';
+  }
+}

@@ -1,4 +1,10 @@
-import { angleDelta, orientationFromAccel, uiRotationFor, type DeviceOrientation } from '../orientation';
+import {
+  angleDelta,
+  cameraOrientationFor,
+  orientationFromAccel,
+  uiRotationFor,
+  type DeviceOrientation,
+} from '../orientation';
 
 describe('angleDelta', () => {
   it('replie dans [-180, 180]', () => {
@@ -51,5 +57,14 @@ describe('uiRotationFor', () => {
     expect(uiRotationFor(90)).toBe(-90);
     expect(uiRotationFor(180)).toBe(180);
     expect(uiRotationFor(270)).toBe(90);
+  });
+});
+
+describe('cameraOrientationFor', () => {
+  it('mappe l orientation physique vers la convention CameraOrientation (#174)', () => {
+    expect(cameraOrientationFor(0)).toBe('up');
+    expect(cameraOrientationFor(90)).toBe('right');
+    expect(cameraOrientationFor(180)).toBe('down');
+    expect(cameraOrientationFor(270)).toBe('left');
   });
 });

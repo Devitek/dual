@@ -3,6 +3,7 @@ import {
   VisionCamera,
   type CameraController,
   type CameraDevice,
+  type CameraOrientation,
   type CameraPhotoOutput,
   type CameraPreviewOutput,
   type CameraSession,
@@ -11,6 +12,7 @@ import {
   type FlashMode,
   type TorchMode,
 } from 'react-native-vision-camera';
+import { Accelerometer } from 'expo-sensors';
 // SDK 57 : `saveToLibraryAsync` du package racine est déprécié et THROW à
 // l'exécution. On importe l'API legacy (voie officielle recommandée).
 import { saveToLibraryAsync } from 'expo-media-library/legacy';
@@ -18,6 +20,7 @@ import * as MediaLibrary from 'expo-media-library';
 
 import { getFileSize, toFileUri } from '../utils/fileSystem';
 import { recordError } from '../utils/crashJournal';
+import { orientationFromAccel, cameraOrientationFor, type DeviceOrientation } from '../utils/orientation';
 import type {
   CompositionLayout,
   OutputRatio,
@@ -98,6 +101,11 @@ export class MultiCamController {
 
   private primarySlot: CameraSlot = 'back';
   private disposed = false;
+  /** Orientation PHYSIQUE du téléphone (#174, phase 1), suivie via l'accéléromètre
+   *  (même source que les icônes #173, fiable). Gravée dans l'EXIF des captures
+   *  via `outputOrientation`, même si l'UI reste verrouillée portrait. */
+  private accelSub: { remove: () => void } | null = null;
+  private deviceOrientation: DeviceOrientation = 0;
   /** Un (seul) réessai automatique par épisode d'échec d'ouverture caméra. */
   private autoRetryDone = false;
   /** Devices mémorisés pour la capture PHOTO séquentielle (mode `sequential`). */
@@ -225,6 +233,40 @@ export class MultiCamController {
     await this.buildSession();
   }
 
+  /** Démarre le suivi d'orientation physique (accéléromètre) et l'applique aux
+   *  sorties photo. Best-effort : capteur absent -> orientation par défaut.
+   *  NB expo-sensors : `setUpdateInterval` est GLOBAL ; on s'aligne sur les
+   *  100 ms déjà utilisés ailleurs (useDeviceOrientation, niveau à bulle). */
+  private startCaptureOrientation(): void {
+    this.applyCaptureOrientation(cameraOrientationFor(this.deviceOrientation));
+    if (this.accelSub != null) return;
+    try {
+      Accelerometer.setUpdateInterval(100);
+      this.accelSub = Accelerometer.addListener(({ x, y }) => {
+        const next = orientationFromAccel(x, y, this.deviceOrientation);
+        if (next !== this.deviceOrientation) {
+          this.deviceOrientation = next;
+          this.applyCaptureOrientation(cameraOrientationFor(next));
+        }
+      });
+    } catch {
+      // Capteur absent (émulateur minimal) : on garde l'orientation par défaut.
+    }
+  }
+
+  /** Arrête le suivi (économie d'énergie en arrière-plan). */
+  private stopCaptureOrientation(): void {
+    this.accelSub?.remove();
+    this.accelSub = null;
+  }
+
+  /** Reporte l'orientation sur les sorties PHOTO vivantes (null-safe : les
+   *  sorties sont nulles entre deux sessions). VisionCamera l'applique en EXIF. */
+  private applyCaptureOrientation(orientation: CameraOrientation): void {
+    if (this.backPhoto != null) this.backPhoto.outputOrientation = orientation;
+    if (this.frontPhoto != null) this.frontPhoto.outputOrientation = orientation;
+  }
+
   /** (Re)construit la session avec la qualité courante. */
   private async buildSession(): Promise<void> {
     if (this.disposed) return;
@@ -345,6 +387,9 @@ export class MultiCamController {
 
       await this.session.start();
 
+      // Oriente les captures selon la rotation physique du téléphone (#174).
+      this.startCaptureOrientation();
+
       this.autoRetryDone = false; // session OK → réarme le réessai auto
       this.update({
         status: 'running',
@@ -384,8 +429,13 @@ export class MultiCamController {
     const session = this.session;
     if (session == null) return;
     try {
-      if (active && !session.isRunning) await session.start();
-      else if (!active && session.isRunning) await session.stop();
+      if (active && !session.isRunning) {
+        await session.start();
+        this.startCaptureOrientation();
+      } else if (!active && session.isRunning) {
+        this.stopCaptureOrientation();
+        await session.stop();
+      }
     } catch {
       // start/stop peut échouer pendant une transition — non bloquant
     }
@@ -411,6 +461,7 @@ export class MultiCamController {
 
   async dispose(): Promise<void> {
     this.disposed = true;
+    this.stopCaptureOrientation();
     await this.teardownSession();
   }
 
