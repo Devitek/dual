@@ -59,3 +59,17 @@ jobs:
           else
             gh issue create --title "$TITLE" --label expo --label ci --body "$BODY"
           fi
+
+      # Auto-fermeture quand la dérive est résorbée : evite la fermeture manuelle
+      # a chaque recidive (le cron ne refermait jamais l'issue qu'il avait ouverte).
+      - name: Close drift issue on success
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          TITLE="Dérive Expo SDK détectée (expo install --check / doctor)"
+          EXISTING=$(gh issue list --state open --label expo --search "$TITLE in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$EXISTING" ]; then
+            gh issue close "$EXISTING" --comment "Dérive résorbée : \`expo install --check\`, \`expo-doctor\` et le prebuild sont repassés verts. Fermeture automatique par le cron. Run : $RUN_URL"
+          fi
