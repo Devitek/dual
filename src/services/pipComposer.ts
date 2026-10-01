@@ -85,6 +85,9 @@ export interface VideoComposeOptions {
   /** Boomerang en GIF animé plutôt qu'en MP4. */
   boomerangGif: boolean;
   saveOriginals: boolean;
+  /** Rotation en degrés (0/90/180/270) posée en hint du conteneur MP4 pour un
+   *  affichage paysage sans retoucher les pixels (#174). */
+  orientation: number;
 }
 
 /** Ratio hauteur/largeur de la vignette (portrait), partagé preview ↔ composition. */

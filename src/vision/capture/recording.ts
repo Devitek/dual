@@ -54,6 +54,7 @@ function commitRecordingIfDone(ctx: CaptureContext): void {
         boomerang,
         boomerangGif,
         saveOriginals,
+        orientation: recAgg.orientation,
       });
       ctx.pushCapture({
         kind: 'video',
@@ -99,7 +100,15 @@ export async function startRecording(ctx: CaptureContext): Promise<void> {
   }
   const backVideo = ctx.getBackVideo();
   if (backVideo == null || ctx.getSnapshot().isRecording || ctx.getSnapshot().isBusy) return;
-  ctx.setRecAgg({ expected: ctx.getFrontVideo() != null ? 2 : 1, settled: 0, backPath: null, frontPath: null });
+  ctx.setRecAgg({
+    expected: ctx.getFrontVideo() != null ? 2 : 1,
+    settled: 0,
+    backPath: null,
+    frontPath: null,
+    // #174 : orientation figée au DÉBUT de l'enregistrement (comme les applis
+    // caméra stock) ; tourner le téléphone pendant le clip ne la change plus.
+    orientation: ctx.getCaptureRotationDegrees(),
+  });
   ctx.setRecStartedAt(Date.now());
   ctx.update({ isRecording: true });
   try {

@@ -17,6 +17,12 @@
  *   node scripts/e2e/ui.mjs grant                # accorde camera / micro / notifs
  *   node scripts/e2e/ui.mjs launch               # (re)lance l'activite
  *   node scripts/e2e/ui.mjs onboard              # fresh flow : grant + launch + ferme l'onboarding
+ *   node scripts/e2e/ui.mjs desc <id>            # content-desc du noeud (etat du shutter...)
+ *   node scripts/e2e/ui.mjs media-since <epochMs> [ms]  # attend la video MediaStore creee APRES epochMs
+ *
+ * PIEGE (vecu, #174) : apres un stop video, la composition tourne 10-20 s dans le
+ * Foreground Service. "sleep N puis prendre la plus recente" recupere la sortie
+ * du test PRECEDENT. Utiliser media-since avec l'heure du stop, jamais autre chose.
  *
  * Variable d'env : ADB_SERIAL pour cibler un device precis (sinon `adb` par defaut).
  */
@@ -95,6 +101,39 @@ function isPresent(id) {
   }
 }
 
+/** content-desc d'un noeud par resource-id (ou null). */
+function descOf(id) {
+  for (const frag of dumpXml().split('<node').slice(1)) {
+    if (!frag.includes(`resource-id="${id}"`)) continue;
+    const m = frag.match(/content-desc="([^"]*)"/);
+    return m ? m[1] : '';
+  }
+  return null;
+}
+
+/**
+ * Attend qu'une video apparaisse dans MediaStore avec date_added STRICTEMENT
+ * posterieure a `sinceMs`, et renvoie son chemin. C'est la SEULE facon fiable
+ * d'attraper la sortie d'une composition (le Foreground Service met 10-20 s ;
+ * "la plus recente" tout de suite apres le stop = la sortie du test d'avant).
+ */
+async function mediaSince(sinceMs, timeoutMs = 120000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    try {
+      const out = adb(
+        `shell "content query --uri content://media/external/video/media --projection _data:date_added --sort \\"date_added DESC\\""`,
+      );
+      const m = out.match(/_data=([^,]+), date_added=(\d+)/);
+      if (m && +m[2] * 1000 > sinceMs) return m[1].trim();
+    } catch {
+      // MediaStore occupe : on retente.
+    }
+    await sleep(2000);
+  }
+  throw new Error(`timeout: aucune video MediaStore creee apres ${new Date(sinceMs).toISOString()}`);
+}
+
 function grant() {
   for (const p of RUNTIME_PERMISSIONS) {
     try {
@@ -160,6 +199,18 @@ try {
       break;
     case 'onboard':
       await onboard();
+      break;
+    case 'desc': {
+      const d = descOf(arg);
+      if (d == null) {
+        console.error(`resource-id "${arg}" introuvable`);
+        process.exit(1);
+      }
+      console.log(d);
+      break;
+    }
+    case 'media-since':
+      console.log(await mediaSince(+arg, arg2 ? +arg2 : undefined));
       break;
     default:
       console.error('commande inconnue. Voir l entete du fichier pour l usage.');

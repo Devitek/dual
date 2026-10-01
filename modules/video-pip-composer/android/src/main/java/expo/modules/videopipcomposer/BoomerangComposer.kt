@@ -31,6 +31,9 @@ class BoomerangComposer(
   private val outputPath: String,
   private val asGif: Boolean = false,
   private val loops: Int = 3,
+  /** Rotation en degrés (0/90/180/270) posée en hint du MP4 boomerang (#174).
+   *  Ignoré pour le GIF (format sans métadonnée d'orientation). */
+  private val rotationDegrees: Int = 0,
 ) {
   fun compose(onProgress: (Float) -> Unit = {}) {
     if (asGif) composeGif(onProgress) else composeRemux(onProgress)
@@ -91,6 +94,7 @@ class BoomerangComposer(
       }
 
       val muxer = MediaMuxer(outputPath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+      if (rotationDegrees != 0) muxer.setOrientationHint(rotationDegrees) // #174
       try {
         val outTrack = muxer.addTrack(format)
         muxer.start()
