@@ -9,6 +9,7 @@ import {
   type CameraSessionConnection,
   type CameraVideoOutput,
   type FlashMode,
+  type ListenerSubscription,
   type TorchMode,
 } from 'react-native-vision-camera';
 import { Accelerometer } from 'expo-sensors';
@@ -106,8 +107,18 @@ export class MultiCamController {
    *  réoriente en paysage à l'affichage). */
   private accelSub: { remove: () => void } | null = null;
   private deviceOrientation: DeviceOrientation = 0;
-  /** Un (seul) réessai automatique par épisode d'échec d'ouverture caméra. */
-  private autoRetryDone = false;
+  /** Récupération automatique de session (#222) : tentative courante (réarmée
+   *  à chaque session qui démarre) et timer en attente. Backoff borné : au-delà,
+   *  l'écran d'erreur (bouton Réessayer) et le retour au premier plan prennent
+   *  le relais. */
+  private recoveryAttempt = 0;
+  private recoveryTimer: ReturnType<typeof setTimeout> | null = null;
+  private static readonly RECOVERY_DELAYS_MS = [1500, 3000, 6000, 12000];
+  /** Dernier état demandé par l'UI (premier plan ou non) : les récupérations
+   *  planifiées ne tirent jamais pendant que l'app est en arrière-plan. */
+  private wantedActive = false;
+  /** Abonnements aux événements de la session (erreur, interruptions). */
+  private sessionSubs: ListenerSubscription[] = [];
   /** Devices mémorisés pour la capture PHOTO séquentielle (mode `sequential`). */
   private sequentialBack: CameraDevice | undefined;
   private sequentialFront: CameraDevice | undefined;
@@ -328,6 +339,29 @@ export class MultiCamController {
       const enableMultiCam = mode === 'multi' && frontDevice != null;
       this.session = await VisionCamera.createCameraSession(enableMultiCam);
 
+      // #222 : la session peut mourir EN COURS DE ROUTE sans que start() ne
+      // throw (caméra reprise par le système, interruption non reprise...).
+      // Sans ces écouteurs, le statut resterait « running » avec un aperçu figé.
+      const session = this.session;
+      this.sessionSubs.push(
+        session.addOnErrorListener((error) => {
+          const message = (error as Error)?.message ?? String(error);
+          recordError(message, { context: 'camera-session' });
+          // Ne jamais saborder une capture en cours (le teardown perdrait le clip).
+          if (this.snapshot.isRecording || this.snapshot.isBusy) return;
+          if (!session.isRunning) this.failSession(message);
+        }),
+        session.addOnInterruptionStartedListener((reason) => {
+          recordError(`interruption: ${String(reason)}`, { context: 'camera-session' });
+        }),
+        session.addOnInterruptionEndedListener(() => {
+          // L'interruption est finie mais la session n'est pas repartie → rebuild.
+          if (!session.isRunning && !this.snapshot.isRecording && !this.snapshot.isBusy) {
+            this.failSession('interruption ended, session not resumed');
+          }
+        }),
+      );
+
       const backPreview = VisionCamera.createPreviewOutput();
       this.backPhoto = VisionCamera.createPhotoOutput(photoOptions(q.photoRes, this.snapshot.captureSpeed));
       this.backVideo = VisionCamera.createVideoOutput({ targetResolution: q.videoRes, enableAudio: true });
@@ -382,7 +416,7 @@ export class MultiCamController {
       // Oriente les captures selon la rotation physique du téléphone (#174).
       this.startCaptureOrientation();
 
-      this.autoRetryDone = false; // session OK → réarme le réessai auto
+      this.recoveryAttempt = 0; // session OK → réarme la récupération auto
       this.update({
         status: 'running',
         // `mode` a été déterminé plus haut (multi / sequential / single).
@@ -395,45 +429,75 @@ export class MultiCamController {
       const message = (error as Error)?.message ?? String(error);
       recordError(message, { context: 'camera-open' });
       this.update({ status: 'error', errorMessage: message });
-      // Kill + relance ÉCLAIR de l'app : le handle caméra du process précédent
-      // n'est pas toujours libéré par le HAL au moment où on rouvre (caméra
-      // « in use » → aperçu noir / échec). Un unique réessai différé suffit
-      // dans la grande majorité des cas ; sinon l'écran d'erreur (bouton
-      // Réessayer) et la reprise au foreground (setActive) prennent le relais.
-      if (!this.disposed && !this.autoRetryDone) {
-        this.autoRetryDone = true;
-        setTimeout(() => {
-          if (!this.disposed && this.snapshot.status === 'error') void this.retry();
-        }, 1500);
-      }
+      // Handle caméra pas toujours libéré par le HAL au moment où on rouvre
+      // (kill+relance éclair, retour de keyguard... caméra « in use » → aperçu
+      // noir / échec). Récupération auto à backoff borné (#222) ; au-delà,
+      // l'écran d'erreur (Réessayer) et la reprise au foreground font le reste.
+      this.scheduleRecovery();
     }
   }
 
   async setActive(active: boolean): Promise<void> {
+    this.wantedActive = active;
     // Retour au premier plan avec une session en échec (ex. caméra volée par
     // une autre app, ou échec d'ouverture au lancement) → reconstruction
     // complète : plus besoin d'ouvrir l'app photo native pour « réveiller »
     // les caméras.
     if (active && this.snapshot.status === 'error' && !this.disposed) {
+      this.recoveryAttempt = 0; // l'utilisateur revient : réarme le backoff
       await this.retry();
       return;
     }
     const session = this.session;
     if (session == null) return;
-    try {
-      if (active && !session.isRunning) {
+    if (active && !session.isRunning) {
+      try {
         await session.start();
         this.startCaptureOrientation();
-      } else if (!active && session.isRunning) {
+      } catch (error) {
+        this.failSession((error as Error)?.message ?? String(error));
+        return;
+      }
+      // #222 (vécu au retour de l'écran de verrouillage) : start() peut se
+      // résoudre SANS exception alors que la session n'a PAS démarré (course
+      // avec la libération des caméras à la levée du keyguard). Sans cette
+      // vérification, le statut resterait « running » sur un aperçu figé.
+      if (!session.isRunning) this.failSession('camera session did not resume');
+    } else if (!active && session.isRunning) {
+      try {
         this.stopCaptureOrientation();
         await session.stop();
+      } catch {
+        // L'arrêt pendant une transition peut échouer — non bloquant.
       }
-    } catch {
-      // start/stop peut échouer pendant une transition — non bloquant
     }
   }
 
+  /** Session morte détectée (#222) : statut erreur + récupération auto planifiée. */
+  private failSession(message: string): void {
+    if (this.disposed) return;
+    recordError(message, { context: 'camera-resume' });
+    this.update({ status: 'error', errorMessage: message });
+    this.scheduleRecovery();
+  }
+
+  /** Planifie UNE reconstruction de session (backoff borné, jamais en arrière-plan). */
+  private scheduleRecovery(): void {
+    if (this.disposed || this.recoveryTimer != null) return;
+    const delays = MultiCamController.RECOVERY_DELAYS_MS;
+    if (this.recoveryAttempt >= delays.length) return; // relais : bouton Réessayer / retour foreground
+    const delay = delays[this.recoveryAttempt];
+    this.recoveryAttempt += 1;
+    this.recoveryTimer = setTimeout(() => {
+      this.recoveryTimer = null;
+      if (this.disposed || !this.wantedActive || this.snapshot.status === 'running') return;
+      void this.retry();
+    }, delay);
+  }
+
   private async teardownSession(): Promise<void> {
+    this.sessionSubs.forEach((sub) => sub.remove());
+    this.sessionSubs = [];
     try {
       await this.session?.stop();
     } catch {
@@ -453,6 +517,10 @@ export class MultiCamController {
 
   async dispose(): Promise<void> {
     this.disposed = true;
+    if (this.recoveryTimer != null) {
+      clearTimeout(this.recoveryTimer);
+      this.recoveryTimer = null;
+    }
     this.stopCaptureOrientation();
     await this.teardownSession();
   }
