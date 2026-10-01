@@ -1,1 +1,3 @@
-Mantenimiento: actualizaciones técnicas y correcciones menores para mejorar la estabilidad y la fiabilidad de la app.
+Tus fotos y vídeos ahora siguen la orientación del dispositivo: las capturas en horizontal se muestran correctamente, con la vista previa frontal bien alineada.
+La pantalla permanece encendida mientras el visor está abierto.
+Corrección: las cámaras se reinician automáticamente al volver de la pantalla de bloqueo.

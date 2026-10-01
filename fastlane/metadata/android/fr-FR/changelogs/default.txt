@@ -1,1 +1,3 @@
-Maintenance : mises à jour techniques et corrections mineures pour améliorer la stabilité et la fiabilité de l'application.
+Vos photos et vidéos suivent désormais l'orientation de l'appareil : les prises en paysage s'affichent à l'endroit, avec l'aperçu avant correctement aligné.
+L'écran reste allumé tant que le viseur est ouvert.
+Correction : les caméras redémarrent automatiquement au retour de l'écran de verrouillage.

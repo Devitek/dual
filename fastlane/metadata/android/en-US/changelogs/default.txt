@@ -1,1 +1,3 @@
-Maintenance: technical updates and minor fixes to improve the app's stability and reliability.
+Your photos and videos now follow the device orientation: landscape captures display upright, with the front preview correctly aligned.
+The screen stays on while the viewfinder is open.
+Fix: cameras now restart automatically when returning from the lock screen.
