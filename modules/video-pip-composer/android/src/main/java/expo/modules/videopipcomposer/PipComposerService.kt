@@ -64,6 +64,7 @@ class PipComposerService : Service() {
       boomerang: Boolean,
       boomerangGif: Boolean,
       saveOriginals: Boolean,
+      orientation: Int,
     ) {
       val intent = baseIntent(context, jobId, primaryPath, secondaryPath, corner, saveOriginals).apply {
         putExtra(EXTRA_MEDIA_TYPE, TYPE_VIDEO)
@@ -76,6 +77,7 @@ class PipComposerService : Service() {
         putExtra(EXTRA_OUTPUT_RATIO, outputRatio)
         putExtra(EXTRA_BOOMERANG, boomerang)
         putExtra(EXTRA_BOOMERANG_GIF, boomerangGif)
+        putExtra(EXTRA_ORIENTATION, orientation)
       }
       androidx.core.content.ContextCompat.startForegroundService(context, intent)
     }
@@ -218,6 +220,7 @@ class PipComposerService : Service() {
             marginRatio = MARGIN_RATIO,
             bitRate = bitRate,
             allKeyframes = boomerang, // boomerang : toutes-images-clés pour le re-mux
+            rotationDegrees = orientation, // #174 : hint d'orientation du conteneur MP4
           ).compose { fraction ->
             report(if (fraction < 0f) fraction else if (boomerang) fraction * 0.6f else fraction)
           }
@@ -231,7 +234,7 @@ class PipComposerService : Service() {
             try {
               val ext = if (boomerangGif) ".gif" else ".mp4"
               val bf = File.createTempFile("boom_", ext, cacheDir)
-              BoomerangComposer(outFile.absolutePath, bf.absolutePath, asGif = boomerangGif)
+              BoomerangComposer(outFile.absolutePath, bf.absolutePath, asGif = boomerangGif, rotationDegrees = orientation)
                 .compose { p -> report(0.6f + 0.4f * p) } // boomerang : 0.6 -> 1.0
               boomFile = bf
               finalFile = bf

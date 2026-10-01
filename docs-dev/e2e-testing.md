@@ -135,6 +135,46 @@ Pour verifier l'ecriture dans la pellicule, regler au prealable l'enregistrement
 sur « galerie » (`setting-save-*` dans l'onglet Pro du sheet), puis chercher le
 fichier (`Dual_PiP*.jpg` sous `Pictures/TwinLens`, `Dual_PiP*.mp4` sous `DCIM`).
 
+## Verifier un media compose (LE piege majeur, vecu sur #174)
+
+Apres le stop d'une video, la composition PiP tourne **10 a 20 s** dans le
+Foreground Service avant que le fichier n'arrive dans MediaStore. Consequence :
+`sleep N` puis « prendre la video la plus recente » recupere la sortie du test
+**PRECEDENT** (verifie 4 fois sur 4 lors de l'audit #174 : chaque pull etait en
+retard d'un test, ce qui a fabrique des bugs fantomes).
+
+Protocole fiable :
+
+```bash
+STOP_MS=$(date +%s%3N)                        # heure du stop, AVANT le tap stop
+node scripts/e2e/ui.mjs tap camera-shutter    # stop
+node scripts/e2e/ui.mjs media-since $STOP_MS  # bloque jusqu'au NOUVEAU fichier, imprime son chemin exact
+```
+
+Controles d'identite complementaires :
+- le nom `Dual_PiP_<epochMillis>.mp4` encode l'heure de DEBUT de la composition :
+  le decoder et le comparer a l'heure du test ;
+- une horloge visible dans le champ (ecran connecte...) est un excellent temoin.
+
+### Demarrage d'enregistrement : warm-up
+
+Le premier tap sur l'obturateur apres ouverture d'app ou bascule de mode peut ne
+pas declencher (camera pas prete). Verifier l'etat reel plutot que supposer :
+
+```bash
+node scripts/e2e/ui.mjs tap camera-shutter
+node scripts/e2e/ui.mjs desc camera-shutter   # "Arreter l'enregistrement" = ca tourne
+```
+
+Retenter le tap tant que le desc n'a pas bascule.
+
+### Orientation video : convention de signes ffprobe
+
+`MediaMuxer.setOrientationHint(x)` s'affiche dans ffprobe comme une rotation de
+displaymatrix **anti-horaire** : hint 270 -> `rotation=90` ; hint 90 ->
+`rotation=-90`. Ne jamais comparer le hint au champ ffprobe sans cette table.
+L'extraction de frame fidele au rendu lecteur = `ffmpeg` SANS `-noautorotate`.
+
 ## Pieges device connus
 
 - **Ecran qui se verrouille** pendant un test long (voir #214, garder l'ecran

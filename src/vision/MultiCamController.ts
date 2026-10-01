@@ -130,7 +130,7 @@ export class MultiCamController {
   private locationProvider: (() => GpsCoords | null) | null = null;
 
   private readonly recorders: ActiveRecorders = { back: null, front: null };
-  private recAgg: RecordingAggregate = { expected: 0, settled: 0, backPath: null, frontPath: null };
+  private recAgg: RecordingAggregate = { expected: 0, settled: 0, backPath: null, frontPath: null, orientation: 0 };
   /** Horodatage de début d'enregistrement (pour estimer la durée). */
   private recStartedAt = 0;
 
@@ -149,6 +149,7 @@ export class MultiCamController {
     stampGps: (fileUri, coords) => this.stampGps(fileUri, coords),
     getQuality: () => QUALITY[this.snapshot.captureQuality],
     getCaptureExifOrientation: () => exifOrientationFor(this.deviceOrientation),
+    getCaptureRotationDegrees: () => this.deviceOrientation,
     getPrimarySlot: () => this.primarySlot,
     isDisposed: () => this.disposed,
     getBoomerangMode: () => this.boomerangMode,

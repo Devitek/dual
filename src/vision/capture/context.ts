@@ -26,6 +26,10 @@ export interface RecordingAggregate {
   settled: number;
   backPath: string | null;
   frontPath: string | null;
+  /** Orientation (0/90/180/270) figée au DÉBUT de l'enregistrement (#174) :
+   *  comme les applis caméra stock, tourner le téléphone PENDANT le clip ne
+   *  change pas le tag du conteneur. */
+  orientation: number;
 }
 
 /** Paire de recorders actifs. Objet partagé PAR RÉFÉRENCE (jamais réassigné). */
@@ -53,6 +57,9 @@ export interface CaptureContext {
   /** Valeur EXIF d'orientation (1/3/6/8) selon l'orientation physique à la
    *  capture (#174) : gravée sur le rendu final pour un affichage paysage. */
   getCaptureExifOrientation(): number;
+  /** Rotation vidéo en degrés (0/90/180/270) selon l'orientation physique à la
+   *  capture (#174) : posée en hint du conteneur MP4 (MediaMuxer.setOrientationHint). */
+  getCaptureRotationDegrees(): number;
 
   // ------------------------------------- état privé du contrôleur (lecture) ----
   getPrimarySlot(): CameraSlot;

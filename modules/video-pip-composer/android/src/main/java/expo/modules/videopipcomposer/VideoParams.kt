@@ -23,4 +23,7 @@ class VideoParams : Record {
   /** Boomerang en GIF animé plutôt qu'en MP4. */
   @Field var boomerangGif: Boolean = false
   @Field var saveOriginals: Boolean = false
+  /** Rotation en degrés (0/90/180/270) posée en hint du conteneur MP4 (#174) :
+   *  on ne retouche pas les pixels, le lecteur réoriente juste l'affichage. */
+  @Field var orientation: Int = 0
 }

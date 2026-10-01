@@ -41,6 +41,9 @@ class PipVideoComposer(
   private val bitRate: Int,
   /** true (boomerang) -> toutes-images-clés, pour permettre un re-mux inverse. */
   private val allKeyframes: Boolean = false,
+  /** Rotation en degrés (0/90/180/270) posée en hint du conteneur MP4 (#174) :
+   *  on ne retouche pas les pixels, le lecteur réoriente juste l'affichage. */
+  private val rotationDegrees: Int = 0,
 ) {
   private val timeoutUs = 10_000L
 
@@ -75,6 +78,25 @@ class PipVideoComposer(
     val frameRate =
       if (backFormat.containsKey(MediaFormat.KEY_FRAME_RATE)) backFormat.getInteger(MediaFormat.KEY_FRAME_RATE) else 30
     val durationUs = if (backFormat.containsKey(MediaFormat.KEY_DURATION)) backFormat.getLong(MediaFormat.KEY_DURATION) else 0L
+
+    // #174 : le capteur AVANT est monté à 180° de l'ARRIÈRE. Ce décalage ne se
+    // VOIT dans le composite qu'en PAYSAGE (selfie à 180°, aligné en portrait) :
+    // on compense donc 180° sur la seule texture frontale quand la prise est en
+    // paysage (hint 90/270). En portrait l'écart = 0 (rien ne change).
+    val frontExtraRotation = if (rotationDegrees == 90 || rotationDegrees == 270) 180 else 0
+    // Applique `frontExtraRotation` à la matrice de texture frontale, autour du
+    // centre (0.5, 0.5), AVANT la matrice SurfaceTexture (vTexCoord = uSTMatrix * aTexCoord).
+    fun applyFrontRotation(m: FloatArray) {
+      if (frontExtraRotation == 0) return
+      val r = FloatArray(16)
+      android.opengl.Matrix.setIdentityM(r, 0)
+      android.opengl.Matrix.translateM(r, 0, 0.5f, 0.5f, 0f)
+      android.opengl.Matrix.rotateM(r, 0, frontExtraRotation.toFloat(), 0f, 0f, 1f)
+      android.opengl.Matrix.translateM(r, 0, -0.5f, -0.5f, 0f)
+      val out = FloatArray(16)
+      android.opengl.Matrix.multiplyMM(out, 0, m, 0, r, 0)
+      System.arraycopy(out, 0, m, 0, 16)
+    }
 
     // Dimensions de sortie selon la disposition. Côte-à-côte / haut-bas doublent
     // UNE dimension (les 2 flux pleins, sans distorsion). On borne à MAX_DIM puis
@@ -154,6 +176,9 @@ class PipVideoComposer(
 
     // --- Muxer + audio (depuis la principale) ---
     val muxer = MediaMuxer(outputPath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+    // #174 : hint d'orientation du conteneur (0/90/180/270) ; les pixels ne
+    // changent pas, le lecteur réoriente l'affichage (ex. paysage).
+    if (rotationDegrees != 0) muxer.setOrientationHint(rotationDegrees)
     val audioEx = MediaExtractor().apply { setDataSource(primaryPath) }
     val audioTrack = selectTrack(audioEx, "audio/")
     var audioFormat: MediaFormat? = null
@@ -277,12 +302,14 @@ class PipVideoComposer(
               glSurface.back.getTransform(stMatrix)
               renderer.drawRegion(backTex, stMatrix, -1f, -1f, 0f, 1f) // principale à gauche
               glSurface.front.getTransform(stMatrix)
+              applyFrontRotation(stMatrix)
               renderer.drawRegion(frontTex, stMatrix, 0f, -1f, 1f, 1f) // secondaire à droite
             }
             "topBottom" -> {
               glSurface.back.getTransform(stMatrix)
               renderer.drawRegion(backTex, stMatrix, -1f, 0f, 1f, 1f) // principale en haut
               glSurface.front.getTransform(stMatrix)
+              applyFrontRotation(stMatrix)
               renderer.drawRegion(frontTex, stMatrix, -1f, -1f, 1f, 0f) // secondaire en bas
             }
             else -> {
@@ -290,6 +317,7 @@ class PipVideoComposer(
               // Cover-crop centré (le quad déborde, GL rogne au bord du cadre).
               renderer.drawRegion(backTex, stMatrix, -coverKx, -coverKy, coverKx, coverKy)
               glSurface.front.getTransform(stMatrix)
+              applyFrontRotation(stMatrix)
               renderer.drawInset(
                 frontTex, stMatrix,
                 rect[0], rect[1], rect[2], rect[3],

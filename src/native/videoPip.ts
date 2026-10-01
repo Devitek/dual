@@ -30,6 +30,8 @@ interface NativeVideoParams {
   boomerang: boolean;
   boomerangGif: boolean;
   saveOriginals: boolean;
+  /** Rotation en degrés (0/90/180/270) posée en hint du conteneur MP4 (#174). */
+  orientation: number;
 }
 
 interface PipProgressEvent {
@@ -145,6 +147,7 @@ export async function composePipVideo(
     boomerang: opts.boomerang,
     boomerangGif: opts.boomerangGif,
     saveOriginals: opts.saveOriginals,
+    orientation: opts.orientation,
   });
 }
 

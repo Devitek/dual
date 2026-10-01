@@ -89,6 +89,7 @@ class VideoPipComposerModule : Module(), PipComposerBus.Listener {
         boomerang = params.boomerang,
         boomerangGif = params.boomerangGif,
         saveOriginals = params.saveOriginals,
+        orientation = params.orientation,
       )
     }
 
