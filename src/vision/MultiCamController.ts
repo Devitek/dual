@@ -10,9 +10,9 @@ import {
   type CameraSessionConnection,
   type CameraVideoOutput,
   type FlashMode,
-  type OrientationManager,
   type TorchMode,
 } from 'react-native-vision-camera';
+import { Accelerometer } from 'expo-sensors';
 // SDK 57 : `saveToLibraryAsync` du package racine est déprécié et THROW à
 // l'exécution. On importe l'API legacy (voie officielle recommandée).
 import { saveToLibraryAsync } from 'expo-media-library/legacy';
@@ -20,6 +20,7 @@ import * as MediaLibrary from 'expo-media-library';
 
 import { getFileSize, toFileUri } from '../utils/fileSystem';
 import { recordError } from '../utils/crashJournal';
+import { orientationFromAccel, cameraOrientationFor, type DeviceOrientation } from '../utils/orientation';
 import type {
   CompositionLayout,
   OutputRatio,
@@ -100,12 +101,11 @@ export class MultiCamController {
 
   private primarySlot: CameraSlot = 'back';
   private disposed = false;
-  /** Suit l'orientation PHYSIQUE du téléphone (#174, phase 1). Source `device` :
-   *  VisionCamera grave l'orientation dans l'EXIF des photos selon la rotation
-   *  réelle même si l'UI reste verrouillée portrait (comme l'app photo stock). */
-  private orientationManager: OrientationManager | null = null;
-  /** Évite un double abonnement aux mises à jour d'orientation (start idempotent). */
-  private orientationRunning = false;
+  /** Orientation PHYSIQUE du téléphone (#174, phase 1), suivie via l'accéléromètre
+   *  (même source que les icônes #173, fiable). Gravée dans l'EXIF des captures
+   *  via `outputOrientation`, même si l'UI reste verrouillée portrait. */
+  private accelSub: { remove: () => void } | null = null;
+  private deviceOrientation: DeviceOrientation = 0;
   /** Un (seul) réessai automatique par épisode d'échec d'ouverture caméra. */
   private autoRetryDone = false;
   /** Devices mémorisés pour la capture PHOTO séquentielle (mode `sequential`). */
@@ -233,43 +233,31 @@ export class MultiCamController {
     await this.buildSession();
   }
 
-  /** Crée (une seule fois) le gestionnaire d'orientation physique. Best-effort :
-   *  capteur absent (émulateur minimal) -> on reste sur l'orientation par défaut. */
-  private ensureOrientationManager(): void {
-    if (this.orientationManager != null) return;
-    try {
-      this.orientationManager = VisionCamera.createOrientationManager('device');
-    } catch {
-      this.orientationManager = null;
-    }
-  }
-
-  /** Démarre le suivi d'orientation physique et l'applique aux sorties photo
-   *  (idempotent : réappliquer l'orientation courante si déjà abonné). */
+  /** Démarre le suivi d'orientation physique (accéléromètre) et l'applique aux
+   *  sorties photo. Best-effort : capteur absent -> orientation par défaut.
+   *  NB expo-sensors : `setUpdateInterval` est GLOBAL ; on s'aligne sur les
+   *  100 ms déjà utilisés ailleurs (useDeviceOrientation, niveau à bulle). */
   private startCaptureOrientation(): void {
-    this.ensureOrientationManager();
-    const mgr = this.orientationManager;
-    if (mgr == null) return;
-    if (!this.orientationRunning) {
-      try {
-        mgr.startOrientationUpdates((o) => this.applyCaptureOrientation(o));
-        this.orientationRunning = true;
-      } catch {
-        return;
-      }
+    this.applyCaptureOrientation(cameraOrientationFor(this.deviceOrientation));
+    if (this.accelSub != null) return;
+    try {
+      Accelerometer.setUpdateInterval(100);
+      this.accelSub = Accelerometer.addListener(({ x, y }) => {
+        const next = orientationFromAccel(x, y, this.deviceOrientation);
+        if (next !== this.deviceOrientation) {
+          this.deviceOrientation = next;
+          this.applyCaptureOrientation(cameraOrientationFor(next));
+        }
+      });
+    } catch {
+      // Capteur absent (émulateur minimal) : on garde l'orientation par défaut.
     }
-    if (mgr.currentOrientation != null) this.applyCaptureOrientation(mgr.currentOrientation);
   }
 
   /** Arrête le suivi (économie d'énergie en arrière-plan). */
   private stopCaptureOrientation(): void {
-    if (!this.orientationRunning) return;
-    try {
-      this.orientationManager?.stopOrientationUpdates();
-    } catch {
-      /* noop */
-    }
-    this.orientationRunning = false;
+    this.accelSub?.remove();
+    this.accelSub = null;
   }
 
   /** Reporte l'orientation sur les sorties PHOTO vivantes (null-safe : les
@@ -474,7 +462,6 @@ export class MultiCamController {
   async dispose(): Promise<void> {
     this.disposed = true;
     this.stopCaptureOrientation();
-    this.orientationManager = null;
     await this.teardownSession();
   }
 
