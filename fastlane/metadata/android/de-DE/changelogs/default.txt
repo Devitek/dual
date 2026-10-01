@@ -1,1 +1,3 @@
-Wartung: technische Aktualisierungen und kleinere Korrekturen für mehr Stabilität und Zuverlässigkeit der App.
+Fotos und Videos folgen jetzt der Geräteausrichtung: Querformataufnahmen werden richtig herum angezeigt, mit korrekt ausgerichteter Frontvorschau.
+Der Bildschirm bleibt an, solange der Sucher geöffnet ist.
+Korrektur: Die Kameras starten nach dem Entsperren des Sperrbildschirms automatisch neu.
