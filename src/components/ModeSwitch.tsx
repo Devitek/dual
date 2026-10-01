@@ -50,6 +50,7 @@ export function ModeSwitch({
         return (
           <Pressable
             key={m.value}
+            testID={`mode-${m.value}`}
             // Un mode bloqué reste pressable (pour afficher le message), mais jamais actif.
             disabled={disabled || active}
             // Pills de ~30 dp de haut : on étend la cible tactile à ~50 dp (a11y, #149).

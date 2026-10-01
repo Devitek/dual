@@ -65,6 +65,7 @@ export function UnsupportedBanner({ mode, diagnostics = null }: UnsupportedBanne
     return (
       <View style={[styles.wrap, topStyle]} pointerEvents="box-none">
         <Pressable
+          testID="unsupported-banner"
           onPress={() => {
             haptics.selection();
             setOpen(true);
@@ -112,7 +113,13 @@ export function UnsupportedBanner({ mode, diagnostics = null }: UnsupportedBanne
               {buildDeviceReport(diagnostics)}
             </Text>
 
-            <Pressable onPress={onCopy} style={styles.copyBtn} hitSlop={8} accessibilityRole="button">
+            <Pressable
+              testID="unsupported-copy"
+              onPress={onCopy}
+              style={styles.copyBtn}
+              hitSlop={8}
+              accessibilityRole="button"
+            >
               <Text style={styles.copyText}>{copied ? t('unsupported.copied') : t('unsupported.copy')}</Text>
             </Pressable>
           </>

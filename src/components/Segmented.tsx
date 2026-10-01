@@ -17,6 +17,11 @@ interface SegmentedProps<T extends string> {
   value: T;
   onChange: (value: T) => void;
   disabled?: boolean;
+  /**
+   * Préfixe de testID : chaque segment devient `${testID}-${value}` (ciblage e2e
+   * stable par option, ex. `setting-layout-pip`). Omis = aucun testID.
+   */
+  testID?: string;
 }
 
 /**
@@ -29,6 +34,7 @@ export function Segmented<T extends string>({
   value,
   onChange,
   disabled = false,
+  testID,
 }: SegmentedProps<T>): React.ReactElement {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
@@ -39,6 +45,7 @@ export function Segmented<T extends string>({
         return (
           <Pressable
             key={opt.value}
+            testID={testID != null ? `${testID}-${opt.value}` : undefined}
             disabled={disabled}
             onPress={() => {
               haptics.selection();

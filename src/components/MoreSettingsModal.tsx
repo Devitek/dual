@@ -195,8 +195,10 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
     value: boolean,
     onValueChange: () => void,
     desc?: string,
+    testID?: string,
   ): React.ReactElement => (
     <Pressable
+      testID={testID}
       style={styles.cardRow}
       onPress={onValueChange}
       accessibilityRole="switch"
@@ -243,7 +245,12 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
         <MaterialIcons name="volume-up" size={22} color={colors.onSurfaceVariant} />
         <Text style={styles.rowLabel}>{t('settings.volumeKeys')}</Text>
       </View>
-      <Segmented options={volumeKeyOptions} value={volumeKeyAction} onChange={onSetVolumeKeyAction} />
+      <Segmented
+        testID="more-volumekey"
+        options={volumeKeyOptions}
+        value={volumeKeyAction}
+        onChange={onSetVolumeKeyAction}
+      />
     </View>
   );
 
@@ -251,6 +258,7 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
   // In-App Review (#179), qui n'est pas déclenchable à la demande (quotas Play).
   const rateRow = (
     <Pressable
+      testID="more-rate"
       style={styles.cardRow}
       onPress={() => {
         void Linking.openURL('market://details?id=fr.devitek.twinlens').catch(() =>
@@ -280,6 +288,7 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
       onTheSpotEnabled,
       () => onSetOnTheSpotEnabled(!onTheSpotEnabled),
       t('ots.enableDesc'),
+      'more-ots-enable',
     ),
   ];
   if (onTheSpotEnabled) {
@@ -290,6 +299,7 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
           <Text style={styles.rowLabel}>{t('ots.perDayMin')}</Text>
         </View>
         <Segmented
+          testID="more-ots-perday-min"
           options={otsPerDayOptions}
           value={String(onTheSpotMinPerDay)}
           onChange={(v) => onSetOnTheSpotMinPerDay(Number(v) as OtsPerDay)}
@@ -304,6 +314,7 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
           </View>
         </View>
         <Segmented
+          testID="more-ots-perday-max"
           options={otsPerDayOptions}
           value={String(onTheSpotMaxPerDay)}
           onChange={(v) => onSetOnTheSpotMaxPerDay(Number(v) as OtsPerDay)}
@@ -315,6 +326,7 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
           <Text style={styles.rowLabel}>{t('ots.windowStart')}</Text>
         </View>
         <Segmented
+          testID="more-ots-start"
           options={otsStartOptions}
           value={String(onTheSpotWindowStart)}
           onChange={(v) => onSetOnTheSpotWindowStart(Number(v) as OtsWindowStart)}
@@ -326,6 +338,7 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
           <Text style={styles.rowLabel}>{t('ots.windowEnd')}</Text>
         </View>
         <Segmented
+          testID="more-ots-end"
           options={otsEndOptions}
           value={String(onTheSpotWindowEnd)}
           onChange={(v) => onSetOnTheSpotWindowEnd(Number(v) as OtsWindowEnd)}
@@ -343,7 +356,13 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
       <Text style={styles.report} selectable>
         {buildDeviceReport(diagnostics)}
       </Text>
-      <Pressable onPress={onCopy} style={styles.copyBtn} hitSlop={8} accessibilityRole="button">
+      <Pressable
+        testID="more-copy-report"
+        onPress={onCopy}
+        style={styles.copyBtn}
+        hitSlop={8}
+        accessibilityRole="button"
+      >
         <MaterialIcons name={copied ? 'check' : 'content-copy'} size={16} color={colors.onSecondaryContainer} />
         <Text style={styles.copyText}>{copied ? t('settings.copied') : t('settings.copyReport')}</Text>
       </Pressable>
@@ -365,7 +384,13 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
       </View>
       {journal.length > 0 && (
         <View style={styles.journalActions}>
-          <Pressable onPress={onCopyJournal} style={styles.copyBtn} hitSlop={8} accessibilityRole="button">
+          <Pressable
+            testID="more-copy-journal"
+            onPress={onCopyJournal}
+            style={styles.copyBtn}
+            hitSlop={8}
+            accessibilityRole="button"
+          >
             <MaterialIcons
               name={journalCopied ? 'check' : 'content-copy'}
               size={16}
@@ -373,7 +398,13 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
             />
             <Text style={styles.copyText}>{journalCopied ? t('settings.copied') : t('settings.copyJournal')}</Text>
           </Pressable>
-          <Pressable onPress={onClearJournal} style={styles.clearBtn} hitSlop={8} accessibilityRole="button">
+          <Pressable
+            testID="more-clear-journal"
+            onPress={onClearJournal}
+            style={styles.clearBtn}
+            hitSlop={8}
+            accessibilityRole="button"
+          >
             <Text style={styles.clearText}>{t('settings.clearJournal')}</Text>
           </Pressable>
         </View>
@@ -387,6 +418,7 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
         {/* Top app bar M3 */}
         <View style={styles.appbar}>
           <Pressable
+            testID="more-close"
             onPress={() => {
               haptics.selection();
               onClose();
@@ -411,21 +443,30 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
               shutterSound,
               onToggleShutterSound,
               t('settings.shutterSoundDesc'),
+              'more-shuttersound',
             ),
             volumeRow,
-            rowSwitch('location-on', t('settings.geotag'), geotag, onToggleGeotag, t('settings.geotagDesc')),
+            rowSwitch(
+              'location-on',
+              t('settings.geotag'),
+              geotag,
+              onToggleGeotag,
+              t('settings.geotagDesc'),
+              'more-geotag',
+            ),
           ])}
 
           <Text style={styles.section}>{t('settings.catComposition')}</Text>
           {card([
-            rowSwitch('grid-on', t('settings.grid'), grid, onToggleGrid),
-            rowSwitch('straighten', t('settings.level'), level, onToggleLevel, t('settings.levelDesc')),
+            rowSwitch('grid-on', t('settings.grid'), grid, onToggleGrid, undefined, 'more-grid'),
+            rowSwitch('straighten', t('settings.level'), level, onToggleLevel, t('settings.levelDesc'), 'more-level'),
             rowSwitch(
               'flip',
               t('settings.mirrorFront'),
               mirrorFront,
               onToggleMirrorFront,
               t('settings.mirrorFrontDesc'),
+              'more-mirror',
             ),
             rowSwitch(
               'branding-watermark',
@@ -433,6 +474,7 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
               watermark,
               onToggleWatermark,
               t('settings.watermarkDesc'),
+              'more-watermark',
             ),
           ])}
 
@@ -444,6 +486,7 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
               stabilization,
               onToggleStabilization,
               t('settings.stabilizationDesc'),
+              'more-stabilization',
             ),
           ])}
 

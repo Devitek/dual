@@ -52,6 +52,7 @@ export function CameraTopBar({
     <View style={[styles.container, { top }]} pointerEvents="box-none">
       <View style={styles.actions}>
         <Pressable
+          testID="camera-ae-lock"
           onPress={onToggleAeLock}
           hitSlop={8}
           android_ripple={{ color: colors.onSurfaceVariant, borderless: true, radius: 22 }}
@@ -70,6 +71,7 @@ export function CameraTopBar({
         </Pressable>
 
         <Pressable
+          testID="camera-flash-toggle"
           onPress={onCyclePhotoFlash}
           disabled={!flashSupported}
           hitSlop={8}
