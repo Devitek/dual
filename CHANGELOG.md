@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.26.0](https://github.com/Devitek/dual/compare/v1.25.1...v1.26.0) (2026-10-01)
+
+
+### Features
+
+* **camera:** capture orientation follows the physical device ([#174](https://github.com/Devitek/dual/issues/174) phase 1) ([#213](https://github.com/Devitek/dual/issues/213)) ([c9201a7](https://github.com/Devitek/dual/commit/c9201a7e8110d8cad3fb0d6b420a30594e0ef052))
+* **camera:** keep the screen awake while the viewfinder is active ([#221](https://github.com/Devitek/dual/issues/221)) ([a97e8b7](https://github.com/Devitek/dual/commit/a97e8b77f7838db2af5cc843e2005eca92b9f5e3)), closes [#214](https://github.com/Devitek/dual/issues/214)
+
+
+### Bug Fixes
+
+* **camera:** auto-recover the session when it fails to resume after unlock ([#223](https://github.com/Devitek/dual/issues/223)) ([f3939eb](https://github.com/Devitek/dual/commit/f3939eb332dc51be2597772598c7fd976805c2ab)), closes [#222](https://github.com/Devitek/dual/issues/222)
+* **camera:** landscape video orientation via MP4 hint, front PiP aligned ([#174](https://github.com/Devitek/dual/issues/174)) ([#220](https://github.com/Devitek/dual/issues/220)) ([971ffb0](https://github.com/Devitek/dual/commit/971ffb0fdfc46132acf6c0dbc3e581974f503309))
+* **camera:** orient the composed photo via an EXIF tag, keeping the exact viewfinder framing ([#174](https://github.com/Devitek/dual/issues/174)) ([#216](https://github.com/Devitek/dual/issues/216)) ([ea2e250](https://github.com/Devitek/dual/commit/ea2e250aa9037cfa8c84e412d058f4857534b82d))
+
 ## [1.25.1](https://github.com/Devitek/dual/compare/v1.25.0...v1.25.1) (2026-09-30)
 
 
