@@ -13,6 +13,7 @@ import { useVolumeShutter } from '../hooks/useVolumeShutter';
 import { useGeotag } from '../hooks/useGeotag';
 import { useZoomState } from '../hooks/useZoomState';
 import { useDeviceOrientation } from '../hooks/useDeviceOrientation';
+import { useKeepAwakeWhen } from '../hooks/useKeepAwakeWhen';
 import { useReviewPrompt } from '../hooks/useReviewPrompt';
 import { syncOnTheSpotSchedule } from '../services/onTheSpot';
 import { useOnTheSpotCall } from '../hooks/useOnTheSpotCall';
@@ -135,6 +136,9 @@ export function MultiCameraScreen(): React.ReactElement {
   // activité verrouillée portrait (façon Google Camera). Capteur actif
   // uniquement caméra prête et app au premier plan.
   const uiRotation = useDeviceOrientation(cam.status === 'running' && isForeground);
+  // Écran maintenu allumé tant que le viseur est actif (#214), comme toutes les
+  // applis caméra. Relâché sur erreur caméra ou passage en arrière-plan.
+  useKeepAwakeWhen(cam.status === 'running' && isForeground);
   // Avis Play (#179) : sollicité au plus une fois, à la fermeture de la galerie.
   const review = useReviewPrompt(cam.lastCapture, cam.notice);
 
