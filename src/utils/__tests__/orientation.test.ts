@@ -1,6 +1,6 @@
 import {
   angleDelta,
-  cameraOrientationFor,
+  exifOrientationFor,
   orientationFromAccel,
   uiRotationFor,
   type DeviceOrientation,
@@ -60,11 +60,11 @@ describe('uiRotationFor', () => {
   });
 });
 
-describe('cameraOrientationFor', () => {
-  it('mappe l orientation physique vers la convention CameraOrientation (#174)', () => {
-    expect(cameraOrientationFor(0)).toBe('up');
-    expect(cameraOrientationFor(90)).toBe('right');
-    expect(cameraOrientationFor(180)).toBe('down');
-    expect(cameraOrientationFor(270)).toBe('left');
+describe('exifOrientationFor', () => {
+  it('mappe l orientation physique vers la valeur EXIF TAG_ORIENTATION (#174)', () => {
+    expect(exifOrientationFor(0)).toBe(1); // normal
+    expect(exifOrientationFor(90)).toBe(6); // rotate 90
+    expect(exifOrientationFor(180)).toBe(3); // rotate 180
+    expect(exifOrientationFor(270)).toBe(8); // rotate 270
   });
 });

@@ -64,6 +64,9 @@ export interface PhotoComposeOptions {
   /** Ratio du cadre `pip` (ignoré pour les autres dispositions). */
   outputRatio: OutputRatio;
   saveOriginals: boolean;
+  /** Valeur EXIF d'orientation (1/3/6/8) à graver sur le rendu (et les
+   *  originaux) pour un affichage paysage sans recadrer les pixels (#174). */
+  orientation: number;
 }
 
 /** Options de composition PiP VIDÉO (passées au compositeur natif GL). */

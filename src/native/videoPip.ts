@@ -13,6 +13,8 @@ interface NativePhotoParams {
   canvasWidth: number;
   outputRatio: string;
   saveOriginals: boolean;
+  /** Valeur EXIF d'orientation (1/3/6/8) gravée sur le rendu + originaux (#174). */
+  orientation: number;
 }
 
 /** Params bruts (primitifs) attendus par le Record natif `VideoParams`. */
@@ -173,5 +175,6 @@ export async function composePipPhoto(
     canvasWidth: opts.canvasWidth,
     outputRatio: opts.outputRatio,
     saveOriginals: opts.saveOriginals,
+    orientation: opts.orientation,
   });
 }
