@@ -55,6 +55,9 @@ export function PermissionGate({ permissions, children }: PermissionGateProps): 
       </View>
 
       <Pressable
+        testID="permission-grant"
+        accessibilityRole="button"
+        accessibilityLabel={t('permissions.grant')}
         style={({ pressed }) => [styles.button, pressed && styles.buttonPressed, isRequesting && styles.buttonDim]}
         disabled={isRequesting}
         onPress={() => void permissions.requestAll()}
@@ -72,6 +75,7 @@ export function PermissionGate({ permissions, children }: PermissionGateProps): 
       {/* Toujours proposé : indispensable si une autorisation a été refusée
           définitivement (Android ne réaffiche alors plus le dialogue). */}
       <Pressable
+        testID="permission-open-settings"
         style={({ pressed }) => [styles.settingsBtn, pressed && styles.buttonPressed]}
         onPress={() => void Linking.openSettings()}
         accessibilityRole="button"

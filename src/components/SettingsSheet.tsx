@@ -264,8 +264,10 @@ export function SettingsSheet(props: SettingsSheetProps): React.ReactElement {
     value: boolean,
     onValueChange: () => void,
     disabled = false,
+    testID?: string,
   ): React.ReactElement => (
     <Pressable
+      testID={testID}
       style={[styles.row, disabled && styles.dim]}
       onPress={onValueChange}
       disabled={disabled}
@@ -292,18 +294,26 @@ export function SettingsSheet(props: SettingsSheetProps): React.ReactElement {
     </View>
   );
 
-  const torchRow = rowSwitch('flashlight-on', t('settings.torch'), torch, onToggleTorch, !torchSupported);
+  const torchRow = rowSwitch(
+    'flashlight-on',
+    t('settings.torch'),
+    torch,
+    onToggleTorch,
+    !torchSupported,
+    'setting-torch',
+  );
   const previewRow = rowSwitch(
     'picture-in-picture-alt',
     t('settings.secondaryPreview'),
     secondaryPreview,
     onToggleSecondaryPreview,
     !secondaryPreviewSupported,
+    'setting-preview',
   );
   const layoutRow = rowSeg(
     'dashboard-customize',
     t('settings.layout'),
-    <Segmented options={layoutOptions} value={layout} onChange={onSetLayout} />,
+    <Segmented testID="setting-layout" options={layoutOptions} value={layout} onChange={onSetLayout} />,
   );
 
   // --- Contenu Général selon le mode ---
@@ -324,6 +334,7 @@ export function SettingsSheet(props: SettingsSheetProps): React.ReactElement {
             'gif',
             t('settings.boomerangFormat'),
             <Segmented
+              testID="setting-boomformat"
               options={BOOM_FORMAT_OPTIONS}
               value={boomerangGif ? 'gif' : 'mp4'}
               onChange={(v) => {
@@ -343,6 +354,7 @@ export function SettingsSheet(props: SettingsSheetProps): React.ReactElement {
           'timer',
           t('settings.timer'),
           <Segmented
+            testID="setting-timer"
             options={timerOptions}
             value={String(timerSeconds) as '0' | '3' | '10'}
             onChange={(v) => onSetTimerSeconds(Number(v) as 0 | 3 | 10)}
@@ -352,6 +364,7 @@ export function SettingsSheet(props: SettingsSheetProps): React.ReactElement {
           'burst-mode',
           t('settings.burst'),
           <Segmented
+            testID="setting-burst"
             options={burstOptions}
             value={String(burstCount) as '1' | '3' | '5' | '10'}
             onChange={(v) => onSetBurstCount(Number(v) as 1 | 3 | 5 | 10)}
@@ -369,7 +382,7 @@ export function SettingsSheet(props: SettingsSheetProps): React.ReactElement {
   const qualityRow = rowSeg(
     'high-quality',
     t('settings.quality'),
-    <Segmented options={qualityOptions} value={quality} onChange={onSetQuality} />,
+    <Segmented testID="setting-quality" options={qualityOptions} value={quality} onChange={onSetQuality} />,
     t('settings.qualityHint'),
   );
   const ratioRow =
@@ -377,7 +390,7 @@ export function SettingsSheet(props: SettingsSheetProps): React.ReactElement {
       ? rowSeg(
           'aspect-ratio',
           t('settings.outputRatio'),
-          <Segmented options={ratioOptions} value={outputRatio} onChange={onSetOutputRatio} />,
+          <Segmented testID="setting-ratio" options={ratioOptions} value={outputRatio} onChange={onSetOutputRatio} />,
           t('settings.outputRatioDesc'),
         )
       : null;
@@ -391,6 +404,7 @@ export function SettingsSheet(props: SettingsSheetProps): React.ReactElement {
             '60fps-select',
             t('settings.videoFps'),
             <Segmented
+              testID="setting-fps"
               options={fpsOptions}
               value={String(videoFps) as '30' | '60'}
               onChange={(v) => onSetVideoFps(Number(v) as VideoFps)}
@@ -401,7 +415,12 @@ export function SettingsSheet(props: SettingsSheetProps): React.ReactElement {
           {rowSeg(
             'save',
             t('settings.save'),
-            <Segmented options={saveOptions} value={videoSaveMode} onChange={onSetVideoSaveMode} />,
+            <Segmented
+              testID="setting-save"
+              options={saveOptions}
+              value={videoSaveMode}
+              onChange={onSetVideoSaveMode}
+            />,
             t(saveModeDescKey(videoSaveMode, 'video')),
           )}
         </>
@@ -414,7 +433,12 @@ export function SettingsSheet(props: SettingsSheetProps): React.ReactElement {
           {rowSeg(
             'save',
             t('settings.save'),
-            <Segmented options={saveOptions} value={videoSaveMode} onChange={onSetVideoSaveMode} />,
+            <Segmented
+              testID="setting-save"
+              options={saveOptions}
+              value={videoSaveMode}
+              onChange={onSetVideoSaveMode}
+            />,
             t(saveModeDescKey(videoSaveMode, 'video')),
           )}
         </>
@@ -427,13 +451,13 @@ export function SettingsSheet(props: SettingsSheetProps): React.ReactElement {
         {rowSeg(
           'speed',
           t('settings.captureSpeed'),
-          <Segmented options={speedOptions} value={captureSpeed} onChange={onSetCaptureSpeed} />,
+          <Segmented testID="setting-speed" options={speedOptions} value={captureSpeed} onChange={onSetCaptureSpeed} />,
         )}
         {ratioRow}
         {rowSeg(
           'save',
           t('settings.save'),
-          <Segmented options={saveOptions} value={photoSaveMode} onChange={onSetPhotoSaveMode} />,
+          <Segmented testID="setting-save" options={saveOptions} value={photoSaveMode} onChange={onSetPhotoSaveMode} />,
           t(saveModeDescKey(photoSaveMode, 'photo')),
         )}
       </>
@@ -463,6 +487,7 @@ export function SettingsSheet(props: SettingsSheetProps): React.ReactElement {
           <View style={styles.headerRow}>
             <Text style={styles.title}>{t('settings.title')}</Text>
             <Pressable
+              testID="settings-more"
               onPress={() => {
                 haptics.selection();
                 onOpenMore();
@@ -502,6 +527,7 @@ export function SettingsSheet(props: SettingsSheetProps): React.ReactElement {
               return (
                 <Pressable
                   key={tb}
+                  testID={`settings-tab-${tb}`}
                   onPress={() => {
                     haptics.selection();
                     // Anime la hauteur du sheet quand le contenu de l'onglet change.

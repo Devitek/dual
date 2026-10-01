@@ -234,6 +234,7 @@ export function ZoomControl({
             return (
               <Pressable
                 key={pr}
+                testID={`zoom-preset-${pr}`}
                 onPress={() => tapChip(pr)}
                 style={styles.chipHit}
                 accessibilityRole="button"

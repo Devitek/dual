@@ -285,6 +285,7 @@ export function MediaViewer({
           <View style={styles.topSide}>
             {screenReader && (
               <Pressable
+                testID="viewer-close"
                 onPress={onClose}
                 style={styles.iconBtn}
                 hitSlop={8}
@@ -304,6 +305,7 @@ export function MediaViewer({
           )}
           <View style={styles.topSide}>
             <Pressable
+              testID="viewer-share"
               onPress={() => onShare(item)}
               style={styles.iconBtn}
               hitSlop={8}
@@ -319,7 +321,13 @@ export function MediaViewer({
       {/* Contrôles vidéo : play/pause + barre de progression seekable. */}
       {chrome && isVideo && (
         <View style={[styles.controls, { bottom: Math.max(insets.bottom + 16, 30) }]}>
-          <Pressable onPress={togglePlay} style={styles.playBtn} hitSlop={8} accessibilityRole="button">
+          <Pressable
+            testID="viewer-play"
+            onPress={togglePlay}
+            style={styles.playBtn}
+            hitSlop={8}
+            accessibilityRole="button"
+          >
             <MaterialIcons name={isPlaying ? 'pause' : 'play-arrow'} size={26} color="#fff" />
           </Pressable>
           <View
@@ -344,6 +352,7 @@ export function MediaViewer({
       {screenReader && (
         <View style={[styles.a11yBar, { bottom: Math.max(insets.bottom + 80, 96) }]}>
           <Pressable
+            testID="viewer-prev"
             onPress={() => goTo(Math.max(0, cur - 1))}
             disabled={cur === 0}
             style={styles.iconBtn}
@@ -354,6 +363,7 @@ export function MediaViewer({
             <MaterialIcons name="chevron-left" size={28} color="#fff" />
           </Pressable>
           <Pressable
+            testID="viewer-info"
             onPress={() => setInfo(true)}
             style={styles.iconBtn}
             accessibilityRole="button"
@@ -362,6 +372,7 @@ export function MediaViewer({
             <MaterialIcons name="info-outline" size={24} color="#fff" />
           </Pressable>
           <Pressable
+            testID="viewer-next"
             onPress={() => goTo(Math.min(media.length - 1, cur + 1))}
             disabled={cur === media.length - 1}
             style={styles.iconBtn}

@@ -203,6 +203,7 @@ export function CaptureControls({
         <View style={styles.bar}>
           {/* Extrême gauche : réglages (façon appareil photo Android). */}
           <Pressable
+            testID="camera-settings-open"
             onPress={onOpenSettings}
             style={styles.sideBtn}
             hitSlop={8}
@@ -219,8 +220,10 @@ export function CaptureControls({
             {lastCapture != null ? (
               <Animated.View style={{ transform: [{ scale: thumbScale }] }}>
                 <Pressable
+                  testID="camera-gallery-thumbnail"
                   style={({ pressed }) => [styles.thumbWrap, pressed && styles.pressed]}
                   onPress={onOpenReview}
+                  accessibilityRole="button"
                   accessibilityLabel={t('capture.thumbnailA11y')}
                 >
                   {/* Le CONTENU pivote dans le cadre arrondi fixe (façon Google Camera). */}
@@ -253,6 +256,7 @@ export function CaptureControls({
               // Aucune capture en session : la galerie reste accessible (onglet
               // « Sur le fait », historique) via une icône permanente (#180).
               <Pressable
+                testID="camera-gallery-open"
                 style={({ pressed }) => [styles.thumbWrap, styles.emptyGallery, pressed && styles.pressed]}
                 onPress={onOpenReview}
                 accessibilityRole="button"
@@ -270,6 +274,7 @@ export function CaptureControls({
           {/* Centre : obturateur unique (photo / vidéo repos / vidéo en cours) */}
           <View style={styles.zone}>
             <Pressable
+              testID="camera-shutter"
               onPress={boomerang ? undefined : onShutter}
               onPressIn={boomerang ? startBoom : undefined}
               onPressOut={boomerang ? stopBoom : undefined}
@@ -320,6 +325,7 @@ export function CaptureControls({
           {/* Droite : inversion des caméras */}
           <View style={styles.zone}>
             <Pressable
+              testID="camera-flip"
               onPress={onSwap}
               disabled={swapDisabled}
               style={({ pressed }) => [

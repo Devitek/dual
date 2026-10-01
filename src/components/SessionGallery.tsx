@@ -207,7 +207,13 @@ export function SessionGallery({
                 <Text style={styles.countText}>{captures.length}</Text>
               </View>
               <View style={styles.spacer} />
-              <Pressable onPress={onClose} style={styles.closeIcon} accessibilityLabel={t('gallery.closeA11y')}>
+              <Pressable
+                testID="gallery-close"
+                onPress={onClose}
+                style={styles.closeIcon}
+                accessibilityRole="button"
+                accessibilityLabel={t('gallery.closeA11y')}
+              >
                 <MaterialIcons name="close" size={24} color={colors.onSurface} />
               </Pressable>
             </>
@@ -222,6 +228,7 @@ export function SessionGallery({
               return (
                 <Pressable
                   key={value}
+                  testID={`gallery-tab-${value}`}
                   style={[styles.tabCell, activeTab && styles.tabCellOn]}
                   onPress={() => setTab(value)}
                   accessibilityRole="button"
@@ -260,12 +267,13 @@ export function SessionGallery({
                 columnWrapperStyle={styles.rowGap}
                 contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 16 }]}
                 extraData={{ selectMode, sel: selected, posters }}
-                renderItem={({ item }) => {
+                renderItem={({ item, index }) => {
                   const isSelected = selected.has(keyOf(item));
                   const poster = item.kind === 'video' ? posters[keyOf(item)] : undefined;
                   const dur = formatDuration(item.durationMs);
                   return (
                     <Pressable
+                      testID={`gallery-cell-${index}`}
                       style={[styles.cell, { width: cellSize, height: cellSize }, isSelected && styles.cellSelected]}
                       onPress={() => onCellPress(item)}
                       onLongPress={() => onCellLongPress(item)}
