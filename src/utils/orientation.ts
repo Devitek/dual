@@ -74,29 +74,24 @@ export function uiRotationFor(orientation: DeviceOrientation): number {
 }
 
 /**
- * Orientation de sortie caméra (convention VisionCamera `CameraOrientation`) à
- * graver dans l'EXIF des captures, dérivée de l'orientation PHYSIQUE (#174).
+ * Valeur EXIF d'orientation (TAG_ORIENTATION) à graver sur le rendu final (#174)
+ * selon l'orientation PHYSIQUE du téléphone à la capture.
  *
- * On N'utilise PAS l'OrientationManager `device` de VisionCamera : en multi-cam
- * impératif il ne pousse aucune mise à jour (vérifié sur device, l'EXIF restait
- * `up`). On alimente nous-mêmes `output.outputOrientation` depuis la détection
- * accéléromètre déjà fiable (celle des icônes, #173).
- *
- * Convention : `DeviceOrientation` = degrés HORAIRES depuis le portrait ;
- * `CameraOrientation` 'right' = tourné 90° à droite (horaire), 'left' = 90° à
- * gauche. Le mapping est donc direct (calibré sur device).
+ * Principe (demandé) : on NE touche PAS aux pixels ni au cadre. La photo composée
+ * reste EXACTEMENT celle du viseur (vignette selfie à sa place) ; on ajoute juste
+ * ce tag pour que la galerie l'affiche en paysage quand le téléphone était tenu
+ * ainsi. Les valeurs suivent la norme EXIF : 1=normal, 6=90° horaire, 3=180°,
+ * 8=270° horaire. Mapping calibré sur device.
  */
-export type CaptureOrientation = 'up' | 'right' | 'down' | 'left';
-
-export function cameraOrientationFor(orientation: DeviceOrientation): CaptureOrientation {
+export function exifOrientationFor(orientation: DeviceOrientation): number {
   switch (orientation) {
     case 90:
-      return 'right';
+      return 6; // ROTATE_90
     case 180:
-      return 'down';
+      return 3; // ROTATE_180
     case 270:
-      return 'left';
+      return 8; // ROTATE_270
     default:
-      return 'up';
+      return 1; // NORMAL
   }
 }

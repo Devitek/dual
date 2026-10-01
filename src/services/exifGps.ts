@@ -64,3 +64,34 @@ export async function writeGpsToJpeg(fileUri: string, coords: GpsCoords): Promis
   const newBinary = piexif.insert(exifBytes, binary);
   await writeAsStringAsync(fileUri, b64encode(newBinary), { encoding: EncodingType.Base64 });
 }
+
+/**
+ * Inscrit la valeur EXIF d'orientation (TAG_ORIENTATION : 1/3/6/8) dans le JPEG
+ * `fileUri` (in-place), sans toucher aux pixels (#174). Les galeries affichent
+ * alors la photo réorientée (ex. paysage) ; on ne remplace QUE ce tag, le GPS et
+ * les autres sont préservés. No-op si `orientation` vaut 1 (normal) ou n'est pas
+ * une valeur EXIF connue. Best-effort : lève en cas d'I/O (l'appelant try/catch).
+ */
+export async function writeOrientationToJpeg(fileUri: string, orientation: number): Promise<void> {
+  if (![3, 6, 8].includes(orientation)) return; // 1 = normal -> rien à écrire
+  const b64 = await readAsStringAsync(fileUri, { encoding: EncodingType.Base64 });
+  const binary = b64decode(b64);
+
+  let exifObj: Record<string, unknown>;
+  try {
+    exifObj = piexif.load(binary) as Record<string, unknown>;
+  } catch {
+    exifObj = { '0th': {}, Exif: {}, GPS: {}, '1st': {}, thumbnail: null };
+  }
+
+  const zeroth: Record<number, unknown> = { ...((exifObj['0th'] as Record<number, unknown>) ?? {}) };
+  // Tag EXIF Orientation = 0x0112 (274). `piexif.ImageIFD` n'est pas typé ; on
+  // récupère la constante au runtime avec repli sur la valeur standard.
+  const orientationTag = (piexif.ImageIFD as unknown as { Orientation?: number })?.Orientation ?? 0x0112;
+  zeroth[orientationTag] = orientation;
+  exifObj['0th'] = zeroth;
+
+  const exifBytes = piexif.dump(exifObj);
+  const newBinary = piexif.insert(exifBytes, binary);
+  await writeAsStringAsync(fileUri, b64encode(newBinary), { encoding: EncodingType.Base64 });
+}

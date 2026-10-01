@@ -20,4 +20,7 @@ class PhotoParams : Record {
   /** Ratio du cadre `pip` : "full" (~3:4) | "square" (1:1) | "tall" (9:16). */
   @Field var outputRatio: String = "full"
   @Field var saveOriginals: Boolean = false
+  /** Valeur EXIF d'orientation (1/3/6/8) à graver sur le rendu + originaux (#174).
+   *  On ne recadre pas : la galerie réoriente juste l'affichage (ex. paysage). */
+  @Field var orientation: Int = 1
 }

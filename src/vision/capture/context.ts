@@ -50,6 +50,9 @@ export interface CaptureContext {
   // ------------------------------------------------------------- config ----
   /** Config qualité COURANTE (résolutions, bitrate vidéo, canvas PiP). */
   getQuality(): QualityConfig;
+  /** Valeur EXIF d'orientation (1/3/6/8) selon l'orientation physique à la
+   *  capture (#174) : gravée sur le rendu final pour un affichage paysage. */
+  getCaptureExifOrientation(): number;
 
   // ------------------------------------- état privé du contrôleur (lecture) ----
   getPrimarySlot(): CameraSlot;

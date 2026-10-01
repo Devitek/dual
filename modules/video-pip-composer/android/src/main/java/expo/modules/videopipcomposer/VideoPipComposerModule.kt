@@ -119,6 +119,7 @@ class VideoPipComposerModule : Module(), PipComposerBus.Listener {
         canvasWidth = params.canvasWidth.toInt(),
         outputRatio = params.outputRatio,
         saveOriginals = params.saveOriginals,
+        orientation = params.orientation,
       )
     }
 

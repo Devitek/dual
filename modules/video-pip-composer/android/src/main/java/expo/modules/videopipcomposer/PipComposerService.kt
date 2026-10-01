@@ -6,6 +6,7 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.media.ExifInterface
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
@@ -38,6 +39,7 @@ class PipComposerService : Service() {
     private const val EXTRA_OUTPUT_RATIO = "outputRatio"
     private const val EXTRA_BOOMERANG = "boomerang"
     private const val EXTRA_BOOMERANG_GIF = "boomerangGif"
+    private const val EXTRA_ORIENTATION = "orientation"
 
     private const val TYPE_VIDEO = "video"
     private const val TYPE_PHOTO = "photo"
@@ -92,6 +94,7 @@ class PipComposerService : Service() {
       canvasWidth: Int,
       outputRatio: String,
       saveOriginals: Boolean,
+      orientation: Int,
     ) {
       val intent = baseIntent(context, jobId, primaryPath, secondaryPath, corner, saveOriginals).apply {
         putExtra(EXTRA_MEDIA_TYPE, TYPE_PHOTO)
@@ -102,6 +105,7 @@ class PipComposerService : Service() {
         putExtra(EXTRA_INSET_W, insetW)
         putExtra(EXTRA_WATERMARK, watermark)
         putExtra(EXTRA_OUTPUT_RATIO, outputRatio)
+        putExtra(EXTRA_ORIENTATION, orientation)
       }
       androidx.core.content.ContextCompat.startForegroundService(context, intent)
     }
@@ -145,6 +149,7 @@ class PipComposerService : Service() {
     val outputRatio = intent.getStringExtra(EXTRA_OUTPUT_RATIO) ?: "full"
     val boomerang = intent.getBooleanExtra(EXTRA_BOOMERANG, false)
     val boomerangGif = intent.getBooleanExtra(EXTRA_BOOMERANG_GIF, false)
+    val orientation = intent.getIntExtra(EXTRA_ORIENTATION, 1)
     val isPhoto = mediaType == TYPE_PHOTO
     val title = if (isPhoto) "Composition de la photo PiP" else "Composition de la vidéo PiP"
 
@@ -172,8 +177,13 @@ class PipComposerService : Service() {
             insetWidthRatio = INSET_WIDTH_RATIO,
             marginRatio = MARGIN_RATIO,
           ).compose()
+          // #174 : on ne recadre pas, on grave juste l'orientation EXIF sur le
+          // rendu (et les originaux) pour un affichage paysage en galerie.
+          stampExifOrientation(outFile, orientation)
           val uri = MediaStoreSaver.saveImage(ctx, outFile, "Dual_PiP_$ts.jpg")
           if (saveOriginals) {
+            stampExifOrientation(File(primaryPath), orientation)
+            stampExifOrientation(File(secondaryPath), orientation)
             MediaStoreSaver.saveImage(ctx, File(primaryPath), "Dual_${ts}_1.jpg")
             MediaStoreSaver.saveImage(ctx, File(secondaryPath), "Dual_${ts}_2.jpg")
           }
@@ -265,6 +275,23 @@ class PipComposerService : Service() {
   private fun stopSelfSafely() {
     ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
     stopSelf()
+  }
+
+  /**
+   * Écrit le tag EXIF d'orientation (#174) sur un JPEG, sans toucher aux pixels :
+   * la galerie réoriente juste l'affichage (ex. paysage). No-op si `exif` vaut 1
+   * (normal). Best-effort : une erreur d'I/O ne doit pas faire échouer la capture.
+   */
+  private fun stampExifOrientation(file: File, exif: Int) {
+    if (exif == ExifInterface.ORIENTATION_NORMAL) return
+    try {
+      ExifInterface(file.absolutePath).apply {
+        setAttribute(ExifInterface.TAG_ORIENTATION, exif.toString())
+        saveAttributes()
+      }
+    } catch (_: Exception) {
+      // best-effort
+    }
   }
 
   private fun ensureChannel() {

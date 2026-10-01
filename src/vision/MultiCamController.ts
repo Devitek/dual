@@ -3,7 +3,6 @@ import {
   VisionCamera,
   type CameraController,
   type CameraDevice,
-  type CameraOrientation,
   type CameraPhotoOutput,
   type CameraPreviewOutput,
   type CameraSession,
@@ -20,7 +19,7 @@ import * as MediaLibrary from 'expo-media-library';
 
 import { getFileSize, toFileUri } from '../utils/fileSystem';
 import { recordError } from '../utils/crashJournal';
-import { orientationFromAccel, cameraOrientationFor, type DeviceOrientation } from '../utils/orientation';
+import { orientationFromAccel, exifOrientationFor, type DeviceOrientation } from '../utils/orientation';
 import type {
   CompositionLayout,
   OutputRatio,
@@ -101,9 +100,10 @@ export class MultiCamController {
 
   private primarySlot: CameraSlot = 'back';
   private disposed = false;
-  /** Orientation PHYSIQUE du téléphone (#174, phase 1), suivie via l'accéléromètre
-   *  (même source que les icônes #173, fiable). Gravée dans l'EXIF des captures
-   *  via `outputOrientation`, même si l'UI reste verrouillée portrait. */
+  /** Orientation PHYSIQUE du téléphone (#174), suivie via l'accéléromètre (même
+   *  source que les icônes #173). Sert à graver le tag EXIF d'orientation sur le
+   *  rendu final (la composition reste celle du viseur ; seule la galerie la
+   *  réoriente en paysage à l'affichage). */
   private accelSub: { remove: () => void } | null = null;
   private deviceOrientation: DeviceOrientation = 0;
   /** Un (seul) réessai automatique par épisode d'échec d'ouverture caméra. */
@@ -148,6 +148,7 @@ export class MultiCamController {
     persist: (filePath) => this.persist(filePath),
     stampGps: (fileUri, coords) => this.stampGps(fileUri, coords),
     getQuality: () => QUALITY[this.snapshot.captureQuality],
+    getCaptureExifOrientation: () => exifOrientationFor(this.deviceOrientation),
     getPrimarySlot: () => this.primarySlot,
     isDisposed: () => this.disposed,
     getBoomerangMode: () => this.boomerangMode,
@@ -233,21 +234,18 @@ export class MultiCamController {
     await this.buildSession();
   }
 
-  /** Démarre le suivi d'orientation physique (accéléromètre) et l'applique aux
-   *  sorties photo. Best-effort : capteur absent -> orientation par défaut.
+  /** Suit l'orientation PHYSIQUE du téléphone (#174) via l'accéléromètre (même
+   *  source que les icônes #173). Ne touche PAS aux pixels ni au cadrage : sert
+   *  uniquement à GRAVER un tag EXIF d'orientation sur le rendu final, pour que
+   *  la galerie affiche la photo en paysage quand le téléphone était tenu ainsi.
    *  NB expo-sensors : `setUpdateInterval` est GLOBAL ; on s'aligne sur les
    *  100 ms déjà utilisés ailleurs (useDeviceOrientation, niveau à bulle). */
   private startCaptureOrientation(): void {
-    this.applyCaptureOrientation(cameraOrientationFor(this.deviceOrientation));
     if (this.accelSub != null) return;
     try {
       Accelerometer.setUpdateInterval(100);
       this.accelSub = Accelerometer.addListener(({ x, y }) => {
-        const next = orientationFromAccel(x, y, this.deviceOrientation);
-        if (next !== this.deviceOrientation) {
-          this.deviceOrientation = next;
-          this.applyCaptureOrientation(cameraOrientationFor(next));
-        }
+        this.deviceOrientation = orientationFromAccel(x, y, this.deviceOrientation);
       });
     } catch {
       // Capteur absent (émulateur minimal) : on garde l'orientation par défaut.
@@ -258,13 +256,6 @@ export class MultiCamController {
   private stopCaptureOrientation(): void {
     this.accelSub?.remove();
     this.accelSub = null;
-  }
-
-  /** Reporte l'orientation sur les sorties PHOTO vivantes (null-safe : les
-   *  sorties sont nulles entre deux sessions). VisionCamera l'applique en EXIF. */
-  private applyCaptureOrientation(orientation: CameraOrientation): void {
-    if (this.backPhoto != null) this.backPhoto.outputOrientation = orientation;
-    if (this.frontPhoto != null) this.frontPhoto.outputOrientation = orientation;
   }
 
   /** (Re)construit la session avec la qualité courante. */
