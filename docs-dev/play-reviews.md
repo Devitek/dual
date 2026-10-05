@@ -79,3 +79,25 @@ reviewId `e59f2c24-e62d-4722-ae99-c5ae1a5f9da2`)** :
 Choix : réponse dans sa langue avec le clin d'œil miroir (il finit en
 français, on finit en français), micro-nudge vers « Sur le fait » (il est sur
 la version qui l'a).
+
+---
+
+## 2026-10 · A D. · 5★ · fr · v1.25.0 (production, Pixel 7)
+
+Détecté via dispatch manuel du workflow Play Reviews (traitement périodique).
+
+**Avis** : « Enfin une app sans pub !! L'app est fluide, j'adore le concept de
+pouvoir prendre des photos et de pouvoir avoir le retour de la caméra
+frontale. Je recommande ! »
+
+**Réponse (2026-10-05, envoyée via le workflow `play-reviews.yml` action=reply,
+reviewId `a30681f1-6c35-43db-986c-da325793fee0`)** :
+
+> Merci beaucoup pour ces 5 étoiles ! TwinLens restera sans pub et sans
+> collecte : tout reste sur votre appareil. La mise à jour 1.26.0 arrive avec
+> les photos et vidéos en paysage enfin bien orientées. Si vous ne l'avez pas
+> encore essayé, le mode Boomerang vous attend. Bonnes doubles captures !
+
+Choix : réaffirmer l'engagement sans pub / sans collecte (ce qu'il valorise,
+aligné ADR 0007), annoncer la 1.26.0 (en bêta ouverte au moment de la
+réponse, production imminente) et un micro-nudge vers le mode Boomerang.
