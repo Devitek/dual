@@ -126,6 +126,17 @@
     "journalEntries_other": "{{count}} entradas registradas (solo local, nunca se envía)",
     "copyJournal": "Copiar registro",
     "clearJournal": "Borrar",
+    "recoverTitle": "Vídeos interrumpidos",
+    "recoverDesc": "Archivos sin procesar que quedaron en la caché tras una grabación no finalizada (por ejemplo, si saliste de la app mientras grababas). Puede incluir vídeos ya guardados.",
+    "recoverNone": "No se encontraron vídeos interrumpidos.",
+    "recoverFound_one": "{{count}} archivo encontrado ({{size}})",
+    "recoverFound_other": "{{count}} archivos encontrados ({{size}})",
+    "recoverAction": "Guardar en la galería",
+    "recoverSaving": "Guardando…",
+    "recoverDone_one": "{{count}} archivo guardado en la galería",
+    "recoverDone_other": "{{count}} archivos guardados en la galería",
+    "recoverFailed_one": "No se pudo guardar {{count}} archivo",
+    "recoverFailed_other": "No se pudieron guardar {{count}} archivos",
     "rateApp": "Valorar TwinLens"
   },
   "gallery": {

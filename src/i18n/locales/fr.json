@@ -126,6 +126,17 @@
     "journalEntries_other": "{{count}} entrées enregistrées (local uniquement, jamais envoyé)",
     "copyJournal": "Copier le journal",
     "clearJournal": "Effacer",
+    "recoverTitle": "Vidéos interrompues",
+    "recoverDesc": "Fichiers bruts restés dans le cache après un enregistrement non finalisé (app quittée pendant la prise, par exemple). Peut inclure des vidéos déjà enregistrées.",
+    "recoverNone": "Aucune vidéo interrompue trouvée.",
+    "recoverFound_one": "{{count}} fichier trouvé ({{size}})",
+    "recoverFound_other": "{{count}} fichiers trouvés ({{size}})",
+    "recoverAction": "Enregistrer dans la galerie",
+    "recoverSaving": "Enregistrement…",
+    "recoverDone_one": "{{count}} fichier enregistré dans la galerie",
+    "recoverDone_other": "{{count}} fichiers enregistrés dans la galerie",
+    "recoverFailed_one": "{{count}} fichier n'a pas pu être enregistré",
+    "recoverFailed_other": "{{count}} fichiers n'ont pas pu être enregistrés",
     "rateApp": "Noter TwinLens"
   },
   "gallery": {

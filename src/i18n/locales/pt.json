@@ -126,6 +126,17 @@
     "journalEntries_other": "{{count}} entradas registradas (apenas local, nunca enviado)",
     "copyJournal": "Copiar registro",
     "clearJournal": "Limpar",
+    "recoverTitle": "Vídeos interrompidos",
+    "recoverDesc": "Arquivos brutos que ficaram no cache após uma gravação não finalizada (por exemplo, app fechado durante a gravação). Pode incluir vídeos já salvos.",
+    "recoverNone": "Nenhum vídeo interrompido encontrado.",
+    "recoverFound_one": "{{count}} arquivo encontrado ({{size}})",
+    "recoverFound_other": "{{count}} arquivos encontrados ({{size}})",
+    "recoverAction": "Salvar na galeria",
+    "recoverSaving": "Salvando…",
+    "recoverDone_one": "{{count}} arquivo salvo na galeria",
+    "recoverDone_other": "{{count}} arquivos salvos na galeria",
+    "recoverFailed_one": "Não foi possível salvar {{count}} arquivo",
+    "recoverFailed_other": "Não foi possível salvar {{count}} arquivos",
     "rateApp": "Avaliar o TwinLens"
   },
   "gallery": {
