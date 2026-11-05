@@ -192,6 +192,7 @@
     "noVideo": "Nenhum vídeo gravado.",
     "recError": "Gravação ({{slot}}): {{error}}",
     "processingFailed": "Falha no processamento: {{error}}",
+    "pipFallbackOriginals": "Não foi possível compor o vídeo ({{error}}): os dois vídeos originais foram salvos.",
     "qualityUnsupported": "Qualidade não suportada — voltando à configuração anterior.",
     "fpsUnsupported": "60 fps não suportado aqui — voltando para 30.",
     "speedUnsupported": "Velocidade de captura não suportada — voltando à configuração anterior.",

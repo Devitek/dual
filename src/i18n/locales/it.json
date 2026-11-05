@@ -192,6 +192,7 @@
     "noVideo": "Nessun video registrato.",
     "recError": "Registrazione ({{slot}}): {{error}}",
     "processingFailed": "Elaborazione non riuscita: {{error}}",
+    "pipFallbackOriginals": "Composizione non riuscita ({{error}}): sono stati salvati i due video originali.",
     "qualityUnsupported": "Qualità non supportata — ritorno all’impostazione precedente.",
     "fpsUnsupported": "60 fps non supportato qui — ritorno a 30.",
     "speedUnsupported": "Velocità di scatto non supportata — ritorno all’impostazione precedente.",

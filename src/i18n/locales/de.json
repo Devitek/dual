@@ -192,6 +192,7 @@
     "noVideo": "Kein Video aufgenommen.",
     "recError": "Aufnahme ({{slot}}): {{error}}",
     "processingFailed": "Verarbeitung fehlgeschlagen: {{error}}",
+    "pipFallbackOriginals": "Zusammensetzen fehlgeschlagen ({{error}}): Beide Originalvideos wurden gespeichert.",
     "qualityUnsupported": "Qualität nicht unterstützt – zurück zur vorherigen Einstellung.",
     "fpsUnsupported": "60 fps hier nicht unterstützt – zurück zu 30.",
     "speedUnsupported": "Aufnahmetempo nicht unterstützt – zurück zur vorherigen Einstellung.",

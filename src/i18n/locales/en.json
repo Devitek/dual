@@ -192,6 +192,7 @@
     "noVideo": "No video recorded.",
     "recError": "Recording ({{slot}}): {{error}}",
     "processingFailed": "Processing failed: {{error}}",
+    "pipFallbackOriginals": "Could not compose the video ({{error}}): both original videos were saved instead.",
     "qualityUnsupported": "Quality not supported — reverting to previous setting.",
     "fpsUnsupported": "60 fps not supported here — reverting to 30.",
     "speedUnsupported": "Capture speed not supported — reverting to previous setting.",

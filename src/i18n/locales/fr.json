@@ -192,6 +192,7 @@
     "noVideo": "Aucune vidéo enregistrée.",
     "recError": "Enregistrement ({{slot}}) : {{error}}",
     "processingFailed": "Traitement échoué : {{error}}",
+    "pipFallbackOriginals": "Composition impossible ({{error}}) : les deux vidéos d'origine ont été enregistrées.",
     "qualityUnsupported": "Qualité non supportée — retour au réglage précédent.",
     "fpsUnsupported": "60 ips non supporté ici — retour à 30.",
     "speedUnsupported": "Vitesse de capture non supportée — retour au réglage précédent.",
