@@ -43,6 +43,15 @@ updates:
         update-types: ['version-update:semver-major']
       - dependency-name: '@types/jest'
         update-types: ['version-update:semver-major']
+      # Outils dev versionnés avec le SDK Expo (majeur = numéro de SDK) : un
+      # majeur Dependabot les fait passer au SDK suivant (vécu #247 : jest-expo 58
+      # cherche react-native/src/asset-registry.js, absent de RN 0.86, et
+      # eslint-config-expo 58 fait échouer expo-doctor). Les patches restent
+      # alignés par `npx expo install --fix`, les majeurs suivent la montée de SDK.
+      - dependency-name: 'jest-expo'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'eslint-config-expo'
+        update-types: ['version-update:semver-major']
 
   # Actions GitHub des workflows
   - package-ecosystem: github-actions
