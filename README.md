@@ -1,58 +1,84 @@
-# TwinLens 📸
+<p align="center">
+  <img src="assets/icon.png" alt="" width="116" height="116">
+</p>
 
-**Deux caméras. Une seule photo. 100 % sur l'appareil.**
+<h1 align="center">TwinLens</h1>
 
-TwinLens est une application caméra **Android** qui capture l'avant et l'arrière
-**en même temps** (multi-cam simultané, VisionCamera v5), puis fusionne les deux
-flux en une seule photo ou vidéo — Picture-in-Picture, côte à côte ou empilé —
-entièrement hors-ligne : **pas de compte, pas de serveur, pas de pub, pas de
-tracking**.
+<p align="center">Two cameras, one photo, 100% on-device. An Android dual-camera app.</p>
 
-[Google Play](https://play.google.com/store/apps/details?id=fr.devitek.twinlens) ·
-[Site](https://twinlens.devitek.fr) ·
-[Support](https://twinlens.devitek.fr/support.html) ·
-[Confidentialité](https://twinlens.devitek.fr/privacy.html)
+<p align="center">
+  <a href="https://github.com/Devitek/dual/releases/latest"><img src="https://img.shields.io/github/v/release/Devitek/dual?style=flat-square&label=release&labelColor=141517&color=F0703A" alt="Latest release"></a>
+  <a href="https://github.com/Devitek/dual/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/Devitek/dual/ci.yml?branch=main&style=flat-square&label=ci&labelColor=141517" alt="CI"></a>
+</p>
 
-## Fonctionnalités
+<p align="center">
+  <a href="https://twinlens.devitek.fr">Website</a> ·
+  <a href="#installation">Installation</a> ·
+  <a href="#usage">Usage</a> ·
+  <a href="#documentation">Documentation</a> ·
+  <a href="CHANGELOG.md">Changelog</a> ·
+  <a href="CONTRIBUTING.md">Contributing</a>
+</p>
 
-- 🎬 Photo & vidéo **double** (avant + arrière simultanés), boomerang (MP4/GIF)
-- 🖼️ Compositions on-device : PiP (vignette déplaçable/redimensionnable), côte à
-  côte, empilé — un seul fichier prêt à partager
-- 📸 Repli **photo séquentielle** sur les appareils sans concurrent-camera
-  (les deux clichés l'un après l'autre, composés automatiquement)
-- 🔒 **Zéro réseau applicatif** : pas de compte, pas d'analytics, géotag opt-in
-  purement local (EXIF)
-- 🌍 6 langues · Material You (Android 12+) · widget d'accueil + tuile Réglages
-  rapides · partage direct Instagram/TikTok
+TwinLens captures the front and back cameras **at the same time** (concurrent multi-cam, VisionCamera v5), then merges both streams into a single photo or video: Picture-in-Picture, side by side or stacked. Everything happens offline: no account, no server, no ads, no tracking.
 
-## Stack
+## Installation
 
-Expo SDK 57 (**CNG** — `android/` généré, jamais commité) · React Native 0.86 ·
-TypeScript strict · VisionCamera v5 (Nitro) · module natif local Kotlin
-([`modules/video-pip-composer`](modules/video-pip-composer)) : composition PiP
-en Foreground Service, MediaStore, widget/tuile, partage · Release :
-**GitHub Actions + Fastlane → Google Play** (release-please, aucune étape
-manuelle).
+<a href="https://play.google.com/store/apps/details?id=fr.devitek.twinlens"><img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="64"></a>
 
-## Démarrage rapide
+[Support](https://twinlens.devitek.fr/support.html) · [Privacy](https://twinlens.devitek.fr/privacy.html)
 
-> ⚠️ App **native** : Expo Go ne fonctionne pas — il faut un **development
-> build** (`expo run:android`).
+## Usage
 
-```bash
+- **Dual photo and video** (front and back simultaneously), boomerang (MP4 / GIF).
+- **On-device compositions**: PiP (movable, resizable thumbnail), side by side, stacked; one file ready to share.
+- **Sequential fallback** on devices without concurrent cameras: both shots one after the other, composed automatically.
+- **No app network access**: no account, no analytics, opt-in geotag kept local (EXIF).
+- 6 languages, Material You (Android 12+), home-screen widget and Quick Settings tile, direct sharing to Instagram / TikTok.
+
+## Development
+
+Expo SDK 57 (CNG: `android/` is generated, never committed), React Native 0.86, strict TypeScript, VisionCamera v5 (Nitro), and a local Kotlin module ([`modules/video-pip-composer`](modules/video-pip-composer)) for PiP composition in a foreground service, MediaStore, widget, tile and sharing. Releases go through GitHub Actions and Fastlane to Google Play (release-please, no manual step).
+
+> [!IMPORTANT]
+> TwinLens is a native app: Expo Go does not work. You need a development build.
+
+```sh
 npm ci
-npx expo run:android   # build + installe le dev build (appareil USB / émulateur)
-npm start              # Metro ; ensuite, rechargement à chaud du JS
+npx expo run:android   # builds and installs the dev build (USB device / emulator)
+npm start              # Metro, then hot reload of the JS
 ```
 
-Utilisateurs NixOS : `nix-shell` fournit tout (SDK Android 36, NDK, JDK 17,
-Node, contournement aapt2) — voir [`shell.nix`](shell.nix).
+On NixOS, `nix-shell` provides everything (Android SDK 36, NDK, JDK 17, Node, aapt2 workaround); see [`shell.nix`](shell.nix).
 
 ## Documentation
 
-| Fichier | Rôle |
-|---|---|
-| [`AGENTS.md`](AGENTS.md) | **Source de vérité** des règles (humains & agents IA) : release, permissions Play, persistance des réglages |
-| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Setup, boucle de dev, conventions de PR, Definition of Done |
-| [`RELEASE.md`](RELEASE.md) | Chaîne de release Fastlane/Play : signing, secrets, fiche store |
-| [`CHANGELOG.md`](CHANGELOG.md) | Généré par release-please — ne pas éditer |
+The project documentation is in French.
+
+| File | Role |
+| --- | --- |
+| [`AGENTS.md`](AGENTS.md) | Source of truth for the rules (humans and AI agents): release, Play permissions, settings persistence |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Setup, dev loop, PR conventions, Definition of Done |
+| [`RELEASE.md`](RELEASE.md) | Fastlane / Play release chain: signing, secrets, store listing |
+| [`CHANGELOG.md`](CHANGELOG.md) | Generated by release-please, do not edit |
+
+## Contributing
+
+Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) first: one issue per change, Conventional Commits, green CI.
+
+## License
+
+No license has been chosen yet, so all rights are reserved by default.
+
+---
+
+<p align="center">
+  <a href="https://github.com/Devitek">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset=".github/assets/devitek-wordmark-blanc.svg">
+      <img src=".github/assets/devitek-wordmark-encre.svg" alt="Devitek" height="22">
+    </picture>
+  </a>
+  <br>
+  <sub>Built and maintained by <a href="https://github.com/Devitek">Devitek</a></sub>
+</p>
