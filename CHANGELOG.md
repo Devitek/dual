@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.26.2](https://github.com/Devitek/dual/compare/v1.26.1...v1.26.2) (2026-11-19)
+
+
+### Bug Fixes
+
+* **video:** keep recordings when leaving the app mid-recording ([#244](https://github.com/Devitek/dual/issues/244)) ([e4c19a6](https://github.com/Devitek/dual/commit/e4c19a62070449448c8b45dc11a9008d546dfc37))
+
 ## [1.26.1](https://github.com/Devitek/dual/compare/v1.26.0...v1.26.1) (2026-11-19)
 
 
