@@ -162,8 +162,8 @@ Colonnes : **ID**, **cas**, **attendu**, **mode**, **réf.** (issue ou ADR).
 | INT-03 | Arrêt normal puis arrêt forcé pendant la composition | Vidéo reprise au lancement suivant | D (**KNOWN #261**) | #243, #261 |
 | INT-04 | Accueil puis arrêt forcé pendant la composition | Vidéo reprise au lancement suivant | D (**KNOWN #261**) | #243, #261 |
 | INT-05 | Retrait de l'app des récents pendant la composition | Le service garde le processus : vidéo sauvegardée | M | #243 |
-| INT-06 | Composition refusée par Android (hors délai de grâce) | Réessai au retour au premier plan, sinon originaux sauvegardés | M (non reproductible à la demande) | #244 |
-| INT-07 | Récupération des vidéos interrompues (réglages) | Bruts orphelins enregistrés en galerie puis retirés du cache | M | #244 |
+| INT-06 | Composition refusée par Android (délai de grâce forcé à 0 via `device_config`) | Refus constaté dans le logcat, aucune vidéo en arrière-plan, vidéo composée au retour dans l'app | D (build ≥ 1.26.2) | #244 |
+| INT-07 | Récupération des vidéos interrompues (réglages) | Bruts orphelins enregistrés en galerie puis retirés du cache | D (destructif : consomme tous les bruts récupérables) | #244 |
 | LCK-01 | Verrouillage puis déverrouillage | Caméras rouvertes seules, photo possible | D+ | #222 |
 | AWK-01 | Viseur ouvert, aucune interaction | Écran maintenu allumé ; relâché en arrière-plan | D | #214 |
 | CRS-01 | Crash pendant l'usage | Journal de crash local, consultable et copiable | J (`crashJournal.test`), M | |
