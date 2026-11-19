@@ -1,5 +1,5 @@
-// Finalisation d'un enregistrement double : composition au premier plan, et
-// repli sur les originaux si la composition échoue (app quittée pendant la prise).
+// Finalisation d'un enregistrement double : composition immédiate, nouvel essai
+// au premier plan si Android refuse le service, repli sur les originaux sinon.
 import type { CameraVideoOutput } from 'react-native-vision-camera';
 
 import { waitForForeground } from '../../../utils/appState';
@@ -94,15 +94,19 @@ beforeEach(() => {
   mockedWait.mockReset().mockResolvedValue(undefined);
 });
 
+/** Erreur telle que rejetée par le module natif quand Android refuse le service. */
+const fgsNotAllowed = (): Error =>
+  Object.assign(new Error("Démarrage du service refusé depuis l'arrière-plan"), { code: 'E_FGS_NOT_ALLOWED' });
+
 describe('finalisation vidéo', () => {
-  it('compose la vidéo PiP une fois au premier plan', async () => {
+  it("compose immédiatement, sans attendre le premier plan (délai de grâce d'Android)", async () => {
     const composer = jest.fn().mockResolvedValue('content://media/Dual_PiP.mp4');
     const { ctx, recordAndFinalize } = setup(composer);
 
     await recordAndFinalize();
 
-    expect(mockedWait).toHaveBeenCalledTimes(1);
-    expect(mockedWait.mock.invocationCallOrder[0]!).toBeLessThan(composer.mock.invocationCallOrder[0]!);
+    expect(mockedWait).not.toHaveBeenCalled();
+    expect(composer).toHaveBeenCalledTimes(1);
     expect(composer).toHaveBeenCalledWith(
       'file:///cache/VisionCamera_back.mp4',
       'file:///cache/VisionCamera_front.mp4',
@@ -115,28 +119,51 @@ describe('finalisation vidéo', () => {
     expect(ctx.notify).toHaveBeenCalledWith('success', 'notices.videoSaved');
   });
 
-  it("n'appelle pas le composeur tant que l'app n'est pas revenue au premier plan", async () => {
+  it('si Android refuse le service, attend le premier plan puis réessaie une fois', async () => {
     let backToForeground: () => void = () => undefined;
     mockedWait.mockReturnValue(new Promise<void>((resolve) => (backToForeground = resolve)));
-    const composer = jest.fn().mockResolvedValue('content://media/Dual_PiP.mp4');
-    const { record } = setup(composer);
+    const composer = jest
+      .fn()
+      .mockRejectedValueOnce(fgsNotAllowed())
+      .mockResolvedValueOnce('content://media/Dual_PiP.mp4');
+    const { ctx, record } = setup(composer);
 
     const job = await record();
     const done = job();
     await flushPromises();
-    expect(composer).not.toHaveBeenCalled();
+    expect(composer).toHaveBeenCalledTimes(1);
+    expect(mockedWait).toHaveBeenCalledTimes(1);
 
     backToForeground();
     await done;
-    expect(composer).toHaveBeenCalledTimes(1);
+    expect(composer).toHaveBeenCalledTimes(2);
+    expect(ctx.persist).not.toHaveBeenCalled();
+    expect(ctx.pushCapture).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: 'video', primaryUri: 'content://media/Dual_PiP.mp4' }),
+    );
+    expect(ctx.notify).toHaveBeenCalledWith('success', 'notices.videoSaved');
   });
 
-  it('sauvegarde les deux originaux si la composition échoue', async () => {
-    const composer = jest.fn().mockRejectedValue(new Error('ForegroundServiceStartNotAllowedException'));
+  it('sauvegarde les originaux si le second essai est encore refusé', async () => {
+    const composer = jest.fn().mockRejectedValue(fgsNotAllowed());
     const { ctx, recordAndFinalize } = setup(composer);
 
     await recordAndFinalize();
 
+    expect(composer).toHaveBeenCalledTimes(2);
+    expect(ctx.persist).toHaveBeenCalledWith('/cache/VisionCamera_back.mp4');
+    expect(ctx.persist).toHaveBeenCalledWith('/cache/VisionCamera_front.mp4');
+    expect(ctx.notify).toHaveBeenCalledWith('error', 'notices.pipFallbackOriginals');
+  });
+
+  it('toute autre erreur : sauvegarde les deux originaux, sans attendre ni réessayer', async () => {
+    const composer = jest.fn().mockRejectedValue(new Error('Échec du muxer'));
+    const { ctx, recordAndFinalize } = setup(composer);
+
+    await recordAndFinalize();
+
+    expect(composer).toHaveBeenCalledTimes(1);
+    expect(mockedWait).not.toHaveBeenCalled();
     expect(ctx.persist).toHaveBeenCalledWith('/cache/VisionCamera_back.mp4');
     expect(ctx.persist).toHaveBeenCalledWith('/cache/VisionCamera_front.mp4');
     expect(ctx.pushCapture).toHaveBeenCalledWith(

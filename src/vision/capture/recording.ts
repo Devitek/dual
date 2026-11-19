@@ -2,6 +2,7 @@
 // (composition PiP + sauvegarde en tâche de fond).
 // Code extrait de MultiCamController.ts (issue #148, étape C) : déplacement pur,
 // aucune modification de logique.
+import { isForegroundServiceNotAllowed } from '../../native/composerErrors';
 import { waitForForeground } from '../../utils/appState';
 import { toFileUri } from '../../utils/fileSystem';
 import i18n from '../../i18n';
@@ -43,15 +44,10 @@ function commitRecordingIfDone(ctx: CaptureContext): void {
   ctx.enqueue(async () => {
     if (wantPip && canPip) {
       const saveOriginals = mode === 'pip_plus_originals';
-      let savedPipUri: string;
-      try {
-        // App quittée pendant l'enregistrement : CameraX a finalisé les fichiers,
-        // mais le Foreground Service de composition ne peut pas démarrer depuis
-        // l'arrière-plan (Android 12+). On attend le retour au premier plan.
-        await waitForForeground();
-        // Le composeur natif compose ET sauvegarde (Foreground Service) : URI galerie.
-        // Le natif gère les dispositions (pip / côte-à-côte / haut-bas) + vignette libre.
-        savedPipUri = await ctx.getVideoComposer()!(toFileUri(primaryPath), toFileUri(secondaryPath!), {
+      // Le composeur natif compose ET sauvegarde (Foreground Service) : URI galerie.
+      // Le natif gère les dispositions (pip / côte-à-côte / haut-bas) + vignette libre.
+      const compose = (): Promise<string> =>
+        ctx.getVideoComposer()!(toFileUri(primaryPath), toFileUri(secondaryPath!), {
           layout,
           corner,
           inset,
@@ -63,6 +59,19 @@ function commitRecordingIfDone(ctx: CaptureContext): void {
           saveOriginals,
           orientation: recAgg.orientation,
         });
+      let savedPipUri: string;
+      try {
+        try {
+          // On essaie tout de suite : même si l'app a été quittée pendant la prise,
+          // Android accorde un délai de grâce et le service démarre le plus souvent.
+          savedPipUri = await compose();
+        } catch (error) {
+          // Refus explicite (Android 12+, délai de grâce dépassé) : on attend le
+          // retour au premier plan et on réessaie une seule fois.
+          if (!isForegroundServiceNotAllowed(error)) throw error;
+          await waitForForeground();
+          savedPipUri = await compose();
+        }
       } catch (error) {
         // Repli : la composition a échoué, on sauvegarde les deux originaux
         // plutôt que de perdre la vidéo (ils restaient orphelins dans le cache).
