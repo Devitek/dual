@@ -167,6 +167,7 @@ Colonnes : **ID**, **cas**, **attendu**, **mode**, **réf.** (issue ou ADR).
 | LCK-01 | Verrouillage puis déverrouillage | Caméras rouvertes seules, photo possible | D+ | #222 |
 | AWK-01 | Viseur ouvert, aucune interaction | Écran maintenu allumé ; relâché en arrière-plan | D | #214 |
 | CRS-01 | Crash pendant l'usage | Journal de crash local, consultable et copiable | J (`crashJournal.test`), M | |
+| CCH-01 | 5 vidéos en mode fusion, puis 5 photos, puis relance de l'app | Le cache de l'app (Paramètres > Applis > Stockage) ne grossit plus durablement : bruts vidéo supprimés aussitôt, bruts photo et originaux au lancement suivant ; les orphelins (composition jamais aboutie) restent | J (`cachePurge.test`), M | #255 |
 
 ### 4.9 Galerie de session et visionneuse
 

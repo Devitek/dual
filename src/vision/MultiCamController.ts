@@ -30,6 +30,7 @@ import type {
   VideoComposeOptions,
 } from '../services/pipComposer';
 import { writeGpsToJpeg, type GpsCoords } from '../services/exifGps';
+import { deleteRawFiles, runCachePurge, scheduleCachePurge } from '../services/cachePurge';
 import i18n from '../i18n';
 
 import { INITIAL } from './types';
@@ -243,6 +244,9 @@ export class MultiCamController {
   // ----------------------------------------------------------- lifecycle ----
   async init(): Promise<void> {
     if (this.session != null || this.disposed) return;
+    // #255 : bruts SAUVEGARDÉS lors des sessions précédentes (jamais les orphelins,
+    // ni ceux de la session en cours). Avant toute capture.
+    runCachePurge();
     await this.buildSession();
   }
 
@@ -620,13 +624,36 @@ export class MultiCamController {
   setVideoComposer(
     fn: ((primaryUri: string, secondaryUri: string, opts: VideoComposeOptions) => Promise<string>) | null,
   ): void {
-    this.videoComposer = fn;
+    // #255 : nettoyage des bruts APRÈS une composition réussie uniquement (un échec
+    // laisse les bruts en place pour le repli / la récupération, #244 / #261).
+    this.videoComposer =
+      fn == null
+        ? null
+        : async (primaryUri, secondaryUri, opts) => {
+            const saved = await fn(primaryUri, secondaryUri, opts);
+            if (opts.saveOriginals) {
+              // La galerie de session affiche encore un original brut : au prochain lancement.
+              scheduleCachePurge([primaryUri, secondaryUri]);
+            } else {
+              // Plus rien ne référence les bruts (la session affiche le rendu galerie).
+              deleteRawFiles([primaryUri, secondaryUri]);
+            }
+            return saved;
+          };
   }
 
   setPhotoComposer(
     fn: ((primaryUri: string, secondaryUri: string, opts: PhotoComposeOptions) => Promise<string>) | null,
   ): void {
-    this.photoComposer = fn;
+    // #255 : la galerie de session peut afficher le brut secondaire : au prochain lancement.
+    this.photoComposer =
+      fn == null
+        ? null
+        : async (primaryUri, secondaryUri, opts) => {
+            const saved = await fn(primaryUri, secondaryUri, opts);
+            scheduleCachePurge([primaryUri, secondaryUri]);
+            return saved;
+          };
   }
 
   setPhotoSaveMode(mode: SaveMode): void {
@@ -732,6 +759,9 @@ export class MultiCamController {
     if (__DEV__) console.log('[multicam] saveToLibrary', uri, 'size=', size);
     // saveToLibraryAsync copie le fichier temporaire dans la pellicule (MediaStore).
     await saveToLibraryAsync(uri);
+    // #255 : la copie est en galerie ; le brut ne sert plus qu'à la galerie de
+    // session (qui affiche cet URI) : suppression au prochain lancement.
+    scheduleCachePurge([uri]);
     return uri;
   }
 
