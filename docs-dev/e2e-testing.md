@@ -244,6 +244,12 @@ L'extraction de frame fidele au rendu lecteur = `ffmpeg` SANS `-noautorotate`.
 - **`adb shell` dans une boucle `while read`** consomme le stdin de la boucle (seule
   la 1re ligne est traitee) : toujours `adb ... </dev/null`. La lib passe par
   `execFileSync` (stdin ignore), sans shell local.
+- **Refus d'Android reproductible** (astuce de @the40n8, #244) : forcer le delai de
+  grace a 0 rend systematique le refus de demarrer un Foreground Service depuis
+  l'arriere-plan. `adb shell device_config put activity_manager
+  fg_to_bg_fgs_grace_duration 0`, puis **toujours** remettre le defaut :
+  `adb shell device_config delete activity_manager fg_to_bg_fgs_grace_duration`
+  (INT-06 le fait dans un `finally`).
 - **Animations systeme** : si on les modifie pour un test, sauvegarder puis
   restaurer explicitement les trois cles (`window_animation_scale`,
   `transition_animation_scale`, `animator_duration_scale`).
