@@ -1,2 +1,3 @@
-Corrección: la app ya no acumula archivos temporales de tus fotos y vídeos. Su almacenamiento podía crecer varios cientos de MB con el tiempo.
-Actualizaciones técnicas para mayor estabilidad.
+Salir de la app mientras grabas ya no hace perder el vídeo: se finaliza cuando vuelves, o se conservan sus dos archivos originales.
+Nuevo: «Vídeos interrumpidos» (Más ajustes, Ayuda y diagnóstico) recupera en la galería las grabaciones sin terminar.
+Corrección: la app ya no acumula archivos temporales de tus fotos y vídeos.

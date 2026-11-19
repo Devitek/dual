@@ -1,2 +1,3 @@
-Korrektur: Die App sammelt keine temporären Dateien Ihrer Fotos und Videos mehr an. Ihr Speicherbedarf konnte mit der Zeit um mehrere hundert MB wachsen.
-Technische Aktualisierungen für mehr Stabilität.
+Wenn Sie die App während einer Aufnahme verlassen, geht das Video nicht mehr verloren: Es wird bei Ihrer Rückkehr fertiggestellt, oder beide Originaldateien bleiben erhalten.
+Neu: „Unterbrochene Videos“ (Weitere Einstellungen, Hilfe & Diagnose) stellt unvollendete Aufnahmen in der Galerie wieder her.
+Korrektur: Die App sammelt keine temporären Dateien Ihrer Fotos und Videos mehr an.

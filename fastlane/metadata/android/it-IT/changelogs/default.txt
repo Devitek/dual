@@ -1,2 +1,3 @@
-Correzione: l'app non accumula più file temporanei di foto e video. Il suo spazio di archiviazione poteva crescere di diverse centinaia di MB nel tempo.
-Aggiornamenti tecnici per una maggiore stabilità.
+Uscire dall'app durante una registrazione non fa più perdere il video: viene completato al tuo ritorno, oppure si conservano i due file originali.
+Novità: «Video interrotti» (Altre impostazioni, Aiuto e diagnostica) recupera nella galleria le registrazioni non completate.
+Correzione: l'app non accumula più file temporanei di foto e video.
