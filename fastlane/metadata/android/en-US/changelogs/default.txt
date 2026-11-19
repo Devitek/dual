@@ -1,3 +1,2 @@
-Your photos and videos now follow the device orientation: landscape captures display upright, with the front preview correctly aligned.
-The screen stays on while the viewfinder is open.
-Fix: cameras now restart automatically when returning from the lock screen.
+Fix: the app no longer piles up temporary files from your photos and videos. Its storage could grow by several hundred MB over time.
+Technical updates for stability.

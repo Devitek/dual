@@ -1,3 +1,2 @@
-Vos photos et vidéos suivent désormais l'orientation de l'appareil : les prises en paysage s'affichent à l'endroit, avec l'aperçu avant correctement aligné.
-L'écran reste allumé tant que le viseur est ouvert.
-Correction : les caméras redémarrent automatiquement au retour de l'écran de verrouillage.
+Correction : l'application ne laisse plus s'accumuler les fichiers temporaires de vos photos et vidéos. Son espace de stockage pouvait grossir de plusieurs centaines de Mo au fil des captures.
+Mises à jour techniques pour la stabilité.

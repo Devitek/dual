@@ -1,3 +1,2 @@
-Fotos und Videos folgen jetzt der Geräteausrichtung: Querformataufnahmen werden richtig herum angezeigt, mit korrekt ausgerichteter Frontvorschau.
-Der Bildschirm bleibt an, solange der Sucher geöffnet ist.
-Korrektur: Die Kameras starten nach dem Entsperren des Sperrbildschirms automatisch neu.
+Korrektur: Die App sammelt keine temporären Dateien Ihrer Fotos und Videos mehr an. Ihr Speicherbedarf konnte mit der Zeit um mehrere hundert MB wachsen.
+Technische Aktualisierungen für mehr Stabilität.
