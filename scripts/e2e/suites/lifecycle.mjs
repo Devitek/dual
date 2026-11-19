@@ -10,9 +10,23 @@ export default {
       tags: ['interactive'],
       async run(t) {
         await t.dev.ensureViewfinder();
-        t.dev.sleepScreen();
-        await t.dev.sleep(4000);
-        t.log(`écran éteint, caméras ouvertes : ${t.dev.openCameraClients()}`);
+        // KEYCODE_POWER = bouton marche/arrêt (verrouillage immédiat). KEYCODE_SLEEP
+        // éteint seulement l'écran : le délai de verrouillage auto s'applique, la
+        // session n'est pas relâchée et le scénario #222 n'est PAS exercé (vécu).
+        t.dev.sh('input keyevent KEYCODE_POWER');
+        await t.dev.sleep(700);
+        // Relevé immédiat : l'utilisateur peut déverrouiller très vite (empreinte).
+        t.log(`écran de verrouillage juste après l'appui : ${t.dev.isKeyguardShowing()}`);
+        // Preuve que le scénario a lieu : la session est relâchée (caméras fermées,
+        // mesuré entre 1 et 5 s après l'appui sur Pixel 8 Pro / Android 17).
+        let released = false;
+        for (let i = 0; i < 16 && !released; i++) {
+          await t.dev.sleep(500);
+          released = t.dev.openCameraClients() === 0;
+        }
+        t.log(`verrouillage : caméras relâchées = ${released}, écran allumé = ${t.dev.isScreenOn()}`);
+        t.expect(released, "session relâchée au verrouillage (sinon le scénario #222 n'est pas exercé)");
+        await t.dev.sleep(3000);
         t.dev.wake();
         await t.dev.sleep(1000);
         t.dev.dismissKeyguard();
