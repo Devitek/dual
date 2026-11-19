@@ -156,6 +156,26 @@ export async function tap(id, timeoutMs) {
 }
 
 /**
+ * Fait défiler (geste vers le haut au centre de l'écran) jusqu'à ce que `id`
+ * soit visible, renvoie le noeud. uiautomator ne liste que les noeuds à l'écran.
+ */
+export async function scrollUntil(id, { maxSwipes = 10 } = {}) {
+  const m = sh('wm size').match(/(\d+)x(\d+)/);
+  const [w, h] = m ? [+m[1], +m[2]] : [1080, 2400];
+  for (let i = 0; i <= maxSwipes; i++) {
+    try {
+      const node = find(id);
+      if (node) return node;
+    } catch (e) {
+      if (!(e instanceof UiNotIdleError)) throw e;
+    }
+    sh(`input swipe ${Math.round(w / 2)} ${Math.round(h * 0.75)} ${Math.round(w / 2)} ${Math.round(h * 0.3)} 300`);
+    await sleep(700);
+  }
+  throw new Error(`"${id}" introuvable après ${maxSwipes} défilements`);
+}
+
+/**
  * Tape à la dernière position CONNUE d'un id (sans dump). Pour les boutons fixes
  * quand l'UI n'est pas dumpable (ex. arrêter un enregistrement).
  */
