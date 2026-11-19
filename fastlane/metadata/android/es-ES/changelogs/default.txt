@@ -1,3 +1,2 @@
-Tus fotos y vídeos ahora siguen la orientación del dispositivo: las capturas en horizontal se muestran correctamente, con la vista previa frontal bien alineada.
-La pantalla permanece encendida mientras el visor está abierto.
-Corrección: las cámaras se reinician automáticamente al volver de la pantalla de bloqueo.
+Corrección: la app ya no acumula archivos temporales de tus fotos y vídeos. Su almacenamiento podía crecer varios cientos de MB con el tiempo.
+Actualizaciones técnicas para mayor estabilidad.
