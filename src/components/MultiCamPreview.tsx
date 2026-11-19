@@ -188,7 +188,7 @@ export function MultiCamPreview({
     <View style={StyleSheet.absoluteFill}>
       {mainPreview == null ? (
         <View style={[StyleSheet.absoluteFill, styles.placeholder]}>
-          {isStarting && <ActivityIndicator color={colors.primary} size="large" />}
+          {isStarting && <ActivityIndicator color={colors.primary} size="large" testID="camera-starting" />}
           {isStarting && <Text style={styles.placeholderText}>{t('preview.starting')}</Text>}
         </View>
       ) : isSplit ? (
