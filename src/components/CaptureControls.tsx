@@ -176,7 +176,7 @@ export function CaptureControls({
   return (
     <View style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom + 8, 34) }]} pointerEvents="box-none">
       {isRecording && !boomerang && (
-        <View style={styles.timer}>
+        <View style={styles.timer} testID="camera-rec-timer">
           <View style={styles.recDot} />
           <Text style={styles.timerText}>{formatDuration(elapsed)}</Text>
         </View>

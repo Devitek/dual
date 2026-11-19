@@ -4,6 +4,10 @@ Runbook pour piloter l'app sur un device Android sans intervention humaine :
 install fraiche, octroi des permissions, fermeture de l'onboarding, puis flows
 photo et video. Voir issue #218 pour l'historique.
 
+**Suites automatisees** : `node scripts/e2e/run.mjs` (issue #263), cas identifies
+comme dans le **cahier de test** [`test-plan.md`](test-plan.md), qui couvre toute
+l'app et la campagne de recette avant release.
+
 ## Principe : cibler par `resource-id`, jamais par coordonnees
 
 React Native expose le prop `testID` comme `resource-id` dans la hierarchie
@@ -25,27 +29,65 @@ il est immunise contre ce decalage.
 
 ### Correction d'un piege repandu
 
-Contrairement a une croyance courante, le dump uiautomator n'est **pas** vide sur
-l'ecran camera : les overlays RN (Pressables des controles) se rendent par-dessus
-la SurfaceView/GL et apparaissent dans la hierarchie. Le ciblage par `testID`
-marche donc aussi sur le viseur (`camera-shutter`, `mode-video`, etc.).
+Le dump uiautomator n'est **pas** vide sur l'ecran camera **au repos** : les
+overlays RN (Pressables des controles) se rendent par-dessus la SurfaceView/GL et
+apparaissent dans la hierarchie. Le ciblage par `testID` marche donc sur le
+viseur (`camera-shutter`, `mode-video`, etc.).
 
-## Driver : `scripts/e2e/ui.mjs`
+**Mais pendant un enregistrement, le dump echoue a 100 %** (`ERROR: could not get
+idle state` : le compteur REC et le point pulse emettent des evenements
+d'accessibilite en continu ; animations systeme a 0, 1 reussite sur 3 seulement).
+Et l'ancien driver relisait alors **en silence le dump precedent** (fichier non
+reecrit) : etat perime, obturateur lu « Demarrer » alors qu'il enregistrait.
+Corrige (#263) : dump frais ou erreur `UiNotIdleError`, jamais de lecture perimee,
+et etat lu via des **temoins systeme** (ci-dessous).
+
+## Driver : `scripts/e2e/lib/device.mjs` + CLI `scripts/e2e/ui.mjs`
 
 ```bash
-# Flow install fraiche complet (accorde permissions + lance + ferme l'onboarding)
+# Flow install fraiche complet (accorde permissions + viseur pret)
 node scripts/e2e/ui.mjs onboard
 
 # Briques unitaires
 node scripts/e2e/ui.mjs grant               # camera + micro + notifications
 node scripts/e2e/ui.mjs launch              # (re)lance l'activite
-node scripts/e2e/ui.mjs dump                # liste les resource-id visibles
-node scripts/e2e/ui.mjs exists mode-video   # exit 0 si present
+node scripts/e2e/ui.mjs dump                # resource-id visibles (dump FRAIS)
+node scripts/e2e/ui.mjs exists mode-video   # exit 0 present, 1 absent, 3 UI pas au repos
 node scripts/e2e/ui.mjs wait camera-shutter # attend l'apparition
 node scripts/e2e/ui.mjs tap mode-video      # attend puis tape le centre
+node scripts/e2e/ui.mjs status              # temoins systeme (JSON)
 ```
 
 Device multiple : `ADB_SERIAL=<serial> node scripts/e2e/ui.mjs ...`.
+
+### Temoins systeme (independants de l'UI)
+
+| Etat | Source | Fonction |
+|---|---|---|
+| Enregistrement en cours | `dumpsys audio` (RecordActivityMonitor : `active? true`, `CAMCORDER`, `pack:`) | `isRecording()` |
+| Cameras reellement ouvertes (0 = session morte, cf. #222) | `dumpsys media.camera` (Active Camera Clients) | `openCameraClients()` |
+| Composition en cours | `dumpsys activity services` (PipComposerService) | `isComposing()` |
+| Ecran maintenu allume (#214) | `dumpsys window windows` (`KEEP_SCREEN_ON`) | `keepsScreenOn()` |
+| Ecran / verrouillage | `dumpsys power` / `dumpsys window` | `isScreenOn()`, `isKeyguardShowing()` |
+| Activite au premier plan | `dumpsys activity activities` | `topActivity()` |
+| Medias de l'app | MediaStore `files`, `owner_package_name` ou `Dual_%`, `is_pending=0` | `mediaAddedSince()`, `waitMedia()` |
+| Crash | `logcat -b crash` | `crashesSince()` |
+
+### Runner : `scripts/e2e/run.mjs`
+
+```bash
+node scripts/e2e/run.mjs --list                  # suites et cas
+node scripts/e2e/run.mjs                         # tout sauf les cas destructifs
+node scripts/e2e/run.mjs --suite interruption    # une suite
+node scripts/e2e/run.mjs --case INT-01,LCK-01    # des cas
+node scripts/e2e/run.mjs --interactive           # cas avec action humaine (detectee, pas de touche)
+node scripts/e2e/run.mjs --allow-destructive     # pm clear (vide AUSSI le cache de l'app)
+```
+
+Rapport (`report.md`, `report.json`, logcat filtre par cas, capture d'ecran des
+cas non PASS) dans `/tmp/twinlens-e2e/<horodatage>/` (option `--report`). Les
+medias crees par chaque cas sont supprimes apres coup (attente de la fin des
+compositions). `--suite` et `--case` se combinent en ET.
 
 ## Catalogue des testID stables
 
@@ -58,6 +100,14 @@ Onboarding / Nouveautes (`IntroSheet`)
 Barre de capture (`CaptureControls`)
 - `camera-shutter`, `camera-flip`, `camera-settings-open`
 - `camera-gallery-open` (session vide), `camera-gallery-thumbnail` (apres capture)
+- `camera-rec-timer` (compteur, present seulement pendant un enregistrement video ;
+  illisible tant que l'UI n'est pas au repos : preferer `isRecording()`)
+
+Etats du viseur (#263)
+- `camera-starting` (spinner de demarrage de session, `MultiCamPreview`)
+- `camera-error`, `camera-error-retry`, `camera-error-settings` (`CameraErrorView`)
+- `processing-indicator` (traitement en tache de fond, `ProcessingIndicator`)
+- `snackbar-success` / `snackbar-error` + `snackbar-text` (message, `Snackbar`)
 
 Barre du haut (`CameraTopBar`)
 - `camera-ae-lock`, `camera-flash-toggle`
@@ -146,10 +196,14 @@ retard d'un test, ce qui a fabrique des bugs fantomes).
 Protocole fiable :
 
 ```bash
-STOP_MS=$(date +%s%3N)                        # heure du stop, AVANT le tap stop
+STOP_MS=$(( $(adb shell date +%s) * 1000 ))   # heure DEVICE du stop, AVANT le tap stop
 node scripts/e2e/ui.mjs tap camera-shutter    # stop
-node scripts/e2e/ui.mjs media-since $STOP_MS  # bloque jusqu'au NOUVEAU fichier, imprime son chemin exact
+node scripts/e2e/ui.mjs media-since $STOP_MS  # bloque jusqu'au NOUVEAU media de l'app, imprime son chemin
 ```
+
+Dans le runner, c'est `stopRecording()` (heure prise avant le tap) puis
+`waitMedia(stop)`. Une composition dure environ la duree du clip (4 min de video =
+plus de 4 min de composition) : prevoir des timeouts en consequence.
 
 Controles d'identite complementaires :
 - le nom `Dual_PiP_<epochMillis>.mp4` encode l'heure de DEBUT de la composition :
@@ -161,12 +215,11 @@ Controles d'identite complementaires :
 Le premier tap sur l'obturateur apres ouverture d'app ou bascule de mode peut ne
 pas declencher (camera pas prete). Verifier l'etat reel plutot que supposer :
 
-```bash
-node scripts/e2e/ui.mjs tap camera-shutter
-node scripts/e2e/ui.mjs desc camera-shutter   # "Arreter l'enregistrement" = ca tourne
-```
-
-Retenter le tap tant que le desc n'a pas bascule.
+Ne **pas** se fier au `desc` de l'obturateur (l'UI n'est plus dumpable des que
+l'enregistrement tourne) : prouver l'etat par le temoin systeme. C'est ce que fait
+`startRecording()` (tap, puis `isRecording()` jusqu'a 5 s, 3 tentatives) ; pour
+arreter, `stopRecording()` tape a la **position memorisee** de l'obturateur
+(`tapCached`), puisque le dump echoue pendant l'enregistrement.
 
 ### Orientation video : convention de signes ffprobe
 
@@ -185,6 +238,15 @@ L'extraction de frame fidele au rendu lecteur = `ffmpeg` SANS `-noautorotate`.
   desinstaller d'abord (`adb uninstall fr.devitek.twinlens`) puis reinstaller.
 - **dump transitoire vide** pendant une transition d'ecran : le driver retente
   automatiquement (`waitFor`).
+- **Relancer une activite deja au premier plan** (`am start`, singleTask) peut la
+  mettre en pause/reprise et fermer les cameras : `ensureViewfinder()` ne lance
+  que si l'app n'est pas deja au premier plan (vecu #263, CAP-02).
+- **`adb shell` dans une boucle `while read`** consomme le stdin de la boucle (seule
+  la 1re ligne est traitee) : toujours `adb ... </dev/null`. La lib passe par
+  `execFileSync` (stdin ignore), sans shell local.
+- **Animations systeme** : si on les modifie pour un test, sauvegarder puis
+  restaurer explicitement les trois cles (`window_animation_scale`,
+  `transition_animation_scale`, `animator_duration_scale`).
 - **Permissions** : `onboard`/`grant` accordent camera + micro + notifications.
   La galerie (ecriture scoped MediaStore) et le geotag (localisation) ne sont pas
   requis pour le gate bloquant.
