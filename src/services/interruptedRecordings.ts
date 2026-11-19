@@ -12,8 +12,7 @@
 import { Directory, File, Paths } from 'expo-file-system';
 import { saveToLibraryAsync } from 'expo-media-library/legacy';
 
-/** Début de la session (chargement du module, donc démarrage du process JS). */
-const SESSION_STARTED_AT = Date.now();
+import { getSessionStartedAt } from '../utils/sessionStart';
 
 const RAW_RECORDING_PATTERN = /^VisionCamera_.*\.mp4$/i;
 
@@ -34,21 +33,26 @@ export interface RecoveryResult {
 export interface RecoveryDeps {
   listCache: () => (Directory | File)[];
   save: (uri: string) => Promise<void>;
-  sessionStartedAt: number;
+  /** Début de la session en cours (repère posé au démarrage), ou null s'il manque. */
+  sessionStartedAt: number | null;
 }
 
-const defaultDeps: RecoveryDeps = {
+const defaultDeps = (): RecoveryDeps => ({
   listCache: () => Paths.cache.list(),
   save: (uri) => saveToLibraryAsync(uri),
-  sessionStartedAt: SESSION_STARTED_AT,
-};
+  sessionStartedAt: getSessionStartedAt(),
+});
 
 /**
  * Liste les enregistrements bruts laissés dans le cache par une session
  * précédente (fichiers non vides, plus anciens que la session en cours).
  * Ne lève jamais : renvoie une liste vide en cas d'erreur d'accès au cache.
+ * Sans repère de session, renvoie une liste vide : impossible de distinguer
+ * les fichiers de la session en cours, on ne touche à rien.
  */
-export function findInterruptedRecordings(deps: RecoveryDeps = defaultDeps): InterruptedRecording[] {
+export function findInterruptedRecordings(deps: RecoveryDeps = defaultDeps()): InterruptedRecording[] {
+  const { sessionStartedAt } = deps;
+  if (sessionStartedAt == null) return [];
   let entries: (Directory | File)[];
   try {
     entries = deps.listCache();
@@ -62,7 +66,7 @@ export function findInterruptedRecordings(deps: RecoveryDeps = defaultDeps): Int
       const size = entry.size ?? 0;
       const modifiedAt = entry.modificationTime ?? null;
       if (size <= 0) continue;
-      if (modifiedAt != null && modifiedAt >= deps.sessionStartedAt) continue;
+      if (modifiedAt != null && modifiedAt >= sessionStartedAt) continue;
       found.push({ uri: entry.uri, name: entry.name, size, modifiedAt });
     } catch {
       // Fichier disparu entre le listing et la lecture : on l'ignore.
@@ -78,7 +82,7 @@ export function findInterruptedRecordings(deps: RecoveryDeps = defaultDeps): Int
  */
 export async function recoverInterruptedRecordings(
   recordings: InterruptedRecording[],
-  deps: Pick<RecoveryDeps, 'save'> = defaultDeps,
+  deps: Pick<RecoveryDeps, 'save'> = defaultDeps(),
 ): Promise<RecoveryResult> {
   const result: RecoveryResult = { saved: 0, failed: 0 };
   for (const recording of recordings) {

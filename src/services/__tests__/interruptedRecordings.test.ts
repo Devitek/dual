@@ -72,6 +72,12 @@ describe('findInterruptedRecordings', () => {
     };
     expect(findInterruptedRecordings(failing)).toEqual([]);
   });
+
+  it("ne touche à rien si le repère de session n'a pas été posé", () => {
+    const listCache = jest.fn(() => [new CacheFile('file:///cache/VisionCamera_1.mp4', 100, SESSION - 20)]);
+    expect(findInterruptedRecordings({ ...deps([]), listCache, sessionStartedAt: null })).toEqual([]);
+    expect(listCache).not.toHaveBeenCalled();
+  });
 });
 
 describe('recoverInterruptedRecordings', () => {
