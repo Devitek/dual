@@ -16,3 +16,5 @@ Décisions structurantes du projet, numérotées, immuables une fois acceptées
 | [0005](0005-sequentiel-photo-seulement.md) | Repli séquentiel : photo oui, vidéo non | ✅ Accepté |
 | [0006](0006-politique-dependabot.md) | Supply chain : SHA pinning + auto-merge restreint | ✅ Accepté |
 | [0007](0007-privacy-produit.md) | Privacy = produit (zéro réseau applicatif) | ✅ Accepté |
+| [0008](0008-notifications-locales-sur-le-fait.md) | Notifications locales pour « Sur le fait » | ✅ Accepté |
+| [0009](0009-licence-mit.md) | Licence MIT pour le dépôt | ✅ Accepté |

@@ -68,7 +68,7 @@ Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) first:
 
 ## License
 
-No license has been chosen yet, so all rights are reserved by default.
+TwinLens is released under the [MIT License](LICENSE). The license does not cover the TwinLens name, icon or the Devitek logo.
 
 ---
 
