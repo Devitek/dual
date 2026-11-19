@@ -1,3 +1,2 @@
-Foto e video ora seguono l'orientamento del dispositivo: le riprese in orizzontale vengono mostrate correttamente, con l'anteprima frontale ben allineata.
-Lo schermo resta acceso finché il mirino è aperto.
-Correzione: le fotocamere si riavviano automaticamente al ritorno dalla schermata di blocco.
+Correzione: l'app non accumula più file temporanei di foto e video. Il suo spazio di archiviazione poteva crescere di diverse centinaia di MB nel tempo.
+Aggiornamenti tecnici per una maggiore stabilità.
