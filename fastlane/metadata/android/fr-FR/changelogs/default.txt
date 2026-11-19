@@ -1,2 +1,3 @@
-Correction : l'application ne laisse plus s'accumuler les fichiers temporaires de vos photos et vidéos. Son espace de stockage pouvait grossir de plusieurs centaines de Mo au fil des captures.
-Mises à jour techniques pour la stabilité.
+Quitter l'app pendant un enregistrement ne fait plus perdre la vidéo : elle est finalisée dès votre retour, ou ses deux fichiers d'origine sont conservés.
+Nouveau : « Vidéos interrompues » (Autres réglages, Aide & diagnostic) récupère dans la galerie les enregistrements restés inachevés.
+Correction : l'app ne laisse plus s'accumuler les fichiers temporaires de vos photos et vidéos.

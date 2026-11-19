@@ -1,2 +1,3 @@
-Fix: the app no longer piles up temporary files from your photos and videos. Its storage could grow by several hundred MB over time.
-Technical updates for stability.
+Leaving the app while recording no longer loses the video: it is finished when you come back, or both original files are kept.
+New: "Interrupted videos" (More settings, Help & diagnostics) recovers unfinished recordings into your gallery.
+Fix: the app no longer piles up temporary files from your photos and videos.
