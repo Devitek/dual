@@ -23,7 +23,7 @@ export function ProcessingIndicator({ count, progress }: ProcessingIndicatorProp
 
   return (
     <View style={styles.wrap} pointerEvents="none">
-      <View style={styles.pill}>
+      <View style={styles.pill} testID="processing-indicator">
         <ActivityIndicator size="small" color={colors.onPrimaryContainer} />
         <Text style={styles.text}>{pct != null ? t('processing.pip', { pct }) : t('processing.generic')}</Text>
       </View>

@@ -42,9 +42,9 @@ export function Snackbar({ notice }: { notice: Notice | null }): React.ReactElem
   if (current == null) return null;
 
   return (
-    <Animated.View style={[styles.snack, { opacity }]} pointerEvents="none">
+    <Animated.View style={[styles.snack, { opacity }]} pointerEvents="none" testID={`snackbar-${current.kind}`}>
       <Text style={styles.dot}>{current.kind === 'success' ? '✓' : '⚠'}</Text>
-      <Text style={styles.text} numberOfLines={2}>
+      <Text style={styles.text} numberOfLines={2} testID="snackbar-text">
         {current.text}
       </Text>
     </Animated.View>

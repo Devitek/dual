@@ -1,7 +1,8 @@
 {
   "name": "dual",
-  "version": "1.26.0",
+  "version": "1.26.1",
   "private": true,
+  "license": "MIT",
   "main": "index.ts",
   "scripts": {
     "start": "expo start --dev-client",
@@ -12,7 +13,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "jest",
-    "e2e:ui": "node scripts/e2e/ui.mjs"
+    "e2e:ui": "node scripts/e2e/ui.mjs",
+    "e2e:run": "node scripts/e2e/run.mjs"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
@@ -41,10 +43,10 @@
     "expo-system-ui": "~57.0.4",
     "expo-video": "~57.0.5",
     "expo-video-thumbnails": "~57.0.2",
-    "i18next": "^26.4.2",
+    "i18next": "^27.2.2",
     "piexifjs": "^1.0.6",
     "react": "19.2.3",
-    "react-i18next": "^17.0.15",
+    "react-i18next": "^18.0.1",
     "react-native": "0.86.3",
     "react-native-gesture-handler": "~2.32.0",
     "react-native-nitro-image": "^0.15.1",

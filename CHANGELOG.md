@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.26.1](https://github.com/Devitek/dual/compare/v1.26.0...v1.26.1) (2026-11-19)
+
+
+### Bug Fixes
+
+* **storage:** stop leaking raw captures in the app cache ([#265](https://github.com/Devitek/dual/issues/265)) ([d8d1bad](https://github.com/Devitek/dual/commit/d8d1bada3acac258912f6fff7bb02482aec0168b)), closes [#255](https://github.com/Devitek/dual/issues/255)
+
 ## [1.26.0](https://github.com/Devitek/dual/compare/v1.25.1...v1.26.0) (2026-10-01)
 
 

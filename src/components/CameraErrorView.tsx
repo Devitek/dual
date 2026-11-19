@@ -21,7 +21,7 @@ export function CameraErrorView({ message, onRetry }: CameraErrorViewProps): Rea
   const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation();
   return (
-    <View style={styles.container}>
+    <View style={styles.container} testID="camera-error" collapsable={false}>
       <View style={styles.iconCircle}>
         <MaterialIcons name="no-photography" size={42} color={colors.danger} />
       </View>
@@ -39,6 +39,7 @@ export function CameraErrorView({ message, onRetry }: CameraErrorViewProps): Rea
         }}
         accessibilityRole="button"
         accessibilityLabel={t('error.retry')}
+        testID="camera-error-retry"
       >
         <MaterialIcons name="refresh" size={20} color={colors.onPrimary} />
         <Text style={styles.retryText}>{t('error.retry')}</Text>
@@ -49,6 +50,7 @@ export function CameraErrorView({ message, onRetry }: CameraErrorViewProps): Rea
         onPress={() => void Linking.openSettings()}
         accessibilityRole="button"
         accessibilityLabel={t('error.openSettings')}
+        testID="camera-error-settings"
       >
         <Text style={styles.settingsLinkText}>{t('error.openSettings')}</Text>
       </Pressable>
