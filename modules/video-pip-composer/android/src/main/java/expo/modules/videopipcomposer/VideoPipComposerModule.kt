@@ -1,6 +1,7 @@
 package expo.modules.videopipcomposer
 
 import android.Manifest
+import android.app.ForegroundServiceStartNotAllowedException
 import android.app.StatusBarManager
 import android.appwidget.AppWidgetManager
 import android.content.ClipData
@@ -23,6 +24,8 @@ import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+
+private const val E_FGS_NOT_ALLOWED = "E_FGS_NOT_ALLOWED"
 
 /**
  * Module Expo : lance la composition PiP vidéo dans un Foreground Service
@@ -72,25 +75,26 @@ class VideoPipComposerModule : Module(), PipComposerBus.Listener {
         return@AsyncFunction
       }
       val jobId = UUID.randomUUID().toString()
-      promises[jobId] = promise
-      PipComposerService.startVideo(
-        context = context,
-        jobId = jobId,
-        primaryPath = primaryPath,
-        secondaryPath = secondaryPath,
-        layout = params.layout,
-        corner = params.corner,
-        insetX = params.insetX.toFloat(),
-        insetY = params.insetY.toFloat(),
-        insetW = params.insetW.toFloat(),
-        watermark = params.watermark,
-        bitRate = params.bitRate.toInt(),
-        outputRatio = params.outputRatio,
-        boomerang = params.boomerang,
-        boomerangGif = params.boomerangGif,
-        saveOriginals = params.saveOriginals,
-        orientation = params.orientation,
-      )
+      startJob(jobId, promise) {
+        PipComposerService.startVideo(
+          context = context,
+          jobId = jobId,
+          primaryPath = primaryPath,
+          secondaryPath = secondaryPath,
+          layout = params.layout,
+          corner = params.corner,
+          insetX = params.insetX.toFloat(),
+          insetY = params.insetY.toFloat(),
+          insetW = params.insetW.toFloat(),
+          watermark = params.watermark,
+          bitRate = params.bitRate.toInt(),
+          outputRatio = params.outputRatio,
+          boomerang = params.boomerang,
+          boomerangGif = params.boomerangGif,
+          saveOriginals = params.saveOriginals,
+          orientation = params.orientation,
+        )
+      }
     }
 
     AsyncFunction("composePipPhoto") {
@@ -105,23 +109,24 @@ class VideoPipComposerModule : Module(), PipComposerBus.Listener {
         return@AsyncFunction
       }
       val jobId = UUID.randomUUID().toString()
-      promises[jobId] = promise
-      PipComposerService.startPhoto(
-        context = context,
-        jobId = jobId,
-        primaryPath = primaryPath,
-        secondaryPath = secondaryPath,
-        layout = params.layout,
-        corner = params.corner,
-        insetX = params.insetX.toFloat(),
-        insetY = params.insetY.toFloat(),
-        insetW = params.insetW.toFloat(),
-        watermark = params.watermark,
-        canvasWidth = params.canvasWidth.toInt(),
-        outputRatio = params.outputRatio,
-        saveOriginals = params.saveOriginals,
-        orientation = params.orientation,
-      )
+      startJob(jobId, promise) {
+        PipComposerService.startPhoto(
+          context = context,
+          jobId = jobId,
+          primaryPath = primaryPath,
+          secondaryPath = secondaryPath,
+          layout = params.layout,
+          corner = params.corner,
+          insetX = params.insetX.toFloat(),
+          insetY = params.insetY.toFloat(),
+          insetW = params.insetW.toFloat(),
+          watermark = params.watermark,
+          canvasWidth = params.canvasWidth.toInt(),
+          outputRatio = params.outputRatio,
+          saveOriginals = params.saveOriginals,
+          orientation = params.orientation,
+        )
+      }
     }
 
     // Partage DIRECT vers une app cible (Instagram / TikTok…) : ACTION_SEND ciblé
@@ -273,6 +278,29 @@ class VideoPipComposerModule : Module(), PipComposerBus.Listener {
         appContext.currentActivity?.let { activity ->
           ActivityCompat.requestPermissions(activity, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 8123)
         }
+      }
+    }
+  }
+
+  /**
+   * Enregistre la promesse puis démarre le Foreground Service. Si le démarrage
+   * est refusé (Android 12+ : app passée en arrière-plan au-delà du délai de
+   * grâce, cf. #243/#244), la promesse est retirée et rejetée avec un code
+   * dédié, pour que le JS attende le premier plan et réessaie une fois.
+   * Toute autre erreur de démarrage : E_FGS_START_FAILED (repli côté JS).
+   */
+  private inline fun startJob(jobId: String, promise: Promise, start: () -> Unit) {
+    promises[jobId] = promise
+    try {
+      start()
+    } catch (e: Exception) {
+      promises.remove(jobId)
+      val notAllowed = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+        e is ForegroundServiceStartNotAllowedException
+      if (notAllowed) {
+        promise.reject(E_FGS_NOT_ALLOWED, "Démarrage du service refusé depuis l'arrière-plan", e)
+      } else {
+        promise.reject("E_FGS_START_FAILED", e.message ?: "Démarrage du service impossible", e)
       }
     }
   }

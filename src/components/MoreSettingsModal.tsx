@@ -19,6 +19,13 @@ import {
   type OtsWindowStart,
 } from '../services/settings';
 import { clearCrashJournal, formatCrashJournal, readCrashJournal, type CrashEntry } from '../utils/crashJournal';
+import { formatBytes } from '../utils/fileSystem';
+import {
+  findInterruptedRecordings,
+  recoverInterruptedRecordings,
+  type InterruptedRecording,
+  type RecoveryResult,
+} from '../services/interruptedRecordings';
 import type { MultiCamDiagnostics } from '../vision/MultiCamController';
 import type { VolumeKeyAction } from '../native/volumeKeys';
 import appJson from '../../app.json';
@@ -143,17 +150,38 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const journalTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Charge le journal d'erreurs local à chaque ouverture de l'écran.
+  const [interrupted, setInterrupted] = useState<InterruptedRecording[]>([]);
+  const [recovering, setRecovering] = useState(false);
+  const [recovery, setRecovery] = useState<RecoveryResult | null>(null);
+
+  // Charge le journal d'erreurs local et les vidéos interrompues à chaque ouverture de l'écran.
   useEffect(() => {
     if (!visible) return;
     let active = true;
     void readCrashJournal().then((entries) => {
       if (active) setJournal(entries);
     });
+    void Promise.resolve().then(() => {
+      if (!active) return;
+      setInterrupted(findInterruptedRecordings());
+      setRecovery(null);
+    });
     return () => {
       active = false;
     };
   }, [visible]);
+
+  const onRecover = useCallback(() => {
+    if (recovering || interrupted.length === 0) return;
+    haptics.selection();
+    setRecovering(true);
+    void recoverInterruptedRecordings(interrupted)
+      .then((result) => setRecovery(result))
+      .finally(() => {
+        setInterrupted(findInterruptedRecordings());
+        setRecovering(false);
+      });
+  }, [interrupted, recovering]);
 
   useEffect(
     () => () => {
@@ -412,6 +440,45 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
     </View>
   );
 
+  const interruptedSize = interrupted.reduce((sum, r) => sum + r.size, 0);
+  const recoverRow = (
+    <View style={styles.cardRowCol}>
+      <View style={styles.rowHeader}>
+        <MaterialIcons name="restore" size={22} color={colors.onSurfaceVariant} />
+        <View style={styles.rowTexts}>
+          <Text style={styles.rowLabel}>{t('settings.recoverTitle')}</Text>
+          <Text style={styles.desc}>{t('settings.recoverDesc')}</Text>
+          <Text style={styles.desc}>
+            {interrupted.length === 0
+              ? t('settings.recoverNone')
+              : t('settings.recoverFound', { count: interrupted.length, size: formatBytes(interruptedSize) })}
+          </Text>
+          {recovery != null && recovery.saved > 0 && (
+            <Text style={styles.desc}>{t('settings.recoverDone', { count: recovery.saved })}</Text>
+          )}
+          {recovery != null && recovery.failed > 0 && (
+            <Text style={styles.clearText}>{t('settings.recoverFailed', { count: recovery.failed })}</Text>
+          )}
+        </View>
+      </View>
+      {interrupted.length > 0 && (
+        <Pressable
+          testID="more-recover-recordings"
+          onPress={onRecover}
+          disabled={recovering}
+          style={styles.copyBtn}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={t('settings.recoverAction')}
+          accessibilityState={{ busy: recovering, disabled: recovering }}
+        >
+          <MaterialIcons name="save-alt" size={16} color={colors.onSecondaryContainer} />
+          <Text style={styles.copyText}>{recovering ? t('settings.recoverSaving') : t('settings.recoverAction')}</Text>
+        </Pressable>
+      )}
+    </View>
+  );
+
   return (
     <Modal visible={visible} animationType="slide" statusBarTranslucent onRequestClose={onClose}>
       <View style={[styles.screen, { paddingTop: insets.top }]}>
@@ -509,7 +576,7 @@ export function MoreSettingsModal(props: MoreSettingsModalProps): React.ReactEle
           </View>
 
           <Text style={styles.section}>{t('settings.catHelp')}</Text>
-          {card([rateRow, reportRow, journalRow])}
+          {card([rateRow, recoverRow, reportRow, journalRow])}
 
           <Text style={styles.version}>
             {t('settings.version')} {APP_VERSION}
